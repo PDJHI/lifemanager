@@ -2966,6 +2966,46 @@ function retroShowDetail(type) {
   if (type === 'quarterly') { renderRetroQuarterlyDashboard(); retroQuarterlyRenderForm(); }
   if (type === 'yearly')    { renderRetroYearlyDashboard(); retroYearlyRenderForm(); }
   renderRetro(type);
+  // 루틴 요약 카드 직접 렌더 (monthly/quarterly/yearly)
+  if (type === 'monthly') {
+    const d = retroCursor['monthly'];
+    const year = d.getFullYear(), month = d.getMonth();
+    const daysInMonth = new Date(year, month+1, 0).getDate();
+    const allDays = Array.from({length: daysInMonth}, (_,i) => {
+      const dt = new Date(year, month, i+1);
+      const dk = `${year}-${String(month+1).padStart(2,'0')}-${String(i+1).padStart(2,'0')}`;
+      const routineAchieved = streakData[`${dt.getFullYear()}-${dt.getMonth()}-${dt.getDate()}`] || false;
+      return { dt, dk, routineAchieved };
+    });
+    renderRoutineCatSummary('retro-monthly-routine-cat', allDays);
+  }
+  if (type === 'quarterly') {
+    const d = retroCursor['quarterly'];
+    const year = d.getFullYear(), qStart = Math.floor(d.getMonth()/3)*3;
+    const allDays = [];
+    for (let m = qStart; m < qStart+3; m++) {
+      const dim = new Date(year, m+1, 0).getDate();
+      for (let i = 1; i <= dim; i++) {
+        const dt = new Date(year, m, i);
+        const routineAchieved = streakData[`${dt.getFullYear()}-${dt.getMonth()}-${dt.getDate()}`] || false;
+        allDays.push({ dt, routineAchieved });
+      }
+    }
+    renderRoutineCatSummary('retro-quarterly-routine-cat', allDays);
+  }
+  if (type === 'yearly') {
+    const year = retroCursor['yearly'].getFullYear();
+    const allDays = [];
+    for (let m = 0; m < 12; m++) {
+      const dim = new Date(year, m+1, 0).getDate();
+      for (let i = 1; i <= dim; i++) {
+        const dt = new Date(year, m, i);
+        const routineAchieved = streakData[`${dt.getFullYear()}-${dt.getMonth()}-${dt.getDate()}`] || false;
+        allDays.push({ dt, routineAchieved });
+      }
+    }
+    renderRoutineCatSummary('retro-yearly-routine-cat', allDays);
+  }
 }
 
 function retroOpenNew(type) {
@@ -4450,6 +4490,8 @@ function dataImport() {
         if (p.wfStore)            Object.assign(wfStore, p.wfStore);
         if (p.tlCatParents)       tlCatParents       = p.tlCatParents;
         if (p.tlCatChildren)      tlCatChildren      = p.tlCatChildren;
+        if (p.tlNextParentId)     tlNextParentId     = p.tlNextParentId;
+        if (p.tlNextChildId)      tlNextChildId      = p.tlNextChildId;
         if (p.tlLogs)             Object.assign(tlLogs, p.tlLogs);
         if (p.diaryStore)         Object.assign(diaryStore, p.diaryStore);
         if (p.retroWeeklyContent) Object.assign(retroWeeklyContent, p.retroWeeklyContent);
@@ -4492,6 +4534,8 @@ function lsSave() {
       wfStore,
       tlCatParents,
       tlCatChildren,
+      tlNextParentId,
+      tlNextChildId,
       tlLogs,
       diaryStore,
       retroWeeklyContent,
@@ -4531,6 +4575,8 @@ function lsLoad() {
     if (p.wfStore)            Object.assign(wfStore, p.wfStore);
     if (p.tlCatParents)       tlCatParents       = p.tlCatParents;
     if (p.tlCatChildren)      tlCatChildren      = p.tlCatChildren;
+    if (p.tlNextParentId)     tlNextParentId     = p.tlNextParentId;
+    if (p.tlNextChildId)      tlNextChildId      = p.tlNextChildId;
     if (p.tlLogs)             Object.assign(tlLogs, p.tlLogs);
     if (p.diaryStore)         Object.assign(diaryStore, p.diaryStore);
     if (p.retroWeeklyContent) Object.assign(retroWeeklyContent, p.retroWeeklyContent);
@@ -4614,6 +4660,8 @@ document.getElementById('logout-btn').addEventListener('click', function() {
         wfStore,
         tlCatParents,
         tlCatChildren,
+        tlNextParentId,
+        tlNextChildId,
         tlLogs,
         diaryStore,
         retroWeeklyContent,
@@ -4644,6 +4692,8 @@ document.getElementById('logout-btn').addEventListener('click', function() {
         if (p.wfStore)            Object.assign(wfStore, p.wfStore);
         if (p.tlCatParents)       tlCatParents       = p.tlCatParents;
         if (p.tlCatChildren)      tlCatChildren      = p.tlCatChildren;
+        if (p.tlNextParentId)     tlNextParentId     = p.tlNextParentId;
+        if (p.tlNextChildId)      tlNextChildId      = p.tlNextChildId;
         if (p.tlLogs)             Object.assign(tlLogs, p.tlLogs);
         if (p.diaryStore)         Object.assign(diaryStore, p.diaryStore);
         if (p.retroWeeklyContent) Object.assign(retroWeeklyContent, p.retroWeeklyContent);
