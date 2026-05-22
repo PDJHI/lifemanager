@@ -617,10 +617,22 @@
           <div class="modal-field">
             <div class="modal-label">카테고리</div>
             <div style="display:flex;gap:6px;flex-wrap:wrap" id="modal-cats">
-              <div class="modal-day-btn selected" data-cat="아침" onclick="selectCat(this)" style="flex:none;padding:6px 12px">아침</div>
-              <div class="modal-day-btn" data-cat="오전" onclick="selectCat(this)" style="flex:none;padding:6px 12px">오전</div>
-              <div class="modal-day-btn" data-cat="오후" onclick="selectCat(this)" style="flex:none;padding:6px 12px">오후</div>
-              <div class="modal-day-btn" data-cat="저녁" onclick="selectCat(this)" style="flex:none;padding:6px 12px">저녁</div>
+              <div class="modal-day-btn selected" data-cat="자산" onclick="selectCat(this)" style="flex:none;padding:6px 12px">자산</div>
+              <div class="modal-day-btn" data-cat="관계" onclick="selectCat(this)" style="flex:none;padding:6px 12px">관계</div>
+              <div class="modal-day-btn" data-cat="건강" onclick="selectCat(this)" style="flex:none;padding:6px 12px">건강</div>
+              <div class="modal-day-btn" data-cat="경험" onclick="selectCat(this)" style="flex:none;padding:6px 12px">경험</div>
+              <div class="modal-day-btn" data-cat="커리어" onclick="selectCat(this)" style="flex:none;padding:6px 12px">커리어</div>
+              <div class="modal-day-btn" data-cat="성장" onclick="selectCat(this)" style="flex:none;padding:6px 12px">성장</div>
+            </div>
+          </div>
+          <div class="modal-field">
+            <div class="modal-label">시간대</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap" id="modal-times">
+              <div class="modal-day-btn selected" data-time="공통" onclick="selectTime(this)" style="flex:none;padding:6px 12px">공통</div>
+              <div class="modal-day-btn" data-time="아침" onclick="selectTime(this)" style="flex:none;padding:6px 12px">아침</div>
+              <div class="modal-day-btn" data-time="오전" onclick="selectTime(this)" style="flex:none;padding:6px 12px">오전</div>
+              <div class="modal-day-btn" data-time="오후" onclick="selectTime(this)" style="flex:none;padding:6px 12px">오후</div>
+              <div class="modal-day-btn" data-time="저녁" onclick="selectTime(this)" style="flex:none;padding:6px 12px">저녁</div>
             </div>
           </div>
           <div class="modal-actions">
@@ -1166,13 +1178,13 @@ function addDays(d, n) { const dt = new Date(d); dt.setDate(dt.getDate()+n); ret
 
 // ── Routine data ────────────────────────────────────────────────
 let routines = [
-  { id:1, name:'아침 독서 30분',  time:'07:00', cat:'아침', days:[0,1,2,3,4,5,6] },
-  { id:2, name:'명상 10분',        time:'07:30', cat:'아침', days:[0,1,2,3,4,5,6] },
-  { id:3, name:'운동 1시간',       time:'09:00', cat:'오전', days:[0,1,2,3,4] },
-  { id:4, name:'영어 공부 30분',   time:'12:00', cat:'오전', days:[0,1,2,3,4] },
-  { id:5, name:'하루 일기 작성',   time:'22:00', cat:'저녁', days:[0,1,2,3,4,5,6] },
-  { id:6, name:'내일 계획 세우기', time:'22:30', cat:'저녁', days:[0,1,2,3,4,5,6] },
-  { id:7, name:'주말 산책',        time:'10:00', cat:'오전', days:[5,6] },
+  { id:1, name:'아침 독서 30분',  time:'07:00', cat:'성장', timeSlot:'아침', days:[0,1,2,3,4,5,6] },
+  { id:2, name:'명상 10분',        time:'07:30', cat:'건강', timeSlot:'아침', days:[0,1,2,3,4,5,6] },
+  { id:3, name:'운동 1시간',       time:'09:00', cat:'건강', timeSlot:'오전', days:[0,1,2,3,4] },
+  { id:4, name:'영어 공부 30분',   time:'12:00', cat:'성장', timeSlot:'오전', days:[0,1,2,3,4] },
+  { id:5, name:'하루 일기 작성',   time:'22:00', cat:'성장', timeSlot:'저녁', days:[0,1,2,3,4,5,6] },
+  { id:6, name:'내일 계획 세우기', time:'22:30', cat:'성장', timeSlot:'저녁', days:[0,1,2,3,4,5,6] },
+  { id:7, name:'주말 산책',        time:'10:00', cat:'건강', timeSlot:'오전', days:[5,6] },
 ];
 let nextRoutineId = 8;
 
@@ -1200,7 +1212,8 @@ let viewMonday = getMonday(now);
 // ── Manage-tab state ────────────────────────────────────────────
 let selectedDay = 0;
 let editingId = null;
-const CAT_TAG = { '아침':'tag-green', '오전':'tag-blue', '오후':'tag-amber', '저녁':'tag-purple' };
+const CAT_TAG = { '자산':'tag-amber', '관계':'tag-blue', '건강':'tag-green', '경험':'tag-coral', '커리어':'tag-purple', '성장':'tag-green', '아침':'tag-green', '오전':'tag-blue', '오후':'tag-amber', '저녁':'tag-purple' };
+const TIME_TAG = { '공통':'tag-blue', '아침':'tag-green', '오전':'tag-blue', '오후':'tag-amber', '저녁':'tag-purple' };
 const PRIO_COLOR = { high:'#E24B4A', mid:'#EF9F27', low:'#639922' };
 const PRIO_LABEL = { high:'높음', mid:'중간', low:'낮음' };
 
@@ -1450,6 +1463,7 @@ function syncTodayRoutines() {
       <div class="check-box"><i class="ti ti-check"></i></div>
       <div class="routine-name" style="font-size:13px">${r.name}</div>
       <div class="tag ${CAT_TAG[r.cat]}">${r.cat}</div>
+      ${r.timeSlot?`<div class="tag ${TIME_TAG[r.timeSlot]||'tag-blue'}" style="opacity:0.7">${r.timeSlot}</div>`:''}
     </div>`).join('');
   updateStats();
 }
@@ -1589,7 +1603,8 @@ function openAddModal(){
   document.getElementById('modal-title-text').textContent='루틴 추가';
   document.getElementById('modal-name').value='';
   document.querySelectorAll('.modal-day-btn[data-d]').forEach(b=>b.classList.toggle('selected',parseInt(b.dataset.d)===selectedDay));
-  document.querySelectorAll('.modal-day-btn[data-cat]').forEach(b=>b.classList.toggle('selected',b.dataset.cat==='아침'));
+  document.querySelectorAll('.modal-day-btn[data-cat]').forEach(b=>b.classList.toggle('selected',b.dataset.cat==='자산'));
+  document.querySelectorAll('.modal-day-btn[data-time]').forEach(b=>b.classList.toggle('selected',b.dataset.time==='공통'));
   document.getElementById('routine-modal').classList.add('open');
   setTimeout(()=>document.getElementById('modal-name').focus(),50);
 }
@@ -1601,21 +1616,25 @@ function openEditModal(id){
   document.getElementById('modal-name').value=r.name;
   document.querySelectorAll('.modal-day-btn[data-d]').forEach(b=>b.classList.toggle('selected',r.days.includes(parseInt(b.dataset.d))));
   document.querySelectorAll('.modal-day-btn[data-cat]').forEach(b=>b.classList.toggle('selected',b.dataset.cat===r.cat));
+  document.querySelectorAll('.modal-day-btn[data-time]').forEach(b=>b.classList.toggle('selected',b.dataset.time===(r.timeSlot||'공통')));
   document.getElementById('routine-modal').classList.add('open');
 }
 
 function closeModal(){ document.getElementById('routine-modal').classList.remove('open'); }
 function toggleModalDay(btn){ btn.classList.toggle('selected'); }
 function selectCat(btn){ document.querySelectorAll('.modal-day-btn[data-cat]').forEach(b=>b.classList.remove('selected')); btn.classList.add('selected'); }
+function selectTime(btn){ document.querySelectorAll('.modal-day-btn[data-time]').forEach(b=>b.classList.remove('selected')); btn.classList.add('selected'); }
 
 function saveRoutine(){
   const name=document.getElementById('modal-name').value.trim();
   if(!name){document.getElementById('modal-name').focus();return;}
   const days=[...document.querySelectorAll('.modal-day-btn[data-d].selected')].map(b=>parseInt(b.dataset.d));
   const catBtn=document.querySelector('.modal-day-btn[data-cat].selected');
-  const cat=catBtn?catBtn.dataset.cat:'아침';
-  if(editingId){const r=routines.find(x=>x.id===editingId);if(r){r.name=name;r.days=days;r.cat=cat;}}
-  else{routines.push({id:nextRoutineId++,name,cat,days});}
+  const cat=catBtn?catBtn.dataset.cat:'자산';
+  const timeBtn=document.querySelector('.modal-day-btn[data-time].selected');
+  const timeSlot=timeBtn?timeBtn.dataset.time:'공통';
+  if(editingId){const r=routines.find(x=>x.id===editingId);if(r){r.name=name;r.days=days;r.cat=cat;r.timeSlot=timeSlot;}}
+  else{routines.push({id:nextRoutineId++,name,cat,timeSlot,days});}
   closeModal(); renderDayList(); syncTodayRoutines(); lsAutoSave();
 }
 
@@ -1874,20 +1893,32 @@ function tlInitPalettes() {
 // tlCatParents: [{id, name, color}]
 // tlCatChildren: [{id, parentId, name, color}]  (color 없으면 parent color 상속)
 let tlCatParents = [
-  { id:'p1', name:'업무',     color:'#7C83FD' },  // 페리윙클
-  { id:'p2', name:'자기계발', color:'#FFD93D' },  // 선샤인 옐로우
-  { id:'p3', name:'건강',     color:'#43E97B' },  // 민트 팝
-  { id:'p4', name:'일상',     color:'#FF6B9D' },  // 핫 핑크
+  { id:'p1', name:'자산',   color:'#FFD93D' },  // 선샤인 옐로우
+  { id:'p2', name:'관계',   color:'#4FC3F7' },  // 스카이 블루
+  { id:'p3', name:'건강',   color:'#43E97B' },  // 민트 팝
+  { id:'p4', name:'경험',   color:'#FF6B9D' },  // 핫 핑크
+  { id:'p5', name:'커리어', color:'#7C83FD' },  // 페리윙클
+  { id:'p6', name:'성장',   color:'#C77DFF' },  // 바이올렛
+  { id:'p7', name:'회사',   color:'#FFA07A' },  // 살몬
+  { id:'p8', name:'일상',   color:'#A8EDEA' },  // 아이스 민트
 ];
 let tlCatChildren = [
-  { id:'c1', parentId:'p1', name:'미팅',      color:'#4FC3F7' },  // 스카이 블루
-  { id:'c2', parentId:'p1', name:'집중 작업', color:'#C77DFF' },  // 바이올렛
-  { id:'c3', parentId:'p2', name:'독서',      color:'#FDDB92' },  // 피치 옐로우
-  { id:'c4', parentId:'p2', name:'영어',      color:'#6BCB77' },  // 프레시 그린
+  { id:'c1', parentId:'p1', name:'투자',      color:'#FDDB92' },  // 피치 옐로우
+  { id:'c2', parentId:'p1', name:'저축',      color:'#FFD93D' },  // 옐로우
+  { id:'c3', parentId:'p2', name:'가족',      color:'#6BCB77' },  // 프레시 그린
+  { id:'c4', parentId:'p2', name:'친구',      color:'#4FC3F7' },  // 스카이 블루
   { id:'c5', parentId:'p3', name:'운동',      color:'#00C9FF' },  // 아쿠아 블루
   { id:'c6', parentId:'p3', name:'식사',      color:'#A8EDEA' },  // 아이스 민트
-  { id:'c7', parentId:'p4', name:'휴식',      color:'#F8A5C2' },  // 소프트 핑크
-  { id:'c8', parentId:'p4', name:'이동',      color:'#FFA07A' },  // 살몬
+  { id:'c7', parentId:'p4', name:'여행',      color:'#FF6B9D' },  // 핫 핑크
+  { id:'c8', parentId:'p4', name:'취미',      color:'#F8A5C2' },  // 소프트 핑크
+  { id:'c9', parentId:'p5', name:'미팅',      color:'#7C83FD' },  // 페리윙클
+  { id:'c10',parentId:'p5', name:'집중 작업', color:'#C77DFF' },  // 바이올렛
+  { id:'c11',parentId:'p6', name:'독서',      color:'#FDDB92' },  // 피치 옐로우
+  { id:'c12',parentId:'p6', name:'공부',      color:'#6BCB77' },  // 프레시 그린
+  { id:'c13',parentId:'p7', name:'회의',      color:'#FFA07A' },  // 살몬
+  { id:'c14',parentId:'p7', name:'업무',      color:'#FF8C42' },  // 오렌지
+  { id:'c15',parentId:'p8', name:'휴식',      color:'#A8EDEA' },  // 아이스 민트
+  { id:'c16',parentId:'p8', name:'이동',      color:'#F8A5C2' },  // 소프트 핑크
 ];
 let tlNextParentId = 10, tlNextChildId = 20;
 
@@ -3687,8 +3718,8 @@ function retroQuarterlyRenderForm() {
 }
 
 
-const RETRO_MONTHLY_CATS   = ['자산','관계','건강','취미','커리'];
-const RETRO_MONTHLY_EMOJIS = { '자산':'💰','관계':'🤝','건강':'💪','취미':'🎨','커리':'🚀' };
+const RETRO_MONTHLY_CATS   = ['자산','관계','건강','경험','커리어','성장'];
+const RETRO_MONTHLY_EMOJIS = { '자산':'💰','관계':'🤝','건강':'💪','경험':'🌟','커리어':'🚀','성장':'🌱' };
 let retroMonthlyData = {};
 
 function retroMonthlyKey() { return retroKey('monthly', retroCursor['monthly']); }
