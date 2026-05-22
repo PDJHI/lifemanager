@@ -3062,7 +3062,8 @@ function renderRetroWeeklyDashboard() {
   if (routineCatEl) {
     const CAT_COLORS = { '자산':'#FFD93D','관계':'#4FC3F7','건강':'#43E97B','경험':'#FF6B9D','커리어':'#7C83FD','성장':'#C77DFF' };
     // 이번 주 해당 요일들의 루틴 데이터 집계
-    const cats = [...new Set(routines.map(r => r.cat))];
+    const TIME_SLOTS = ['공통','아침','오전','오후','저녁'];
+    const cats = [...new Set(routines.map(r => r.cat))].filter(c => !TIME_SLOTS.includes(c));
     if (!cats.length) {
       routineCatEl.innerHTML = '<div style="font-size:12px;color:var(--text-tertiary);">루틴 데이터가 없습니다.</div>';
     } else {
