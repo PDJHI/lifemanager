@@ -3191,18 +3191,13 @@ function renderRoutineCatSummary(elId, allDays) {
   const el = document.getElementById(elId);
   if (!el) return;
   const CAT_COLORS = { '자산':'#FFD93D','관계':'#4FC3F7','건강':'#43E97B','경험':'#FF6B9D','커리어':'#7C83FD','성장':'#C77DFF' };
-  const TIME_SLOTS = ['공통','아침','오전','오후','저녁'];
-  const cats = [...new Set(routines.map(r => r.cat))].filter(c => !TIME_SLOTS.includes(c));
-  if (!cats.length) {
-    el.innerHTML = '<div style="font-size:12px;color:var(--text-tertiary);">루틴 데이터가 없습니다.</div>';
-    return;
-  }
+  const cats = ['자산','관계','건강','경험','커리어','성장'];
   el.innerHTML = cats.map(cat => {
     const catRoutines = routines.filter(r => r.cat === cat);
     let scheduled = 0, achieved = 0;
     allDays.forEach(d => {
       const dt = d.dt;
-      if (dt > new Date()) return;
+      if (!dt || dt > new Date()) return;
       const dowIdx = dt.getDay() === 0 ? 6 : dt.getDay() - 1;
       const dayRoutines = catRoutines.filter(r => r.days.includes(dowIdx));
       if (!dayRoutines.length) return;
@@ -3210,14 +3205,14 @@ function renderRoutineCatSummary(elId, allDays) {
       if (d.routineAchieved) achieved++;
     });
     const pct = scheduled ? Math.round(achieved / scheduled * 100) : 0;
-    const color = CAT_COLORS[cat] || '#aaa';
+    const color = CAT_COLORS[cat];
     return `<div style="display:flex;align-items:center;gap:10px;">
       <div style="width:8px;height:8px;border-radius:2px;background:${color};flex-shrink:0;"></div>
       <div style="font-size:12px;color:var(--text-primary);min-width:52px;">${cat}</div>
       <div style="flex:1;height:5px;background:var(--bg-secondary);border-radius:3px;overflow:hidden;">
         <div style="height:100%;width:${pct}%;background:${color};border-radius:3px;transition:width 0.4s;"></div>
       </div>
-      <div style="font-size:11px;color:var(--text-tertiary);min-width:54px;text-align:right;">${achieved}/${scheduled}일 · ${pct}%</div>
+      <div style="font-size:11px;color:var(--text-tertiary);min-width:54px;text-align:right;">${scheduled?achieved+'/'+scheduled+'일 · '+pct+'%':'기록 없음'}</div>
     </div>`;
   }).join('');
 }
@@ -4455,7 +4450,6 @@ function dataImport() {
         if (p.wfStore)            Object.assign(wfStore, p.wfStore);
         if (p.tlCatParents)       tlCatParents       = p.tlCatParents;
         if (p.tlCatChildren)      tlCatChildren      = p.tlCatChildren;
-        tlMigrateCategories();
         if (p.tlLogs)             Object.assign(tlLogs, p.tlLogs);
         if (p.diaryStore)         Object.assign(diaryStore, p.diaryStore);
         if (p.retroWeeklyContent) Object.assign(retroWeeklyContent, p.retroWeeklyContent);
@@ -4511,29 +4505,7 @@ function lsSave() {
 }
 
 
-// ── 카테고리 마이그레이션 ────────────────────────────────────────
-const TL_DEFAULT_PARENTS = [
-  { id:'p1', name:'자산',   color:'#FFD93D' },
-  { id:'p2', name:'관계',   color:'#4FC3F7' },
-  { id:'p3', name:'건강',   color:'#43E97B' },
-  { id:'p4', name:'경험',   color:'#FF6B9D' },
-  { id:'p5', name:'커리어', color:'#7C83FD' },
-  { id:'p6', name:'성장',   color:'#C77DFF' },
-  { id:'p7', name:'회사',   color:'#FFA07A' },
-  { id:'p8', name:'일상',   color:'#A8EDEA' },
-];
-const TL_DEFAULT_IDS = TL_DEFAULT_PARENTS.map(p => p.id);
-function tlMigrateCategories() {
-  // 저장된 대분류가 새 구조와 다르면 새 구조로 교체 (소분류/기록은 유지)
-  const currentIds = tlCatParents.map(p => p.id).sort().join(',');
-  const defaultIds = TL_DEFAULT_IDS.slice().sort().join(',');
-  if (currentIds !== defaultIds) {
-    tlCatParents = TL_DEFAULT_PARENTS.map(p => {
-      const existing = tlCatParents.find(e => e.id === p.id);
-      return existing ? { ...p, color: existing.color } : p;
-    });
-  }
-}
+
 // ── 루틴 카테고리 마이그레이션 ─────────────────────────────────
 function migrateRoutineCategories() {
   const TIME_SLOTS = ['아침','오전','오후','저녁'];
@@ -4559,7 +4531,6 @@ function lsLoad() {
     if (p.wfStore)            Object.assign(wfStore, p.wfStore);
     if (p.tlCatParents)       tlCatParents       = p.tlCatParents;
     if (p.tlCatChildren)      tlCatChildren      = p.tlCatChildren;
-    tlMigrateCategories();
     if (p.tlLogs)             Object.assign(tlLogs, p.tlLogs);
     if (p.diaryStore)         Object.assign(diaryStore, p.diaryStore);
     if (p.retroWeeklyContent) Object.assign(retroWeeklyContent, p.retroWeeklyContent);
