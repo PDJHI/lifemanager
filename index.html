@@ -915,6 +915,11 @@
 
           <div class="grid-4" id="retro-monthly-summary"></div>
           <div class="card">
+            <div class="card-title" style="margin-bottom:16px;"><i class="ti ti-checkbox"></i>루틴 월간 요약</div>
+            <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em;">카테고리별 달성 현황</div>
+            <div id="retro-monthly-routine-cat" style="display:flex;flex-direction:column;gap:7px;"></div>
+          </div>
+          <div class="card">
             <div class="card-title" style="margin-bottom:12px;"><i class="ti ti-clock"></i>시간 가계부 월간 요약</div>
             <div id="retro-monthly-time-cats"></div>
           </div>
@@ -955,6 +960,11 @@
           </div>
           <div class="grid-4" id="retro-quarterly-summary"></div>
           <div class="card">
+            <div class="card-title" style="margin-bottom:16px;"><i class="ti ti-checkbox"></i>루틴 분기 요약</div>
+            <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em;">카테고리별 달성 현황</div>
+            <div id="retro-quarterly-routine-cat" style="display:flex;flex-direction:column;gap:7px;"></div>
+          </div>
+          <div class="card">
             <div class="card-title" style="margin-bottom:12px;"><i class="ti ti-clock"></i>시간 가계부 분기 요약</div>
             <div id="retro-quarterly-time-cats"></div>
           </div>
@@ -994,6 +1004,11 @@
             <div style="font-size:13px;font-weight:600;color:var(--text-primary);" id="retro-yearly-decade"></div>
           </div>
           <div class="grid-4" id="retro-yearly-summary"></div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:16px;"><i class="ti ti-checkbox"></i>루틴 연간 요약</div>
+            <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em;">카테고리별 달성 현황</div>
+            <div id="retro-yearly-routine-cat" style="display:flex;flex-direction:column;gap:7px;"></div>
+          </div>
           <div class="card">
             <div class="card-title" style="margin-bottom:12px;"><i class="ti ti-clock"></i>시간 가계부 연간 요약</div>
             <div id="retro-yearly-time-cats"></div>
@@ -3170,6 +3185,43 @@ function renderRetroWeeklyDashboard() {
 
 function retroWeekNav_legacy(dir) { retroNav('weekly', dir); }
 
+
+// ── 루틴 카테고리별 달성 현황 렌더 (월간/분기/연간 공용) ──────────
+function renderRoutineCatSummary(elId, allDays) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const CAT_COLORS = { '자산':'#FFD93D','관계':'#4FC3F7','건강':'#43E97B','경험':'#FF6B9D','커리어':'#7C83FD','성장':'#C77DFF' };
+  const TIME_SLOTS = ['공통','아침','오전','오후','저녁'];
+  const cats = [...new Set(routines.map(r => r.cat))].filter(c => !TIME_SLOTS.includes(c));
+  if (!cats.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text-tertiary);">루틴 데이터가 없습니다.</div>';
+    return;
+  }
+  el.innerHTML = cats.map(cat => {
+    const catRoutines = routines.filter(r => r.cat === cat);
+    let scheduled = 0, achieved = 0;
+    allDays.forEach(d => {
+      const dt = d.dt;
+      if (dt > new Date()) return;
+      const dowIdx = dt.getDay() === 0 ? 6 : dt.getDay() - 1;
+      const dayRoutines = catRoutines.filter(r => r.days.includes(dowIdx));
+      if (!dayRoutines.length) return;
+      scheduled++;
+      if (d.routineAchieved) achieved++;
+    });
+    const pct = scheduled ? Math.round(achieved / scheduled * 100) : 0;
+    const color = CAT_COLORS[cat] || '#aaa';
+    return `<div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:8px;height:8px;border-radius:2px;background:${color};flex-shrink:0;"></div>
+      <div style="font-size:12px;color:var(--text-primary);min-width:52px;">${cat}</div>
+      <div style="flex:1;height:5px;background:var(--bg-secondary);border-radius:3px;overflow:hidden;">
+        <div style="height:100%;width:${pct}%;background:${color};border-radius:3px;transition:width 0.4s;"></div>
+      </div>
+      <div style="font-size:11px;color:var(--text-tertiary);min-width:54px;text-align:right;">${achieved}/${scheduled}일 · ${pct}%</div>
+    </div>`;
+  }).join('');
+}
+
 // ── 월간 회고 대시보드 ────────────────────────────────────────────
 let retroMonthlyContent = {};
 
@@ -3237,6 +3289,9 @@ function renderRetroMonthlyDashboard() {
         <div style="height:3px;background:var(--bg-secondary);border-radius:2px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:${avgScore!=='-'?Math.round(parseFloat(avgScore)/10*100):0}%;background:${avgHue?`hsl(${avgHue},60%,55%)`:'var(--border)'};border-radius:2px;"></div></div>
       </div>`;
   }
+
+  // ── 루틴 카테고리별 달성 현황 ─────────────────────────────────
+  renderRoutineCatSummary('retro-monthly-routine-cat', allDays);
 
   // ── 주차별 루틴·투두 ───────────────────────────────────────────
   const weeksEl = document.getElementById('retro-monthly-weeks');
@@ -3448,6 +3503,8 @@ function renderRetroYearlyDashboard() {
       <div class="card" style="text-align:center;"><div style="font-size:22px;font-weight:700;color:var(--text-primary);">${diaryDays}<span style="font-size:13px;color:var(--text-tertiary);">/${total}일</span></div><div style="font-size:11px;color:var(--text-tertiary);margin-top:4px;">일기 작성일</div><div style="height:3px;background:var(--bg-secondary);border-radius:2px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:${Math.round(diaryDays/total*100)}%;background:#FF6B9D;border-radius:2px;"></div></div></div>
       <div class="card" style="text-align:center;"><div style="font-size:22px;font-weight:700;${avgHue?`color:hsl(${avgHue},50%,40%)`:'color:var(--text-tertiary)'};">${avgScore}${avgScore!=='-'?'<span style="font-size:13px;color:var(--text-tertiary);"> / 10</span>':''}</div><div style="font-size:11px;color:var(--text-tertiary);margin-top:4px;">하루 평균 점수</div><div style="height:3px;background:var(--bg-secondary);border-radius:2px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:${avgScore!=='-'?Math.round(parseFloat(avgScore)/10*100):0}%;background:${avgHue?`hsl(${avgHue},60%,55%)`:'var(--border)'};border-radius:2px;"></div></div></div>`;
   }
+
+  renderRoutineCatSummary('retro-yearly-routine-cat', allDays);
 
   const timeCatEl = document.getElementById('retro-yearly-time-cats');
   if (timeCatEl) {
@@ -3669,6 +3726,8 @@ function renderRetroQuarterlyDashboard() {
         <div style="height:3px;background:var(--bg-secondary);border-radius:2px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:${avgScore!=='-'?Math.round(parseFloat(avgScore)/10*100):0}%;background:${avgHue?`hsl(${avgHue},60%,55%)`:'var(--border)'};border-radius:2px;"></div></div>
       </div>`;
   }
+
+  renderRoutineCatSummary('retro-quarterly-routine-cat', allDays);
 
   // 시간 가계부 분기 요약
   const timeCatEl = document.getElementById('retro-quarterly-time-cats');
