@@ -4390,6 +4390,7 @@ function dataImport() {
         const p = JSON.parse(ev.target.result);
         if (!confirm(`백업 파일 (${p._exported?.slice(0,10) || '날짜 없음'}) 을 불러올까요?\n현재 데이터가 덮어써집니다.`)) return;
         if (p.routines)           routines           = p.routines;
+        migrateRoutineCategories();
         if (p.todoStore)          Object.assign(todoStore, p.todoStore);
         if (p.streakData)         Object.assign(streakData, p.streakData);
         if (p.wfStore)            Object.assign(wfStore, p.wfStore);
@@ -4474,12 +4475,26 @@ function tlMigrateCategories() {
     });
   }
 }
+// ── 루틴 카테고리 마이그레이션 ─────────────────────────────────
+function migrateRoutineCategories() {
+  const TIME_SLOTS = ['아침','오전','오후','저녁'];
+  const CAT_MAP = { '아침':'성장', '오전':'성장', '오후':'성장', '저녁':'성장' };
+  routines = routines.map(r => {
+    if (TIME_SLOTS.includes(r.cat)) {
+      return { ...r, timeSlot: r.timeSlot || r.cat, cat: CAT_MAP[r.cat] || '성장' };
+    }
+    if (!r.timeSlot) return { ...r, timeSlot: '공통' };
+    return r;
+  });
+}
+
 function lsLoad() {
   try {
     const raw = localStorage.getItem(LS_KEY);
     if (!raw) return;
     const p = JSON.parse(raw);
     if (p.routines)           routines           = p.routines;
+    migrateRoutineCategories();
     if (p.todoStore)          Object.assign(todoStore, p.todoStore);
     if (p.streakData)         Object.assign(streakData, p.streakData);
     if (p.wfStore)            Object.assign(wfStore, p.wfStore);
