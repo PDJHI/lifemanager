@@ -2089,7 +2089,7 @@ function renderTimelog() {
       const pDel = document.createElement('i');
       pDel.className = 'ti ti-trash';
       pDel.style.cssText = 'font-size:12px;color:var(--text-tertiary);cursor:pointer;';
-      pDel.onclick = () => { if(confirm(`"${p.name}" 대분류와 소분류를 모두 삭제할까요?`)) { tlCatParents = tlCatParents.filter(x=>x.id!==p.id); tlCatChildren = tlCatChildren.filter(x=>x.parentId!==p.id); renderTimelog(); } };
+      pDel.onclick = () => { if(confirm(`"${p.name}" 대분류와 소분류를 모두 삭제할까요?`)) { tlCatParents = tlCatParents.filter(x=>x.id!==p.id); tlCatChildren = tlCatChildren.filter(x=>x.parentId!==p.id); renderTimelog(); lsAutoSave(); } };
 
       pRow.appendChild(pDot); pRow.appendChild(pName); pRow.appendChild(pDel);
       treeEl.appendChild(pRow);
@@ -2112,7 +2112,7 @@ function renderTimelog() {
         const cDel = document.createElement('i');
         cDel.className = 'ti ti-x';
         cDel.style.cssText = 'font-size:10px;color:var(--text-tertiary);cursor:pointer;';
-        cDel.onclick = () => { tlCatChildren = tlCatChildren.filter(x=>x.id!==c.id); renderTimelog(); };
+        cDel.onclick = () => { tlCatChildren = tlCatChildren.filter(x=>x.id!==c.id); renderTimelog(); lsAutoSave(); };
 
         cRow.appendChild(cDot); cRow.appendChild(cName); cRow.appendChild(cDel);
         treeEl.appendChild(cRow);
@@ -2512,7 +2512,7 @@ function tlPickColor(obj, type) {
   picker.style.cssText = 'position:fixed;opacity:0;width:0;height:0;';
   document.body.appendChild(picker);
   picker.click();
-  picker.oninput = () => { obj.color = picker.value; renderTimelog(); };
+  picker.oninput = () => { obj.color = picker.value; renderTimelog(); lsAutoSave(); };
   picker.onblur  = () => { try { document.body.removeChild(picker); } catch(e){} };
 }
 
@@ -2523,6 +2523,7 @@ function tlAddParent() {
   tlCatParents.push({ id:'p'+tlNextParentId++, name, color: tlSelectedParentColor });
   document.getElementById('tl-new-parent-name').value = '';
   renderTimelog();
+  lsAutoSave();
 }
 
 // 소분류 추가
@@ -2533,6 +2534,7 @@ function tlAddChild() {
   tlCatChildren.push({ id:'c'+tlNextChildId++, parentId, name, color: tlSelectedChildColor });
   document.getElementById('tl-new-child-name').value = '';
   renderTimelog();
+  lsAutoSave();
 }
 
 // 구 함수 호환성 유지
@@ -2541,6 +2543,7 @@ function tlDeleteCat(id) {
   tlCatParents  = tlCatParents.filter(p=>p.id!==id);
   tlCatChildren = tlCatChildren.filter(c=>c.id!==id);
   renderTimelog();
+  lsAutoSave();
 }
 
 function tlJumpDay(i) {
