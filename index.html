@@ -4329,6 +4329,7 @@ function dataImport() {
         if (p.retroStore)         Object.assign(retroStore, p.retroStore);
         if (p.yearlyGoalsData)    Object.assign(yearlyGoalsData, p.yearlyGoalsData);
         lsSave();
+        if (window._fbUid && window._fsSave) window._fsSave(window._fbUid);
         // 화면 재렌더링
         syncTodayRoutines();
         renderWeeklyTodo();
@@ -4416,16 +4417,21 @@ updateStats();
 // 로그인/로그아웃 버튼 바인딩 (즉시)
 document.getElementById('btn-google-login').addEventListener('click', function() {
   var errEl = document.getElementById('login-error');
-  if (!window._fbSignIn) {
-    errEl.textContent = 'Firebase 로딩 중... 잠시 후 다시 클릭해주세요.';
-    errEl.style.display = 'block';
-    return;
-  }
   errEl.style.display = 'none';
-  window._fbSignIn().catch(function(e) {
-    errEl.textContent = '로그인 오류: ' + e.message;
-    errEl.style.display = 'block';
-  });
+  if (window._fbSignIn) {
+    window._fbSignIn().catch(function(e) {
+      errEl.textContent = '로그인 오류: ' + e.message;
+      errEl.style.display = 'block';
+    });
+  } else {
+    // Firebase 로딩 완료 후 자동 실행
+    window.addEventListener('firebase-ready', function() {
+      window._fbSignIn().catch(function(e) {
+        errEl.textContent = '로그인 오류: ' + e.message;
+        errEl.style.display = 'block';
+      });
+    }, { once: true });
+  }
 });
 
 document.getElementById('logout-btn').addEventListener('click', function() {
@@ -4436,6 +4442,7 @@ document.getElementById('logout-btn').addEventListener('click', function() {
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
   import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
   const app  = initializeApp({
     apiKey:            "AIzaSyDZ7EjyhLwti7Sp1kZJtlWIR0diiXkR7Uk",
@@ -4446,9 +4453,72 @@ document.getElementById('logout-btn').addEventListener('click', function() {
     appId:             "1:211027712302:web:ba3e22741fbd569e9ac2bf"
   });
 
-  const auth     = getAuth(app);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
   const provider = new GoogleAuthProvider();
   const ALLOWED  = 'jihoe1125@gmail.com';
+
+  // ── Firestore 저장/불러오기 ──────────────────────────────────
+  async function fsSave(uid) {
+    try {
+      const payload = {
+        routines,
+        todoStore,
+        streakData,
+        wfStore,
+        tlCatParents,
+        tlCatChildren,
+        tlLogs,
+        diaryStore,
+        retroWeeklyContent,
+        retroMonthlyData,
+        retroQuarterlyData,
+        retroYearlyData,
+        retroStore,
+        yearlyGoalsData,
+        _savedAt: Date.now()
+      };
+      await setDoc(doc(db, 'users', uid, 'data', 'main'), payload);
+      // localStorage도 동기화
+      lsSave();
+    } catch(e) {
+      console.warn('Firestore 저장 실패, localStorage만 저장:', e);
+      lsSave();
+    }
+  }
+
+  async function fsLoad(uid) {
+    try {
+      const snap = await getDoc(doc(db, 'users', uid, 'data', 'main'));
+      if (snap.exists()) {
+        const p = snap.data();
+        if (p.routines)           routines           = p.routines;
+        if (p.todoStore)          Object.assign(todoStore, p.todoStore);
+        if (p.streakData)         Object.assign(streakData, p.streakData);
+        if (p.wfStore)            Object.assign(wfStore, p.wfStore);
+        if (p.tlCatParents)       tlCatParents       = p.tlCatParents;
+        if (p.tlCatChildren)      tlCatChildren      = p.tlCatChildren;
+        if (p.tlLogs)             Object.assign(tlLogs, p.tlLogs);
+        if (p.diaryStore)         Object.assign(diaryStore, p.diaryStore);
+        if (p.retroWeeklyContent) Object.assign(retroWeeklyContent, p.retroWeeklyContent);
+        if (p.retroMonthlyData)   Object.assign(retroMonthlyData, p.retroMonthlyData);
+        if (p.retroQuarterlyData) Object.assign(retroQuarterlyData, p.retroQuarterlyData);
+        if (p.retroYearlyData)    Object.assign(retroYearlyData, p.retroYearlyData);
+        if (p.retroStore)         Object.assign(retroStore, p.retroStore);
+        if (p.yearlyGoalsData)    Object.assign(yearlyGoalsData, p.yearlyGoalsData);
+        // localStorage도 동기화
+        lsSave();
+        return true;
+      }
+    } catch(e) {
+      console.warn('Firestore 불러오기 실패, localStorage 사용:', e);
+    }
+    return false;
+  }
+
+  // 앱 전체에서 사용할 수 있도록 등록
+  window._fsSave = fsSave;
+  window._fsLoad = fsLoad;
 
   window._fbSignIn = async () => {
     try {
@@ -4465,13 +4535,54 @@ document.getElementById('logout-btn').addEventListener('click', function() {
 
   getRedirectResult(auth).catch(e => console.warn('redirect result', e));
 
-  onAuthStateChanged(auth, user => {
+  onAuthStateChanged(auth, async user => {
     const screen = document.getElementById('login-screen');
     const appEl  = document.getElementById('app');
+
     if (user && user.email === ALLOWED) {
+      window._fbUid = user.uid;
+
+      // Firestore에서 데이터 불러오기 → 화면 렌더
+      const loaded = await fsLoad(user.uid);
+      if (loaded) {
+        // Firestore 데이터로 화면 재렌더
+        syncTodayRoutines();
+        renderWeeklyTodo();
+        renderWf();
+        renderStreakWeek();
+        renderTimelog();
+        diaryShowList();
+        retroSwitch('weekly');
+        renderRetroWeeklyDashboard();
+        updateStats();
+      }
+
+      // lsAutoSave 오버라이드 → Firestore도 함께 저장
+      window.lsAutoSave = function() {
+        clearTimeout(window._lsTimer);
+        window._lsTimer = setTimeout(() => {
+          if (window._fbUid) fsSave(window._fbUid);
+          else lsSave();
+        }, 1500);
+      };
+
       screen.style.display = 'none';
       appEl.style.display  = '';
+
+      // 10분 비활동 시 자동 로그아웃
+      const IDLE_MS = 10 * 60 * 1000;
+      let idleTimer = null;
+      function resetIdle() {
+        clearTimeout(idleTimer);
+        idleTimer = setTimeout(() => signOut(auth), IDLE_MS);
+      }
+      ['mousemove','mousedown','keydown','touchstart','scroll','click'].forEach(evt => {
+        document.addEventListener(evt, resetIdle, { passive: true });
+      });
+      resetIdle();
+
     } else {
+      window._fbUid = null;
       screen.style.display = 'flex';
       appEl.style.display  = 'none';
     }
