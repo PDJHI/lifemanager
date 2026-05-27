@@ -571,7 +571,60 @@
             <div id="weekly-todo-days-row2" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-items:start;"></div>
           </div>
         </div>
-      </div>
+
+        <!-- ⑤ 오늘의 욕망 & BUY — 2열 그리드 -->
+        <div class="grid-2">
+
+          <!-- 오늘의 욕망 카드 -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="ti ti-sparkles"></i>오늘의 욕망</div>
+              <button class="add-btn" onclick="desireOpenAdd()"><i class="ti ti-plus"></i> 추가</button>
+            </div>
+            <div id="desire-list" style="display:flex;flex-direction:column;gap:2px;"></div>
+            <div id="desire-empty" style="display:none;padding:18px 0;text-align:center;color:var(--text-tertiary);font-size:13px;">
+              <i class="ti ti-mood-smile-dizzy" style="font-size:26px;display:block;margin-bottom:6px;"></i>
+              오늘 원하는 것을 적어보세요
+            </div>
+          </div>
+
+          <!-- BUY 카드 -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="ti ti-shopping-bag"></i>BUY</div>
+              <button class="add-btn" onclick="buyOpenAdd('need')"><i class="ti ti-plus"></i> 추가</button>
+            </div>
+
+            <!-- 사야할 것 섹션 -->
+            <div style="margin-bottom:12px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;display:flex;align-items:center;gap:5px;">
+                  <i class="ti ti-alert-circle" style="font-size:13px;color:#EF9F27;"></i>사야할 것
+                </div>
+                <button class="add-btn" style="padding:2px 7px;font-size:11px;" onclick="buyOpenAdd('need')"><i class="ti ti-plus"></i></button>
+              </div>
+              <div id="buy-need-list" style="display:flex;flex-direction:column;gap:2px;"></div>
+              <div id="buy-need-empty" style="display:none;font-size:12px;color:var(--text-tertiary);padding:6px 0 2px;">아직 없어요</div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <!-- 사고싶은 것 섹션 -->
+            <div style="margin-top:10px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;display:flex;align-items:center;gap:5px;">
+                  <i class="ti ti-heart" style="font-size:13px;color:#E24B4A;"></i>사고싶은 것
+                </div>
+                <button class="add-btn" style="padding:2px 7px;font-size:11px;" onclick="buyOpenAdd('want')"><i class="ti ti-plus"></i></button>
+              </div>
+              <div id="buy-want-list" style="display:flex;flex-direction:column;gap:2px;"></div>
+              <div id="buy-want-empty" style="display:none;font-size:12px;color:var(--text-tertiary);padding:6px 0 2px;">아직 없어요</div>
+            </div>
+          </div>
+
+        </div><!-- /grid-2 욕망&BUY -->
+
+      </div><!-- /view-today -->
 
       <div id="view-manage" style="display:none;flex-direction:column;gap:16px;">
 
@@ -1684,6 +1737,155 @@ function saveRoutine(){
 }
 
 document.getElementById('routine-modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+// ── 오늘의 욕망 데이터 ─────────────────────────────────────────
+// { [dateKey]: [{id, text, done}] }
+let desireStore = {};
+let desireNextId = 1;
+
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+}
+
+function desireGetToday() {
+  const k = todayKey();
+  if (!desireStore[k]) desireStore[k] = [];
+  return desireStore[k];
+}
+
+function renderDesire() {
+  const items = desireGetToday();
+  const list  = document.getElementById('desire-list');
+  const empty = document.getElementById('desire-empty');
+  list.innerHTML = '';
+  if (!items.length) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  items.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'routine-item' + (item.done ? ' done' : '');
+    row.style.cssText = 'padding:7px 4px;';
+
+    const chk = document.createElement('div');
+    chk.className = 'check-box';
+    chk.innerHTML = '<i class="ti ti-check"></i>';
+    chk.onclick = e => { e.stopPropagation(); item.done = !item.done; renderDesire(); lsAutoSave(); };
+
+    const txt = document.createElement('span');
+    txt.className = 'routine-name';
+    txt.style.fontSize = '13px';
+    txt.textContent = item.text;
+    txt.title = '더블클릭 편집';
+    txt.ondblclick = e => {
+      e.stopPropagation();
+      txt.contentEditable = 'true';
+      txt.style.outline = '1px solid var(--border-md)';
+      txt.style.borderRadius = '3px';
+      txt.style.padding = '0 3px';
+      txt.focus();
+      const range = document.createRange(); range.selectNodeContents(txt);
+      window.getSelection().removeAllRanges(); window.getSelection().addRange(range);
+    };
+    txt.onblur = () => {
+      const val = txt.textContent.trim();
+      if (val) item.text = val; else txt.textContent = item.text;
+      txt.contentEditable = 'false'; txt.style.outline = ''; txt.style.padding = '';
+      lsAutoSave();
+    };
+    txt.onkeydown = e => {
+      if (e.key === 'Enter') { e.preventDefault(); txt.blur(); }
+      if (e.key === 'Escape') { txt.textContent = item.text; txt.blur(); }
+    };
+
+    const del = document.createElement('i');
+    del.className = 'ti ti-x';
+    del.style.cssText = 'font-size:10px;color:var(--text-tertiary);cursor:pointer;opacity:0;transition:opacity 0.1s;flex-shrink:0;';
+    del.onclick = e => { e.stopPropagation(); const k = todayKey(); desireStore[k] = desireStore[k].filter(x=>x.id!==item.id); renderDesire(); lsAutoSave(); };
+    row.onmouseenter = () => del.style.opacity = '1';
+    row.onmouseleave = () => del.style.opacity = '0';
+
+    row.appendChild(chk); row.appendChild(txt); row.appendChild(del);
+    list.appendChild(row);
+  });
+}
+
+function desireOpenAdd() {
+  const text = prompt('오늘의 욕망을 입력하세요');
+  if (!text || !text.trim()) return;
+  desireGetToday().push({ id: desireNextId++, text: text.trim(), done: false });
+  renderDesire(); lsAutoSave();
+}
+
+// ── BUY 데이터 ─────────────────────────────────────────────────
+// { need: [{id,text,done}], want: [{id,text,done}] }
+let buyStore = { need: [], want: [] };
+let buyNextId = 1;
+
+function renderBuy() {
+  ['need','want'].forEach(type => {
+    const items = buyStore[type];
+    const list  = document.getElementById(`buy-${type}-list`);
+    const empty = document.getElementById(`buy-${type}-empty`);
+    list.innerHTML = '';
+    if (!items.length) { empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+
+    items.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'routine-item' + (item.done ? ' done' : '');
+      row.style.cssText = 'padding:6px 4px;';
+
+      const chk = document.createElement('div');
+      chk.className = 'check-box';
+      chk.innerHTML = '<i class="ti ti-check"></i>';
+      chk.onclick = e => { e.stopPropagation(); item.done = !item.done; renderBuy(); lsAutoSave(); };
+
+      const txt = document.createElement('span');
+      txt.className = 'routine-name';
+      txt.style.fontSize = '13px';
+      txt.textContent = item.text;
+      txt.title = '더블클릭 편집';
+      txt.ondblclick = e => {
+        e.stopPropagation();
+        txt.contentEditable = 'true';
+        txt.style.outline = '1px solid var(--border-md)';
+        txt.style.borderRadius = '3px';
+        txt.style.padding = '0 3px';
+        txt.focus();
+        const range = document.createRange(); range.selectNodeContents(txt);
+        window.getSelection().removeAllRanges(); window.getSelection().addRange(range);
+      };
+      txt.onblur = () => {
+        const val = txt.textContent.trim();
+        if (val) item.text = val; else txt.textContent = item.text;
+        txt.contentEditable = 'false'; txt.style.outline = ''; txt.style.padding = '';
+        lsAutoSave();
+      };
+      txt.onkeydown = e => {
+        if (e.key === 'Enter') { e.preventDefault(); txt.blur(); }
+        if (e.key === 'Escape') { txt.textContent = item.text; txt.blur(); }
+      };
+
+      const del = document.createElement('i');
+      del.className = 'ti ti-x';
+      del.style.cssText = 'font-size:10px;color:var(--text-tertiary);cursor:pointer;opacity:0;transition:opacity 0.1s;flex-shrink:0;';
+      del.onclick = e => { e.stopPropagation(); buyStore[type] = buyStore[type].filter(x=>x.id!==item.id); renderBuy(); lsAutoSave(); };
+      row.onmouseenter = () => del.style.opacity = '1';
+      row.onmouseleave = () => del.style.opacity = '0';
+
+      row.appendChild(chk); row.appendChild(txt); row.appendChild(del);
+      list.appendChild(row);
+    });
+  });
+}
+
+function buyOpenAdd(type) {
+  const label = type === 'need' ? '사야할 것' : '사고싶은 것';
+  const text = prompt(`${label}을 입력하세요`);
+  if (!text || !text.trim()) return;
+  buyStore[type].push({ id: buyNextId++, text: text.trim(), done: false });
+  renderBuy(); lsAutoSave();
+}
 
 // ── Weekly focus: goals & rewards ───────────────────────────────
 // { [weekKey]: { goals: [{id,text,done}], rewards: [{id,text,claimed}] } }
@@ -4575,6 +4777,8 @@ function lsSave() {
       retroYearlyData,
       retroStore,
       yearlyGoalsData,
+      desireStore,
+      buyStore,
     }));
   } catch(e) { console.warn('저장 실패:', e); }
 }
@@ -4628,6 +4832,8 @@ function lsLoad() {
     if (p.retroYearlyData)    Object.assign(retroYearlyData, p.retroYearlyData);
     if (p.retroStore)         Object.assign(retroStore, p.retroStore);
     if (p.yearlyGoalsData)    Object.assign(yearlyGoalsData, p.yearlyGoalsData);
+    if (p.desireStore)        Object.assign(desireStore, p.desireStore);
+    if (p.buyStore)           { if(p.buyStore.need) buyStore.need = p.buyStore.need; if(p.buyStore.want) buyStore.want = p.buyStore.want; }
   } catch(e) { console.warn('불러오기 실패:', e); }
 }
 
@@ -4648,6 +4854,8 @@ diaryShowList();
 retroSwitch('weekly');
 renderRetroWeeklyDashboard();
 updateStats();
+renderDesire();
+renderBuy();
 
 // 로그인/로그아웃 버튼 바인딩 (즉시)
 document.getElementById('btn-google-login').addEventListener('click', function() {
@@ -4713,6 +4921,8 @@ document.getElementById('logout-btn').addEventListener('click', function() {
         retroYearlyData,
         retroStore,
         yearlyGoalsData,
+        desireStore,
+        buyStore,
         _savedAt: Date.now()
       };
       await setDoc(doc(db, 'users', uid, 'data', 'main'), payload);
@@ -4745,6 +4955,8 @@ document.getElementById('logout-btn').addEventListener('click', function() {
         if (p.retroYearlyData)    Object.assign(retroYearlyData, p.retroYearlyData);
         if (p.retroStore)         Object.assign(retroStore, p.retroStore);
         if (p.yearlyGoalsData)    Object.assign(yearlyGoalsData, p.yearlyGoalsData);
+        if (p.desireStore)        Object.assign(desireStore, p.desireStore);
+        if (p.buyStore)           { if(p.buyStore.need) buyStore.need = p.buyStore.need; if(p.buyStore.want) buyStore.want = p.buyStore.want; }
         // localStorage도 동기화
         lsSave();
         return true;
@@ -4794,6 +5006,8 @@ document.getElementById('logout-btn').addEventListener('click', function() {
         retroSwitch('weekly');
         renderRetroWeeklyDashboard();
         updateStats();
+        renderDesire();
+        renderBuy();
       }
 
       // lsAutoSave 오버라이드 → Firestore도 함께 저장
