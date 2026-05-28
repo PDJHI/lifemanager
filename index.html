@@ -717,13 +717,13 @@
           </div>
         </div>
 
-        <!-- ⑤ 오늘의 욕망 & BUY — 2열 그리드 -->
+        <!-- ⑤ 오늘의 부처 & BUY — 2열 그리드 -->
         <div class="grid-2">
 
-          <!-- 오늘의 욕망 카드 -->
+          <!-- 오늘의 부처 카드 -->
           <div class="card">
             <div class="card-header">
-              <div class="card-title"><i class="ti ti-sparkles"></i>오늘의 욕망</div>
+              <div class="card-title"><i class="ti ti-sparkles"></i>오늘의 부처</div>
               <button class="add-btn" onclick="desireOpenAdd()"><i class="ti ti-plus"></i> 추가</button>
             </div>
             <div id="desire-list" style="display:flex;flex-direction:column;gap:2px;"></div>
@@ -1109,6 +1109,20 @@
                 <div id="retro-wf-rewards"></div>
               </div>
             </div>
+            <!-- 이번 주 오늘의 부처 -->
+            <div class="card">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                <div class="card-title"><i class="ti ti-sparkles"></i>이번 주 오늘의 부처</div>
+              </div>
+              <div id="retro-desire-week"></div>
+            </div>
+            <!-- 이번 주 BUY -->
+            <div class="card">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                <div class="card-title"><i class="ti ti-shopping-bag"></i>BUY</div>
+              </div>
+              <div id="retro-buy-week"></div>
+            </div>
           </div>
 
           <!-- 회고 작성 -->
@@ -1165,6 +1179,16 @@
             <div class="card-title" style="margin-bottom:12px;"><i class="ti ti-gift"></i>목표 달성 시 보상</div>
             <div id="retro-monthly-reward-grid"></div>
           </div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title" style="margin-bottom:12px;"><i class="ti ti-sparkles"></i>이달의 부처</div>
+              <div id="retro-monthly-desire"></div>
+            </div>
+            <div class="card">
+              <div class="card-title" style="margin-bottom:12px;"><i class="ti ti-shopping-bag"></i>BUY</div>
+              <div id="retro-monthly-buy"></div>
+            </div>
+          </div>
           <div class="card" style="padding:14px 16px;">
             <div class="card-title" style="margin-bottom:16px;"><i class="ti ti-pencil"></i>월간 회고 작성</div>
             <div style="display:flex;flex-direction:column;gap:24px;" id="retro-monthly-cat-form"></div>
@@ -1212,6 +1236,16 @@
             <div class="card-title" style="margin-bottom:10px;"><i class="ti ti-gift"></i>목표 달성 시 보상</div>
             <div id="retro-quarterly-reward-grid"></div>
           </div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title" style="margin-bottom:12px;"><i class="ti ti-sparkles"></i>이번 분기 부처</div>
+              <div id="retro-quarterly-desire"></div>
+            </div>
+            <div class="card">
+              <div class="card-title" style="margin-bottom:12px;"><i class="ti ti-shopping-bag"></i>BUY</div>
+              <div id="retro-quarterly-buy"></div>
+            </div>
+          </div>
           <div class="card" style="padding:14px 16px;">
             <div class="card-title" style="margin-bottom:16px;"><i class="ti ti-pencil"></i>분기 회고 작성</div>
             <div style="display:flex;flex-direction:column;gap:24px;" id="retro-quarterly-cat-form"></div>
@@ -1258,6 +1292,16 @@
           <div class="card" style="padding:14px 16px;">
             <div class="card-title" style="margin-bottom:10px;"><i class="ti ti-gift"></i>목표 달성 시 보상</div>
             <div id="retro-yearly-reward-grid"></div>
+          </div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title" style="margin-bottom:12px;"><i class="ti ti-sparkles"></i>올해의 부처</div>
+              <div id="retro-yearly-desire"></div>
+            </div>
+            <div class="card">
+              <div class="card-title" style="margin-bottom:12px;"><i class="ti ti-shopping-bag"></i>BUY</div>
+              <div id="retro-yearly-buy"></div>
+            </div>
           </div>
           <div class="card" style="padding:14px 16px;">
             <div class="card-title" style="margin-bottom:16px;"><i class="ti ti-pencil"></i>연간 회고 작성</div>
@@ -1475,9 +1519,21 @@ const PRIO_LABEL = { high:'높음', mid:'중간', low:'낮음' };
 
 // ── Nav ─────────────────────────────────────────────────────────
 const navItems = document.querySelectorAll('.nav-item[data-page]');
+
+// 모든 nav 활성 상태 초기화 (서브메뉴 부모 포함)
+function clearAllNavActive() {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.nav-sub-item').forEach(n => n.classList.remove('active'));
+}
+
 navItems.forEach(item => {
   item.addEventListener('click', () => {
-    navItems.forEach(n => n.classList.remove('active'));
+    clearAllNavActive();
+    // 서브메뉴 닫기
+    document.getElementById('nav-goals-sub').classList.remove('open');
+    document.getElementById('nav-goals-parent').classList.remove('open');
+    document.getElementById('nav-retro-sub').classList.remove('open');
+    document.getElementById('nav-retro-parent').classList.remove('open');
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     item.classList.add('active');
     document.getElementById('page-' + item.dataset.page).classList.add('active');
@@ -1899,7 +1955,7 @@ function saveRoutine(){
 
 document.getElementById('routine-modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
 
-// ── 오늘의 욕망 데이터 ─────────────────────────────────────────
+// ── 오늘의 부처 데이터 ─────────────────────────────────────────
 // { [dateKey]: [{id, text, done}] }
 let desireStore = {};
 let desireNextId = 1;
@@ -1971,7 +2027,7 @@ function renderDesire() {
 }
 
 function desireOpenAdd() {
-  const text = prompt('오늘의 욕망을 입력하세요');
+  const text = prompt('오늘의 부처를 입력하세요');
   if (!text || !text.trim()) return;
   desireGetToday().push({ id: desireNextId++, text: text.trim(), done: false });
   renderDesire(); lsAutoSave();
@@ -3372,6 +3428,8 @@ function retroShowDetail(type) {
       return { dt, dk, routineAchieved };
     });
     renderRoutineCatSummary('retro-monthly-routine-cat', allDays);
+    renderRetroDesire('retro-monthly-desire', collectDaysInMonth(d.getFullYear(), d.getMonth()));
+    renderRetroBuy('retro-monthly-buy');
   }
   if (type === 'quarterly') {
     const d = retroCursor['quarterly'];
@@ -3386,6 +3444,10 @@ function retroShowDetail(type) {
       }
     }
     renderRoutineCatSummary('retro-quarterly-routine-cat', allDays);
+    const qDays = [];
+    for (let m = qStart; m < qStart+3; m++) qDays.push(...collectDaysInMonth(year, m));
+    renderRetroDesire('retro-quarterly-desire', qDays);
+    renderRetroBuy('retro-quarterly-buy');
   }
   if (type === 'yearly') {
     const year = retroCursor['yearly'].getFullYear();
@@ -3399,7 +3461,90 @@ function retroShowDetail(type) {
       }
     }
     renderRoutineCatSummary('retro-yearly-routine-cat', allDays);
+    const yDays = [];
+    for (let m = 0; m < 12; m++) yDays.push(...collectDaysInMonth(year, m));
+    renderRetroDesire('retro-yearly-desire', yDays);
+    renderRetroBuy('retro-yearly-buy');
   }
+}
+
+// 특정 월의 날짜 키 배열 반환
+function collectDaysInMonth(year, month) {
+  const dim = new Date(year, month+1, 0).getDate();
+  return Array.from({length: dim}, (_,i) => {
+    const dt = new Date(year, month, i+1);
+    return { dt, dk: `${dt.getFullYear()}-${dt.getMonth()+1}-${dt.getDate()}` };
+  });
+}
+
+// 오늘의 부처 기간 요약 렌더 (날짜별 집계)
+function renderRetroDesire(elId, days) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const MONTH_KR = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  // 날짜별로 항목이 있는 것만 월별 그룹핑
+  const byMonth = {};
+  days.forEach(({dt, dk}) => {
+    const items = desireStore[dk];
+    if (!items || !items.length) return;
+    const mk = dt.getMonth();
+    if (!byMonth[mk]) byMonth[mk] = [];
+    byMonth[mk].push({ date: `${dt.getMonth()+1}/${dt.getDate()}`, items });
+  });
+  const months = Object.keys(byMonth).map(Number).sort((a,b)=>a-b);
+  if (!months.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text-tertiary);padding:4px 0;">기록된 오늘의 부처가 없어요</div>';
+    return;
+  }
+  el.innerHTML = months.map(m => `
+    <div style="margin-bottom:12px;">
+      ${months.length > 1 ? `<div style="font-size:10px;font-weight:700;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:6px;">${MONTH_KR[m]}</div>` : ''}
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        ${byMonth[m].map(d => `
+          <div>
+            <div style="font-size:10px;color:var(--text-tertiary);margin-bottom:3px;">${d.date}</div>
+            ${d.items.map(item => `
+              <div style="display:flex;align-items:center;gap:7px;padding:4px 8px;border-radius:var(--radius-md);background:var(--bg-secondary);border:0.5px solid var(--border);margin-bottom:2px;">
+                <div style="width:13px;height:13px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${item.done?'var(--text-primary)':'transparent'};border:1.5px solid var(--border-md);">
+                  ${item.done?'<i class="ti ti-check" style="font-size:8px;color:var(--bg-primary)"></i>':''}
+                </div>
+                <span style="font-size:12px;color:var(--text-primary);${item.done?'text-decoration:line-through;color:var(--text-tertiary);':''}">${item.text}</span>
+              </div>`).join('')}
+          </div>`).join('')}
+    </div>
+  </div>`).join('');
+}
+
+// BUY 렌더 (공통 목록)
+function renderRetroBuy(elId) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const needItems = buyStore.need || [];
+  const wantItems = buyStore.want || [];
+  if (!needItems.length && !wantItems.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text-tertiary);padding:4px 0;">등록된 BUY 항목이 없어요</div>';
+    return;
+  }
+  const renderSec = (label, icon, color, items) => {
+    if (!items.length) return '';
+    return `
+      <div style="margin-bottom:10px;">
+        <div style="font-size:10px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:5px;display:flex;align-items:center;gap:4px;">
+          <i class="${icon}" style="font-size:12px;color:${color};"></i>${label}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px;">
+          ${items.map(item => `
+            <div style="display:flex;align-items:center;gap:7px;padding:4px 8px;border-radius:var(--radius-md);background:var(--bg-secondary);border:0.5px solid var(--border);">
+              <div style="width:13px;height:13px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${item.done?'var(--text-primary)':'transparent'};border:1.5px solid var(--border-md);">
+                ${item.done?'<i class="ti ti-check" style="font-size:8px;color:var(--bg-primary)"></i>':''}
+              </div>
+              <span style="font-size:12px;color:var(--text-primary);${item.done?'text-decoration:line-through;color:var(--text-tertiary);':''}">${item.text}</span>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  };
+  el.innerHTML = renderSec('사야할 것','ti ti-alert-circle','#EF9F27',needItems) +
+                 renderSec('사고싶은 것','ti ti-heart','#E24B4A',wantItems);
 }
 
 function retroOpenNew(type) {
@@ -3616,7 +3761,70 @@ function renderRetroWeeklyDashboard() {
     }
   }
 
-  // ── 주간 목표 & 보상 (wfStore 연동) ─────────────────────────
+  // ── 이번 주 오늘의 부처 ──────────────────────────────────────
+  const desireWeekEl = document.getElementById('retro-desire-week');
+  if (desireWeekEl) {
+    const DAY_KR = ['월','화','수','목','금','토','일'];
+    // 이번 주 7일치 desireStore 수집
+    const weekEntries = Array.from({length:7}, (_,i) => {
+      const dt = addDays(mon, i);
+      const dk = `${dt.getFullYear()}-${dt.getMonth()+1}-${dt.getDate()}`;
+      const items = desireStore[dk] || [];
+      return { label: DAY_KR[i], date: `${dt.getMonth()+1}/${dt.getDate()}`, items };
+    }).filter(d => d.items.length > 0);
+
+    if (!weekEntries.length) {
+      desireWeekEl.innerHTML = '<div style="font-size:12px;color:var(--text-tertiary);padding:4px 0;">이번 주 기록된 오늘의 부처가 없어요</div>';
+    } else {
+      desireWeekEl.innerHTML = `<div style="display:flex;flex-direction:column;gap:10px;">` +
+        weekEntries.map(d => `
+          <div>
+            <div style="font-size:10px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:5px;">${d.label} · ${d.date}</div>
+            <div style="display:flex;flex-direction:column;gap:3px;">
+              ${d.items.map(item => `
+                <div style="display:flex;align-items:center;gap:7px;padding:4px 8px;border-radius:var(--radius-md);background:var(--bg-secondary);border:0.5px solid var(--border);">
+                  <div style="width:13px;height:13px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${item.done?'var(--text-primary)':'transparent'};border:1.5px solid var(--border-md);">
+                    ${item.done?'<i class="ti ti-check" style="font-size:8px;color:var(--bg-primary)"></i>':''}
+                  </div>
+                  <span style="font-size:12px;color:var(--text-primary);${item.done?'text-decoration:line-through;color:var(--text-tertiary);':''}">${item.text}</span>
+                </div>`).join('')}
+            </div>
+          </div>`).join('') + `</div>`;
+    }
+  }
+
+  // ── 이번 주 BUY ──────────────────────────────────────────────
+  const buyWeekEl = document.getElementById('retro-buy-week');
+  if (buyWeekEl) {
+    const needItems = buyStore.need || [];
+    const wantItems = buyStore.want || [];
+    if (!needItems.length && !wantItems.length) {
+      buyWeekEl.innerHTML = '<div style="font-size:12px;color:var(--text-tertiary);padding:4px 0;">등록된 BUY 항목이 없어요</div>';
+    } else {
+      const renderBuySection = (label, icon, color, items) => {
+        if (!items.length) return '';
+        return `
+          <div style="margin-bottom:10px;">
+            <div style="font-size:10px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:5px;display:flex;align-items:center;gap:4px;">
+              <i class="${icon}" style="font-size:12px;color:${color};"></i>${label}
+            </div>
+            <div style="display:flex;flex-direction:column;gap:3px;">
+              ${items.map(item => `
+                <div style="display:flex;align-items:center;gap:7px;padding:4px 8px;border-radius:var(--radius-md);background:var(--bg-secondary);border:0.5px solid var(--border);">
+                  <div style="width:13px;height:13px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${item.done?'var(--text-primary)':'transparent'};border:1.5px solid var(--border-md);">
+                    ${item.done?'<i class="ti ti-check" style="font-size:8px;color:var(--bg-primary)"></i>':''}
+                  </div>
+                  <span style="font-size:12px;color:var(--text-primary);${item.done?'text-decoration:line-through;color:var(--text-tertiary);':''}">${item.text}</span>
+                </div>`).join('')}
+            </div>
+          </div>`;
+      };
+      buyWeekEl.innerHTML =
+        renderBuySection('사야할 것', 'ti ti-alert-circle', '#EF9F27', needItems) +
+        renderBuySection('사고싶은 것', 'ti ti-heart', '#E24B4A', wantItems);
+    }
+  }
+
   const wfGoalsEl   = document.getElementById('retro-wf-goals');
   const wfRewardsEl = document.getElementById('retro-wf-rewards');
   const wfData      = wfStore[wKey];
@@ -3678,7 +3886,11 @@ function retroToggleWfReward(wKey, id) {
 // 주간 회고 → 루틴&투두 이동 (해당 주로 wfViewMonday 동기화)
 function retroGoToWf() {
   wfViewMonday = new Date(retroWeekMonday);
-  document.querySelectorAll('.nav-item[data-page]').forEach(n => n.classList.remove('active'));
+  clearAllNavActive();
+  document.getElementById('nav-goals-sub').classList.remove('open');
+  document.getElementById('nav-goals-parent').classList.remove('open');
+  document.getElementById('nav-retro-sub').classList.remove('open');
+  document.getElementById('nav-retro-parent').classList.remove('open');
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelector('[data-page="routine"]').classList.add('active');
   document.getElementById('page-routine').classList.add('active');
@@ -5062,7 +5274,9 @@ function toggleGoalsMenu() {
   const isOpen = sub.classList.toggle('open');
   parent.classList.toggle('open', isOpen);
   if (isOpen) {
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    clearAllNavActive();
+    document.getElementById('nav-retro-sub').classList.remove('open');
+    document.getElementById('nav-retro-parent').classList.remove('open');
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById('page-goals').classList.add('active');
     selectGoals('vision');
@@ -5070,9 +5284,9 @@ function toggleGoalsMenu() {
 }
 
 function selectGoals(type) {
+  clearAllNavActive();
   document.querySelectorAll('.nav-sub-item[data-goals]').forEach(el =>
     el.classList.toggle('active', el.dataset.goals === type));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-goals').classList.add('active');
   document.getElementById('goals-view-vision').style.display    = type === 'vision'    ? 'flex' : 'none';
@@ -5106,19 +5320,18 @@ function toggleRetroMenu() {
   const isOpen = sub.classList.toggle('open');
   parent.classList.toggle('open', isOpen);
   if (isOpen) {
-    // 페이지 전환
-    navItems.forEach(n => n.classList.remove('active'));
+    clearAllNavActive();
+    document.getElementById('nav-goals-sub').classList.remove('open');
+    document.getElementById('nav-goals-parent').classList.remove('open');
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById('page-retro').classList.add('active');
   }
 }
 
 function selectRetro(type) {
-  // 서브 메뉴 활성화 표시
-  document.querySelectorAll('.nav-sub-item').forEach(el =>
+  clearAllNavActive();
+  document.querySelectorAll('.nav-sub-item[data-retro]').forEach(el =>
     el.classList.toggle('active', el.dataset.retro === type));
-  // 페이지 전환
-  navItems.forEach(n => n.classList.remove('active'));
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-retro').classList.add('active');
   retroSwitch(type);
