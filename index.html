@@ -639,9 +639,10 @@
       <div class="page-header">
         <div class="page-title">🌿 루틴 & 투두</div>
         <div class="tab-bar">
-          <div class="tab active" id="tab-today" onclick="switchTab('today')">오늘</div>
           <div class="tab" id="tab-lastweek" onclick="switchTab('lastweek')">지난주</div>
-          <div class="tab" id="tab-all" onclick="switchTab('all')" style="padding:4px 14px;"><i class="ti ti-calendar-month" style="font-size:17px;color:var(--text-primary) !important;"></i></div>
+          <div class="tab active" id="tab-today" onclick="switchTab('today')">이번주</div>
+          <div class="tab" id="tab-nextweek" onclick="switchTab('nextweek')">다음주</div>
+          <div class="tab" id="tab-all" onclick="switchTab('all')" style="padding:4px 14px;"><i class="ti ti-calendar-month" style="font-size:19px;color:var(--text-primary) !important;"></i></div>
           <div class="tab" id="tab-manage" onclick="switchTab('manage')">루틴 관리</div>
         </div>
       </div>
@@ -853,6 +854,69 @@
         </div>
 
       </div><!-- /view-lastweek -->
+
+      <!-- ===== 다음주 뷰 ===== -->
+      <div id="view-nextweek" style="display:none;flex-direction:column;gap:16px;">
+        <div class="card">
+          <div style="display:flex;align-items:center;margin-bottom:14px;">
+            <div class="card-title"><i class="ti ti-flag"></i>다음주 목표</div>
+            <span style="font-size:13px;color:var(--text-tertiary);margin-left:10px;" id="nextweek-wf-label"></span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+                <i class="ti ti-target" style="font-size:16px;"></i>목표
+              </div>
+              <div id="nw-goals-list" style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px;"></div>
+              <div style="display:flex;gap:6px;">
+                <input type="text" id="nw-goal-input" placeholder="목표 추가..." onkeydown="if(event.key==='Enter')addNwGoal()"
+                  style="flex:1;font-size:14px;padding:6px 10px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);outline:none;font-family:inherit;">
+                <button onclick="addNwGoal()" style="padding:6px 10px;border-radius:var(--radius-md);border:none;background:var(--text-primary);color:var(--bg-primary);cursor:pointer;font-size:16px;display:flex;align-items:center;"><i class="ti ti-plus"></i></button>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:14px;">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+                  <span style="font-size:15px;">📚</span>이번 주의 책
+                </div>
+                <input type="text" id="nw-book-input" placeholder="읽을 책 제목..."
+                  oninput="nwSaveBook(this.value)"
+                  style="width:100%;font-size:14px;padding:6px 10px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);outline:none;font-family:inherit;box-sizing:border-box;">
+              </div>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+                  <span style="font-size:15px;">✍️</span>이번 주의 필사
+                </div>
+                <input type="text" id="nw-writing-input" placeholder="필사할 책 제목..."
+                  oninput="nwSaveWriting(this.value)"
+                  style="width:100%;font-size:14px;padding:6px 10px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);outline:none;font-family:inherit;box-sizing:border-box;">
+              </div>
+            </div>
+          </div>
+          <div style="padding-top:14px;border-top:0.5px solid var(--border);">
+            <div style="font-size:13px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+              <i class="ti ti-gift" style="font-size:16px;"></i>보상
+            </div>
+            <div id="nw-rewards-list" style="display:flex;flex-direction:row;flex-wrap:wrap;gap:6px;margin-bottom:8px;"></div>
+            <div style="display:flex;gap:6px;">
+              <input type="text" id="nw-reward-input" placeholder="보상 추가..." onkeydown="if(event.key==='Enter')addNwReward()"
+                style="flex:1;font-size:14px;padding:6px 10px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);outline:none;font-family:inherit;">
+              <button onclick="addNwReward()" style="padding:6px 10px;border-radius:var(--radius-md);border:none;background:var(--text-primary);color:var(--bg-primary);cursor:pointer;font-size:16px;display:flex;align-items:center;"><i class="ti ti-plus"></i></button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div class="card-title"><i class="ti ti-list-check"></i>다음주 투두</div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div class="prog-bar" style="width:100px;"><div class="prog-fill" id="nw-todo-prog" style="width:0%"></div></div>
+              <div class="prog-label" id="nw-todo-prog-label" style="min-width:28px;">0%</div>
+            </div>
+          </div>
+          <div id="nw-todo-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-items:start;"></div>
+          <div id="nw-todo-grid2" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-items:start;margin-top:10px;"></div>
+        </div>
+      </div><!-- /view-nextweek -->
 
       <!-- ===== 전체 뷰 (달력) ===== -->
       <div id="view-all" style="display:none;flex-direction:column;gap:16px;">
@@ -1174,27 +1238,29 @@
           <div class="card" style="padding:12px 16px;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
               <div class="card-title"><i class="ti ti-quote"></i>오늘의 확언</div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <button onclick="affmPrev()" class="add-btn" style="padding:3px 7px;"><i class="ti ti-chevron-left"></i></button>
+                <span id="affm-index-label" style="font-size:12px;color:var(--text-tertiary);min-width:36px;text-align:center;"></span>
+                <button onclick="affmNext()" class="add-btn" style="padding:3px 7px;"><i class="ti ti-chevron-right"></i></button>
+                <button onclick="affmAddNew()" class="add-btn"><i class="ti ti-plus"></i> 확언 추가</button>
+              </div>
             </div>
-
             <div style="display:grid;grid-template-columns:1fr 1px 1fr;gap:0 20px;align-items:stretch;">
-
               <!-- 왼쪽: 확언 원문 -->
               <div style="display:flex;flex-direction:column;gap:6px;">
-
-                <!-- 보기 모드 (더블클릭 편집) -->
                 <div id="affm-display" ondblclick="affmStartEdit()"
                   style="font-size:17px;color:var(--text-primary);line-height:1.9;min-height:48px;white-space:pre-wrap;cursor:text;"></div>
-
-                <!-- 편집 모드 (숨김) -->
                 <textarea id="diary-affirmation" rows="3" placeholder="확언을 입력하세요. 예) 나는 오늘도 성장하고 있다."
                   onblur="affmSaveEdit()"
                   onkeydown="if(event.key==='Escape'){affmSaveEdit();}"
                   style="display:none;width:100%;resize:none;border:0.5px solid var(--border-md);border-radius:var(--radius-md);outline:none;background:var(--bg-secondary);font-size:17px;color:var(--text-primary);font-family:inherit;line-height:1.8;padding:8px 10px;"></textarea>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <span style="font-size:12px;color:var(--text-tertiary);">더블클릭하여 편집</span>
+                  <button id="affm-delete-btn" onclick="affmDeleteCurrent()" style="font-size:12px;padding:2px 7px;border-radius:6px;border:0.5px solid var(--border-md);background:transparent;color:var(--text-tertiary);cursor:pointer;font-family:inherit;display:none;">삭제</button>
+                </div>
               </div>
-
               <!-- 구분선 -->
               <div style="background:var(--border);width:1px;align-self:stretch;"></div>
-
               <!-- 오른쪽: 따라 쓰기 -->
               <div style="display:flex;flex-direction:column;gap:6px;">
                 <textarea id="affm-typing" rows="3" placeholder="왼쪽 확언을 따라 타이핑해보세요..."
@@ -1778,11 +1844,10 @@ todoStore[thisKey] = [
 
 // ── Current week being viewed ───────────────────────────────────
 let viewMonday = getMonday(now);
-
 // ── Manage-tab state ────────────────────────────────────────────
 let selectedDay = 0;
 let editingId = null;
-const CAT_TAG = { '자산':'tag-amber', '관계':'tag-blue', '건강':'tag-green', '경험':'tag-coral', '커리어':'tag-purple', '성장':'tag-green', '아침':'tag-green', '오전':'tag-blue', '오후':'tag-amber', '저녁':'tag-purple' };
+const CAT_TAG = { '자산':'tag-amber', '관계':'tag-blue', '가족':'tag-pink', '건강':'tag-green', '경험':'tag-coral', '커리어':'tag-purple', '성장':'tag-green', '아침':'tag-green', '오전':'tag-blue', '오후':'tag-amber', '저녁':'tag-purple' };
 const TIME_TAG = { '공통':'tag-blue', '아침':'tag-green', '오전':'tag-blue', '오후':'tag-amber', '저녁':'tag-purple' };
 const PRIO_COLOR = { high:'#E24B4A', mid:'#EF9F27', low:'#639922' };
 const PRIO_LABEL = { high:'높음', mid:'중간', low:'낮음' };
@@ -2045,7 +2110,15 @@ function routineCheckKey() {
 
 function syncTodayRoutines() {
   const todayIdx = now.getDay()===0?6:now.getDay()-1;
-  const todayRoutines = routines.filter(r=>r.days.includes(todayIdx));
+  const TIME_ORDER = { '아침':0, '오전':1, '오후':2, '저녁':3, '공통':4 };
+  const CAT_ORDER  = { '건강':0, '자산':1, '관계':2, '가족':3, '경험':4, '커리어':5, '성장':6 };
+  const todayRoutines = routines
+    .filter(r => r.days.includes(todayIdx))
+    .sort((a,b) => {
+      const ts = (TIME_ORDER[a.timeSlot||'공통']??4) - (TIME_ORDER[b.timeSlot||'공통']??4);
+      if (ts !== 0) return ts;
+      return (CAT_ORDER[a.cat]??9) - (CAT_ORDER[b.cat]??9);
+    });
   const listEl = document.getElementById('routine-list');
   const ck = routineCheckKey();
   if (!routineCheckData[ck]) routineCheckData[ck] = {};
@@ -2098,7 +2171,7 @@ function updateStats() {
 
 // ── Tab switch ───────────────────────────────────────────────────
 function switchTab(t) {
-  ['today','lastweek','all','manage'].forEach(id => {
+  ['today','lastweek','nextweek','all','manage'].forEach(id => {
     const tab = document.getElementById(`tab-${id}`);
     if (tab) tab.classList.toggle('active', t===id);
     const view = document.getElementById(`view-${id}`);
@@ -2111,6 +2184,7 @@ function switchTab(t) {
   if (t==='manage')   renderDayList();
   if (t==='lastweek') renderLastWeek();
   if (t==='all')      renderAllCal();
+  if (t==='nextweek') renderNextWeek();
 }
 
 // ── 전체 달력 ────────────────────────────────────────────────────
@@ -2900,8 +2974,102 @@ function deleteWfItem(e, k, type, id) {
   renderWf();
 }
 
+function deleteWfItem(e, k, type, id) {
+  e.stopPropagation();
+  if (!wfStore[k]) return;
+  wfStore[k][type] = wfStore[k][type].filter(x => x.id !== id);
+  // 즉시 저장
+  lsSave();
+  if (window._fbUid) fsSave(window._fbUid).catch(()=>{});
+  renderWf();
+}
+
 function wfPrevWeek() { wfViewMonday = addDays(wfViewMonday, -7); retroWeekMonday = new Date(wfViewMonday); renderWf(); }
 function wfNextWeek() { wfViewMonday = addDays(wfViewMonday,  7); retroWeekMonday = new Date(wfViewMonday); renderWf(); }
+
+// ── 다음주 목표/투두 ──────────────────────────────────────────────
+function nwMonday() { return addDays(getMonday(now), 7); }
+function nwSaveBook(val)    { const d = wfGetOrCreate(nwMonday()); d.book = val; lsAutoSave(); }
+function nwSaveWriting(val) { const d = wfGetOrCreate(nwMonday()); d.writing = val; lsAutoSave(); }
+function addNwGoal() {
+  const inp = document.getElementById('nw-goal-input');
+  const text = inp.value.trim(); if (!text) return;
+  wfGetOrCreate(nwMonday()).goals.push({ id: wfNextId++, text, done: false });
+  inp.value = ''; renderNextWeek(); lsAutoSave();
+}
+function addNwReward() {
+  const inp = document.getElementById('nw-reward-input');
+  const text = inp.value.trim(); if (!text) return;
+  wfGetOrCreate(nwMonday()).rewards.push({ id: wfNextId++, text, claimed: false });
+  inp.value = ''; renderNextWeek(); lsAutoSave();
+}
+function renderNextWeek() {
+  const mon = nwMonday();
+  const sun = addDays(mon, 6);
+  const k   = wfKey(mon);
+  const d   = wfGetOrCreate(mon);
+  document.getElementById('nextweek-wf-label').textContent = `${formatDate(mon)} ~ ${formatDate(sun)}`;
+  const KR = ['월','화','수','목','금','토','일'];
+  // 목표
+  const gl = document.getElementById('nw-goals-list');
+  gl.innerHTML = '';
+  if (!d.goals.length) {
+    gl.innerHTML = '<div style="font-size:14px;color:var(--text-tertiary);">목표를 추가해보세요</div>';
+  } else {
+    d.goals.forEach(g => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg-secondary);margin-bottom:4px;' + (g.done?'opacity:0.55;':'');
+      const chk = document.createElement('div');
+      chk.style.cssText = `width:14px;height:14px;border-radius:50%;flex-shrink:0;border:1.5px solid var(--border-md);background:${g.done?'var(--text-primary)':'transparent'};display:flex;align-items:center;justify-content:center;cursor:pointer;`;
+      chk.innerHTML = g.done ? '<i class="ti ti-check" style="font-size:9px;color:var(--bg-primary)"></i>' : '';
+      chk.onclick = () => { g.done=!g.done; lsAutoSave(); renderNextWeek(); };
+      const txt = document.createElement('span');
+      txt.style.cssText = `flex:1;font-size:14px;${g.done?'text-decoration:line-through;color:var(--text-tertiary);':''}`;
+      txt.textContent = g.text;
+      const del = document.createElement('i');
+      del.className='ti ti-x'; del.style.cssText='font-size:12px;color:var(--text-tertiary);cursor:pointer;';
+      del.onclick = e => { e.stopPropagation(); d.goals=d.goals.filter(x=>x.id!==g.id); lsSave(); if(window._fbUid) fsSave(window._fbUid).catch(()=>{}); renderNextWeek(); };
+      row.appendChild(chk); row.appendChild(txt); row.appendChild(del); gl.appendChild(row);
+    });
+  }
+  // 보상
+  const rl = document.getElementById('nw-rewards-list');
+  rl.innerHTML = '';
+  d.rewards.forEach(r => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:inline-flex;align-items:center;gap:8px;padding:5px 10px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg-secondary);cursor:pointer;margin-right:6px;margin-bottom:6px;' + (r.claimed?'opacity:0.55;':'');
+    const icon = document.createElement('span'); icon.textContent = r.claimed?'🎁':'🎀';
+    const txt  = document.createElement('span'); txt.style.cssText=`font-size:14px;${r.claimed?'text-decoration:line-through;color:var(--text-tertiary);':''}`; txt.textContent=r.text;
+    const del  = document.createElement('i'); del.className='ti ti-x'; del.style.cssText='font-size:12px;color:var(--text-tertiary);cursor:pointer;';
+    del.onclick = e => { e.stopPropagation(); d.rewards=d.rewards.filter(x=>x.id!==r.id); lsSave(); if(window._fbUid) fsSave(window._fbUid).catch(()=>{}); renderNextWeek(); };
+    row.onclick = () => { r.claimed=!r.claimed; lsAutoSave(); renderNextWeek(); };
+    row.appendChild(icon); row.appendChild(txt); row.appendChild(del); rl.appendChild(row);
+  });
+  // 책/필사
+  const bookEl = document.getElementById('nw-book-input');
+  const writingEl = document.getElementById('nw-writing-input');
+  if (bookEl) bookEl.value = d.book || '';
+  if (writingEl) writingEl.value = d.writing || '';
+  // 투두
+  const nwKeys = Array.from({length:7}, (_,i) => {
+    const dt = addDays(mon, i);
+    return { d:dt, key:`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}` };
+  });
+  const allTodos = nwKeys.flatMap(({key}) => todoStore[key]||[]);
+  const doneTodo = allTodos.filter(t=>t.done).length;
+  const pct = allTodos.length ? Math.round(doneTodo/allTodos.length*100) : 0;
+  document.getElementById('nw-todo-prog').style.width = pct+'%';
+  document.getElementById('nw-todo-prog-label').textContent = pct+'%';
+  const renderDay = ({d:dt, key}) => {
+    const items = todoStore[key]||[];
+    return `<div style="border:0.5px solid var(--border);border-radius:var(--radius-md);padding:10px;">
+      <div style="font-size:12px;font-weight:600;color:var(--text-tertiary);margin-bottom:6px;">${KR[dt.getDay()===0?6:dt.getDay()-1]} <span style="font-weight:400;">${dt.getMonth()+1}/${dt.getDate()}</span></div>
+      ${items.length ? items.map(t=>`<div style="display:flex;align-items:center;gap:6px;padding:3px 0;"><div style="width:13px;height:13px;border-radius:3px;flex-shrink:0;background:${t.done?'var(--text-primary)':'transparent'};border:1.5px solid var(--border-md);display:flex;align-items:center;justify-content:center;">${t.done?'<i class="ti ti-check" style="font-size:8px;color:var(--bg-primary)"></i>':''}</div><span style="font-size:12px;${t.done?'text-decoration:line-through;color:var(--text-tertiary);':''}">${t.text}</span></div>`).join('') : '<div style="font-size:12px;color:var(--text-tertiary);">-</div>'}
+    </div>`;
+  };
+  document.getElementById('nw-todo-grid').innerHTML  = nwKeys.slice(0,4).map(renderDay).join('');
+  document.getElementById('nw-todo-grid2').innerHTML = nwKeys.slice(4).map(renderDay).join('');
+}
 
 // ── 팝 파스텔 컬러 팔레트 ──────────────────────────────────────
 const TL_PALETTE = [
@@ -4129,6 +4297,8 @@ function renderDiaryEditor() {
   document.getElementById('diary-weather-error').style.display   = 'none';
   document.getElementById('diary-weather-loading').style.display = '';
   diaryFetchWeather();
+  // 확언 렌더
+  affmRenderCurrent();
   document.getElementById('diary-affirmation').value = data.affirmation;
   // 저장된 내용 줄마다 ▪ 붙이기 (이미 있으면 스킵)
   const rawContent = data.content || '';
@@ -4223,7 +4393,65 @@ function affmRenderDisplay() {
   }
 }
 
+// ── 확언 저장소 ─────────────────────────────────────────────────
+// affirmationStore: [{ id, text }]
+let affirmationStore = [];
+let affirmationIdx   = 0;
+let affNextId = 1;
+
+function affmRenderCurrent() {
+  const disp = document.getElementById('affm-display');
+  const ta   = document.getElementById('diary-affirmation');
+  const label = document.getElementById('affm-index-label');
+  const delBtn = document.getElementById('affm-delete-btn');
+  if (!disp) return;
+  ta.style.display = 'none';
+  disp.style.display = '';
+  if (!affirmationStore.length) {
+    disp.innerHTML = '<span style="color:var(--text-tertiary);font-size:16px;">확언을 추가해보세요</span>';
+    if (label) label.textContent = '0/0';
+    if (delBtn) delBtn.style.display = 'none';
+    ta.value = '';
+    return;
+  }
+  affirmationIdx = Math.max(0, Math.min(affirmationIdx, affirmationStore.length-1));
+  const cur = affirmationStore[affirmationIdx];
+  disp.innerHTML = `<span style="color:var(--text-primary);">${cur.text.replace(/\n/g,'<br>')}</span>`;
+  ta.value = cur.text;
+  if (label) label.textContent = `${affirmationIdx+1}/${affirmationStore.length}`;
+  if (delBtn) delBtn.style.display = '';
+  affmReset();
+}
+
+function affmNext() {
+  if (!affirmationStore.length) return;
+  affirmationIdx = (affirmationIdx + 1) % affirmationStore.length;
+  affmRenderCurrent();
+}
+function affmPrev() {
+  if (!affirmationStore.length) return;
+  affirmationIdx = (affirmationIdx - 1 + affirmationStore.length) % affirmationStore.length;
+  affmRenderCurrent();
+}
+function affmAddNew() {
+  const text = prompt('새 확언을 입력하세요\n예) 나는 오늘도 성장하고 있다.');
+  if (!text || !text.trim()) return;
+  affirmationStore.push({ id: affNextId++, text: text.trim() });
+  affirmationIdx = affirmationStore.length - 1;
+  affmRenderCurrent();
+  lsAutoSave();
+}
+function affmDeleteCurrent() {
+  if (!affirmationStore.length) return;
+  if (!confirm('이 확언을 삭제할까요?')) return;
+  affirmationStore.splice(affirmationIdx, 1);
+  affirmationIdx = Math.min(affirmationIdx, Math.max(0, affirmationStore.length-1));
+  affmRenderCurrent();
+  lsAutoSave();
+}
+
 function affmStartEdit() {
+  if (!affirmationStore.length) { affmAddNew(); return; }
   const ta = document.getElementById('diary-affirmation');
   document.getElementById('affm-display').style.display = 'none';
   ta.style.display = '';
@@ -4233,24 +4461,25 @@ function affmStartEdit() {
 
 function affmSaveEdit() {
   const ta = document.getElementById('diary-affirmation');
+  const val = ta.value.trim();
   ta.style.display = 'none';
-  document.getElementById('affm-display').style.display = '';
-  affmRenderDisplay();
+  if (val && affirmationStore.length) {
+    affirmationStore[affirmationIdx].text = val;
+    lsAutoSave();
+  }
+  affmRenderCurrent();
   affmReset();
 }
 
 function affmCheckTyping() {
   const stripBullets = s => s.split('\n').map(l => l.replace(/^▪\s*/, '').trim()).filter(Boolean).join('\n');
-  const original = stripBullets(document.getElementById('diary-affirmation').value.trim());
+  const cur = affirmationStore[affirmationIdx];
+  const original = cur ? stripBullets(cur.text) : '';
   const typed    = stripBullets(document.getElementById('affm-typing').value);
   const feedback = document.getElementById('affm-feedback');
   const inp      = document.getElementById('affm-typing');
 
-  if (!original || !typed) {
-    feedback.innerHTML = '';
-    inp.style.borderColor = 'var(--border-md)';
-    return;
-  }
+  if (!original || !typed) { feedback.innerHTML = ''; inp.style.borderColor = 'var(--border-md)'; return; }
 
   if (typed.length < original.length) {
     const correctSoFar = typed === original.slice(0, typed.length);
@@ -4266,8 +4495,12 @@ function affmCheckTyping() {
   const pct = Math.round(match / original.length * 100);
   inp.style.borderColor = pct === 100 ? '#4CAF82' : '#F6A623';
   const emoji = pct === 100 ? '🎉' : pct >= 80 ? '👍' : '💪';
-  feedback.innerHTML = `<span style="font-weight:600;color:var(--text-primary);">${emoji} ${pct}% 일치</span>
+  feedback.innerHTML = `<span style="font-weight:600;">${emoji} ${pct}% 일치</span>
     <span style="color:var(--text-tertiary);margin-left:6px;">${pct===100?'완벽해요!':'조금 더 연습해보세요.'}</span>`;
+  // 완벽 일치 시 자동으로 다음 확언으로
+  if (pct === 100 && affirmationStore.length > 1) {
+    setTimeout(() => { affmNext(); document.getElementById('affm-typing').focus(); }, 800);
+  }
 }
 
 function affmReset() {
@@ -4277,6 +4510,8 @@ function affmReset() {
   inp.style.borderColor = 'var(--border-md)';
   document.getElementById('affm-feedback').innerHTML = '';
 }
+
+function affmRenderDisplay() { affmRenderCurrent(); }
 
 
 function diarySetBody(label) {
@@ -4938,29 +5173,34 @@ function renderRetroWeeklyDashboard() {
   const wfData      = wfStore[wKey];
 
   if (wfGoalsEl) {
-    const goals = wfData?.goals || [];
-    if (!goals.length) {
+    const goals   = wfData?.goals   || [];
+    const book    = wfData?.book    || '';
+    const writing = wfData?.writing || '';
+    if (!goals.length && !book && !writing) {
       wfGoalsEl.innerHTML = '<div style="font-size:14px;color:var(--text-tertiary);padding:4px 0;">등록된 목표가 없어요</div>';
     } else {
       const doneCount = goals.filter(g => g.done).length;
-      const pct = Math.round(doneCount / goals.length * 100);
-      wfGoalsEl.innerHTML = `
+      const pct = goals.length ? Math.round(doneCount / goals.length * 100) : 0;
+      wfGoalsEl.innerHTML = (goals.length ? `
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
           <div style="flex:1;height:5px;background:var(--bg-secondary);border-radius:3px;overflow:hidden;">
-            <div style="height:100%;width:${pct}%;background:#43E97B;border-radius:3px;transition:width 0.4s;"></div>
+            <div style="height:100%;width:${pct}%;background:#43E97B;border-radius:3px;"></div>
           </div>
-          <span style="font-size:13px;color:var(--text-tertiary);min-width:48px;text-align:right;">${doneCount}/${goals.length} · ${pct}%</span>
-        </div>` +
+          <span style="font-size:13px;color:var(--text-tertiary);">${doneCount}/${goals.length} · ${pct}%</span>
+        </div>` : '') +
         goals.map(g => `
-        <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg-secondary);margin-bottom:5px;cursor:pointer;transition:opacity 0.15s;${g.done?'opacity:0.55;':''}"
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg-secondary);margin-bottom:5px;cursor:pointer;${g.done?'opacity:0.55;':''}"
           onclick="retroToggleWfGoal('${wKey}', ${g.id})">
-          <div style="width:15px;height:15px;border-radius:50%;border:1.5px solid var(--border-md);flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${g.done?'var(--text-primary)':'transparent'};transition:all 0.15s;">
-            ${g.done ? '<i class="ti ti-check" style="font-size:11px;color:var(--bg-primary)"></i>' : ''}
+          <div style="width:15px;height:15px;border-radius:50%;border:1.5px solid var(--border-md);flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${g.done?'var(--text-primary)':'transparent'};">
+            ${g.done ? '<i class="ti ti-check" style="font-size:9px;color:var(--bg-primary)"></i>' : ''}
           </div>
-          <span style="flex:1;font-size:14px;color:var(--text-primary);${g.done?'text-decoration:line-through;color:var(--text-tertiary);':''}">${g.text}</span>
-        </div>`).join('');
+          <span style="flex:1;font-size:14px;${g.done?'text-decoration:line-through;color:var(--text-tertiary);':''}">${g.text}</span>
+        </div>`).join('') +
+        (book    ? `<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:var(--radius-md);background:var(--bg-secondary);border:0.5px solid var(--border);margin-bottom:5px;"><span style="font-size:14px;">📚</span><span style="font-size:13px;">${book}</span></div>` : '') +
+        (writing ? `<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:var(--radius-md);background:var(--bg-secondary);border:0.5px solid var(--border);"><span style="font-size:14px;">✍️</span><span style="font-size:13px;">${writing}</span></div>` : '');
     }
   }
+
 
   if (wfRewardsEl) {
     const rewards = wfData?.rewards || [];
@@ -6831,6 +7071,7 @@ function lsSave() {
       buyStore,
       qGoalsData,
       mGoalsData,
+      affirmationStore,
     }));
   } catch(e) { console.warn('저장 실패:', e); }
 }
@@ -6892,6 +7133,10 @@ function lsLoad() {
     if (p.buyStore)           { if(p.buyStore.need) buyStore.need = p.buyStore.need; if(p.buyStore.want) buyStore.want = p.buyStore.want; }
     if (p.qGoalsData)         Object.assign(qGoalsData, p.qGoalsData);
     if (p.mGoalsData)         Object.assign(mGoalsData, p.mGoalsData);
+    if (p.affirmationStore && Array.isArray(p.affirmationStore)) {
+      affirmationStore = p.affirmationStore;
+      affirmationIdx = 0;
+    }
   } catch(e) { console.warn('불러오기 실패:', e); }
 }
 
@@ -6985,6 +7230,7 @@ document.getElementById('logout-btn').addEventListener('click', function() {
         buyStore,
         qGoalsData,
         mGoalsData,
+        affirmationStore,
         _savedAt: Date.now()
       };
       await setDoc(doc(db, 'users', uid, 'data', 'main'), payload);
@@ -7022,6 +7268,7 @@ document.getElementById('logout-btn').addEventListener('click', function() {
         if (p.buyStore)           { if(p.buyStore.need) buyStore.need = p.buyStore.need; if(p.buyStore.want) buyStore.want = p.buyStore.want; }
         if (p.qGoalsData)         Object.assign(qGoalsData, p.qGoalsData);
         if (p.mGoalsData)         Object.assign(mGoalsData, p.mGoalsData);
+        if (p.affirmationStore && Array.isArray(p.affirmationStore)) { affirmationStore = p.affirmationStore; affirmationIdx = 0; }
         // localStorage도 동기화
         lsSave();
         return true;
