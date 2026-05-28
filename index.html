@@ -39,8 +39,25 @@
   /* Sidebar */
   #sidebar { width: var(--nav-w); background: var(--bg-primary); border-right: 0.5px solid var(--border); display: flex; flex-direction: column; padding: 20px 0; flex-shrink: 0; height: 100vh; overflow-y: auto; }
   .logo { padding: 0 16px 20px; border-bottom: 0.5px solid var(--border); margin-bottom: 8px; }
-  .logo-title { font-size:17px; font-weight: 600; color: var(--text-primary); letter-spacing: 0.1em; text-transform: uppercase; }
-  .logo-sub { font-size:14px; color: var(--text-tertiary); margin-top: 3px; }
+  .logo-title {
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, #FF6B9D 0%, #C77DFF 40%, #7C83FD 70%, #43E97B 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.1;
+  }
+  .logo-sub {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-tertiary);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
   .nav-section { padding: 8px 0; }
   .nav-label { font-size:13px; font-weight: 600; color: var(--text-tertiary); letter-spacing: 0.12em; text-transform: uppercase; padding: 0 16px 4px; }
   .nav-item { display: flex; align-items: center; gap: 9px; padding: 9px 16px; cursor: pointer; font-size:17px; color: var(--text-secondary); transition: all 0.15s; border-left: 2px solid transparent; user-select: none; }
@@ -230,7 +247,7 @@
   /* 서브 메뉴 */
   .nav-sub { display: none; flex-direction: column; }
   .nav-sub.open { display: flex; }
-  .nav-sub-item { display: flex; align-items: center; gap: 8px; padding: 7px 16px 7px 34px; cursor: pointer; font-size:16px; color: var(--text-tertiary); border-left: 2px solid transparent; transition: all 0.15s; }
+  .nav-sub-item { display: flex; align-items: center; gap: 8px; padding: 7px 16px 7px 34px; cursor: pointer; font-size:13px; color: var(--text-tertiary); border-left: 2px solid transparent; transition: all 0.15s; }
   .nav-sub-item:hover { color: var(--text-primary); background: var(--bg-secondary); }
   .nav-sub-item.active { color: var(--text-primary); font-weight: 600; border-left-color: var(--text-primary); background: var(--bg-secondary); }
   .nav-item-arrow { margin-left: auto; font-size:13px; transition: transform 0.2s; }
@@ -674,18 +691,6 @@
           </div>
         </div>
 
-        <!-- ③ 오늘의 루틴 — full width -->
-        <div class="card">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <div class="card-title"><i class="ti ti-sun"></i>오늘의 루틴</div>
-            <div style="display:flex;align-items:center;gap:8px">
-              <div class="prog-bar" style="width:140px"><div class="prog-fill" id="routine-prog" style="width:0%"></div></div>
-              <div class="prog-label" id="routine-prog-label" style="min-width:28px">0%</div>
-            </div>
-          </div>
-          <div id="routine-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:4px 12px;"></div>
-        </div>
-
         <!-- ③ 주간 루틴 달성 현황 -->
         <div class="card">
           <div class="card-header">
@@ -697,6 +702,18 @@
             </div>
           </div>
           <div id="streak-week-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:4px;"></div>
+        </div>
+
+        <!-- ④ 오늘의 루틴 — full width -->
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div class="card-title"><i class="ti ti-sun"></i>오늘의 루틴</div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="prog-bar" style="width:140px"><div class="prog-fill" id="routine-prog" style="width:0%"></div></div>
+              <div class="prog-label" id="routine-prog-label" style="min-width:28px">0%</div>
+            </div>
+          </div>
+          <div id="routine-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:4px 12px;"></div>
         </div>
 
         <!-- ④ 주간 투두 — full width -->
@@ -890,8 +907,8 @@
           <div style="display:flex;align-items:center;gap:6px;">
             <button class="add-btn" style="padding:3px 7px;" onclick="diaryCalPrev()"><i class="ti ti-chevron-left"></i></button>
             <div style="display:flex;flex-direction:column;align-items:flex-start;min-width:40px;">
-              <span style="font-size:12px;color:var(--text-tertiary);font-weight:400;" id="diary-cal-year"></span>
-              <span style="font-size:24px;font-weight:700;color:var(--text-primary);line-height:1.1;" id="diary-cal-label"></span>
+              <span style="font-size:15px;color:var(--text-tertiary);font-weight:400;" id="diary-cal-year"></span>
+              <span style="font-size:30px;font-weight:700;color:var(--text-primary);line-height:1.1;" id="diary-cal-label"></span>
             </div>
             <div style="display:grid;grid-template-columns:repeat(7,1fr);flex:1;gap:4px;" id="diary-cal-grid"></div>
             <button class="add-btn" style="padding:3px 7px;" onclick="diaryCalNext()"><i class="ti ti-chevron-right"></i></button>
@@ -1007,7 +1024,6 @@
 
               <!-- 왼쪽: 확언 원문 -->
               <div style="display:flex;flex-direction:column;gap:6px;">
-                <div style="font-size:12px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;">나의 확언</div>
 
                 <!-- 보기 모드 (더블클릭 편집) -->
                 <div id="affm-display" ondblclick="affmStartEdit()"
@@ -1025,7 +1041,6 @@
 
               <!-- 오른쪽: 따라 쓰기 -->
               <div style="display:flex;flex-direction:column;gap:6px;">
-                <div style="font-size:12px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;">따라 쓰기</div>
                 <textarea id="affm-typing" rows="3" placeholder="왼쪽 확언을 따라 타이핑해보세요..."
                   oninput="affmCheckTyping()"
                   style="width:100%;resize:none;border:0.5px solid var(--border-md);border-radius:var(--radius-md);outline:none;background:var(--bg-secondary);font-size:17px;color:var(--text-primary);font-family:inherit;line-height:1.8;padding:8px 10px;transition:border-color 0.2s;"></textarea>
@@ -1199,19 +1214,20 @@
                 <div id="retro-wf-rewards"></div>
               </div>
             </div>
-            <!-- 이번 주 오늘의 부처 -->
-            <div class="card">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-                <div class="card-title"><i class="ti ti-sparkles"></i>이번 주 오늘의 부처</div>
+            <!-- 이번 주의 부처 + 주간 Buy 요약 -->
+            <div class="grid-2">
+              <div class="card">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                  <div class="card-title"><i class="ti ti-sparkles"></i>이번 주의 부처</div>
+                </div>
+                <div id="retro-desire-week"></div>
               </div>
-              <div id="retro-desire-week"></div>
-            </div>
-            <!-- 이번 주 BUY -->
-            <div class="card">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-                <div class="card-title"><i class="ti ti-shopping-bag"></i>주간 Buy 요약</div>
+              <div class="card">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                  <div class="card-title"><i class="ti ti-shopping-bag"></i>주간 Buy 요약</div>
+                </div>
+                <div id="retro-buy-week"></div>
               </div>
-              <div id="retro-buy-week"></div>
             </div>
           </div>
 
@@ -4029,7 +4045,7 @@ function renderRetroWeeklyDashboard() {
     }
   }
 
-  // ── 이번 주 오늘의 부처 ──────────────────────────────────────
+  // ── 이번 주의 부처 ──────────────────────────────────────
   const desireWeekEl = document.getElementById('retro-desire-week');
   if (desireWeekEl) {
     const DAY_KR = ['월','화','수','목','금','토','일'];
