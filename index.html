@@ -44,7 +44,10 @@
     font-weight: 800;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--text-primary);
+    background: linear-gradient(135deg, #0077B6 0%, #00B4D8 50%, #90E0EF 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
   .logo-sub {
     font-size: 10px;
@@ -260,8 +263,8 @@
 <div id="login-screen" style="display:flex;position:fixed;inset:0;background:var(--bg-primary);z-index:9999;align-items:center;justify-content:center;">
   <div style="width:100%;max-width:360px;padding:0 24px;text-align:center;">
     <div style="margin-bottom:36px;">
-      <div style="font-size:48px;margin-bottom:12px;">🌿</div>
-      <div style="font-size:15px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-primary);">My Life Project</div>
+      <div style="font-size:48px;margin-bottom:12px;">🌊</div>
+      <div style="font-size:15px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;background:linear-gradient(135deg,#0077B6 0%,#00B4D8 50%,#90E0EF 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">My Life Project</div>
       <div style="font-size:10px;font-weight:400;color:var(--text-tertiary);margin-top:5px;letter-spacing:0.22em;text-transform:uppercase;">Life goes on.</div>
     </div>
     <button id="btn-google-login"
@@ -277,7 +280,7 @@
   <nav id="sidebar">
     <div class="logo" style="display:flex;align-items:center;justify-content:space-between;">
       <div style="cursor:pointer;" onclick="document.querySelector('[data-page=\'dashboard\']').click()">
-        <div style="font-size:22px;margin-bottom:4px;">🌿</div>
+        <div style="font-size:22px;margin-bottom:4px;">🌊</div>
         <div class="logo-title">My Life Project</div>
         <div class="logo-sub">Life goes on.</div>
       </div>
@@ -654,7 +657,7 @@
         <!-- ② 주간 목표 & 보상 -->
         <div class="card" id="weekly-focus-card">
           <div style="display:flex;align-items:center;margin-bottom:14px">
-            <div class="card-title"><i class="ti ti-flag"></i>주간 목표 & 보상</div>
+            <div class="card-title"><i class="ti ti-flag"></i>주간 목표</div>
             <span style="font-size:13px;color:var(--text-tertiary);margin-left:10px;" id="wf-week-label"></span>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
@@ -794,31 +797,40 @@
       <!-- ===== 지난주 뷰 ===== -->
       <div id="view-lastweek" style="display:none;flex-direction:column;gap:16px;">
 
+        <!-- 지난주 목표 (오늘 탭과 동일 구조) -->
+        <div class="card">
+          <div style="display:flex;align-items:center;margin-bottom:14px;">
+            <div class="card-title"><i class="ti ti-flag"></i>지난주 목표</div>
+            <span style="font-size:13px;color:var(--text-tertiary);margin-left:10px;" id="lastweek-label"></span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+                <i class="ti ti-target" style="font-size:16px;"></i>목표
+              </div>
+              <div id="lw-goals-list" style="display:flex;flex-direction:column;gap:4px;"></div>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+                <i class="ti ti-gift" style="font-size:16px;"></i>보상
+              </div>
+              <div id="lw-rewards-list" style="display:flex;flex-direction:column;gap:4px;"></div>
+            </div>
+          </div>
+        </div>
+
         <!-- 루틴 달성 현황 -->
         <div class="card">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
             <div class="card-title"><i class="ti ti-flame"></i>루틴 달성 현황</div>
-            <div style="font-size:13px;color:var(--text-tertiary);" id="lastweek-label"></div>
           </div>
           <div id="lw-streak-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;"></div>
         </div>
 
-        <!-- 일자별 루틴 달성 내역 -->
+        <!-- 루틴 달성 내역 -->
         <div class="card">
-          <div class="card-title" style="margin-bottom:14px;"><i class="ti ti-sun"></i>일자별 루틴 달성 내역</div>
+          <div class="card-title" style="margin-bottom:14px;"><i class="ti ti-sun"></i>루틴 달성 내역</div>
           <div id="lw-routine-daily" style="display:flex;flex-direction:column;gap:12px;"></div>
-        </div>
-
-        <!-- 지난주 목표 & 보상 -->
-        <div class="grid-2">
-          <div class="card">
-            <div class="card-title" style="margin-bottom:12px;"><i class="ti ti-flag"></i>지난주 목표</div>
-            <div id="lw-goals-list" style="display:flex;flex-direction:column;gap:4px;"></div>
-          </div>
-          <div class="card">
-            <div class="card-title" style="margin-bottom:12px;"><i class="ti ti-gift"></i>지난주 보상</div>
-            <div id="lw-rewards-list" style="display:flex;flex-direction:column;gap:4px;"></div>
-          </div>
         </div>
 
         <!-- 지난주 BUY -->
@@ -853,7 +865,7 @@
               <button class="add-btn" style="padding:3px 7px;" onclick="allCalNext()"><i class="ti ti-chevron-right"></i></button>
             </div>
           </div>
-          <div id="all-cal-body" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;"></div>
+          <div id="all-cal-body" style="display:flex;flex-direction:column;gap:24px;"></div>
         </div>
       </div><!-- /view-all -->
 
@@ -1065,7 +1077,7 @@
                 <button class="add-btn" style="padding:3px 7px;" onclick="diaryFullCalNext()"><i class="ti ti-chevron-right"></i></button>
               </div>
             </div>
-            <div id="diary-fullcal-body" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;"></div>
+            <div id="diary-fullcal-body" style="display:flex;flex-direction:column;gap:24px;"></div>
           </div>
         </div>
 
@@ -2187,31 +2199,23 @@ function renderWeekFromMonday(mon) {
   // ── 일자별 루틴 달성 내역 ──────────────────────────────────────
   const dailyEl = document.getElementById('lw-routine-daily');
   if (dailyEl) {
-    dailyEl.innerHTML = Array.from({length:7}, (_,i) => {
-      const d  = addDays(mon, i);
-      const sk = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-      const done = streakData[sk];
-      // 해당 요일에 해당하는 루틴 목록
-      const dayIdx = i; // 0=월 ~ 6=일
-      const dayRoutines = routines.filter(r => r.days.includes(dayIdx));
-      if (!dayRoutines.length) return '';
-      return `<div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-          <div style="font-size:13px;font-weight:700;color:var(--text-primary);">${KR[i]}</div>
-          <div style="font-size:12px;color:var(--text-tertiary);">${d.getMonth()+1}/${d.getDate()}</div>
-          <div style="font-size:11px;padding:1px 7px;border-radius:8px;background:${done?'#43E97B22':'var(--bg-secondary)'};color:${done?'#43E97B':'var(--text-tertiary)'};font-weight:600;">${done?'✓ 달성':'✕ 미달성'}</div>
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:4px 10px;">
-          ${dayRoutines.map(r => {
-            const CAT_TAG = {'건강':'tag-green','자산':'tag-amber','관계':'tag-blue','경험':'tag-pink','커리어':'tag-purple','성장':'tag-teal'};
-            return `<div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary);">
-              <i class="ti ti-circle" style="font-size:8px;color:var(--text-tertiary);flex-shrink:0;"></i>${r.name}
-            </div>`;
-          }).join('')}
-        </div>
-      </div>`;
-    }).filter(Boolean).join('<div style="border-top:0.5px solid var(--border);margin:8px 0;"></div>') ||
-    '<div style="font-size:13px;color:var(--text-tertiary);">루틴 없음</div>';
+    dailyEl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;">` +
+      Array.from({length:7}, (_,i) => {
+        const d  = addDays(mon, i);
+        const sk = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+        const done = streakData[sk];
+        const dayRoutines = routines.filter(r => r.days.includes(i));
+        return `<div style="display:flex;flex-direction:column;gap:4px;">
+          <div style="display:flex;align-items:center;gap:4px;margin-bottom:2px;">
+            <span style="font-size:12px;font-weight:700;color:var(--text-primary);">${KR[i]}</span>
+            <span style="font-size:11px;color:var(--text-tertiary);">${d.getMonth()+1}/${d.getDate()}</span>
+          </div>
+          <div style="width:100%;height:3px;border-radius:2px;background:${done?'#43E97B':'var(--border-md)'};margin-bottom:4px;"></div>
+          ${dayRoutines.length
+            ? dayRoutines.map(r => `<div style="font-size:11px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:2px 0;border-bottom:0.5px solid var(--border);">${r.name}</div>`).join('')
+            : '<div style="font-size:11px;color:var(--text-tertiary);">-</div>'}
+        </div>`;
+      }).join('') + `</div>`;
   }
 
   // ── 지난주 목표 & 보상 (wfStore) ──────────────────────────────
@@ -3205,12 +3209,12 @@ function renderTimelog() {
       // 소분류 뱃지 (대분류와 다를 때)
       if (childCat && childCat.name !== parentCat.name) {
         const subBadge = document.createElement('span');
-        subBadge.style.cssText = `font-size:12px;color:${cat.color};font-weight:600;flex-shrink:0;`;
+        subBadge.style.cssText = `font-size:16px;color:${cat.color};font-weight:600;flex-shrink:0;`;
         subBadge.textContent = cat.name;
         labelRow.appendChild(subBadge);
 
         const sep = document.createElement('span');
-        sep.style.cssText = 'font-size:12px;color:var(--border-md);flex-shrink:0;';
+        sep.style.cssText = 'font-size:16px;color:var(--border-md);flex-shrink:0;';
         sep.textContent = '·';
         labelRow.appendChild(sep);
       }
@@ -4304,10 +4308,13 @@ function diarySave() {
 function diaryDelete() {
   if (!confirm('이 일기를 삭제할까요?')) return;
   delete diaryStore[diaryDateKey(diaryViewDate)];
+  // localStorage 즉시 저장
+  lsSave();
+  // Firestore도 즉시 저장 (await 없이 비동기로 실행, 실패해도 localStorage는 저장됨)
+  if (window._fbUid) {
+    fsSave(window._fbUid).catch(e => console.warn('삭제 저장 실패:', e));
+  }
   diaryShowList();
-  // 즉시 저장 (디바운스 없이)
-  if (window._fbUid) fsSave(window._fbUid);
-  else lsSave();
 }
 
 // ── Calendar — weekly strip ───────────────────────────────────────
@@ -6744,7 +6751,7 @@ function dataImport() {
         if (p.tlNextParentId)     tlNextParentId     = p.tlNextParentId;
         if (p.tlNextChildId)      tlNextChildId      = p.tlNextChildId;
         if (p.tlLogs)             Object.assign(tlLogs, p.tlLogs);
-        if (p.diaryStore)         Object.assign(diaryStore, p.diaryStore);
+        if (p.diaryStore) { Object.keys(diaryStore).forEach(k => delete diaryStore[k]); Object.assign(diaryStore, p.diaryStore); }
         if (p.retroWeeklyContent) Object.assign(retroWeeklyContent, p.retroWeeklyContent);
         if (p.retroMonthlyData)   Object.assign(retroMonthlyData, p.retroMonthlyData);
         if (p.retroQuarterlyData) Object.assign(retroQuarterlyData, p.retroQuarterlyData);
@@ -6846,7 +6853,7 @@ function lsLoad() {
     if (p.tlNextParentId)     tlNextParentId     = p.tlNextParentId;
     if (p.tlNextChildId)      tlNextChildId      = p.tlNextChildId;
     if (p.tlLogs)             Object.assign(tlLogs, p.tlLogs);
-    if (p.diaryStore)         Object.assign(diaryStore, p.diaryStore);
+    if (p.diaryStore) { Object.keys(diaryStore).forEach(k => delete diaryStore[k]); Object.assign(diaryStore, p.diaryStore); }
     if (p.retroWeeklyContent) Object.assign(retroWeeklyContent, p.retroWeeklyContent);
     if (p.retroMonthlyData)   Object.assign(retroMonthlyData, p.retroMonthlyData);
     if (p.retroQuarterlyData) Object.assign(retroQuarterlyData, p.retroQuarterlyData);
@@ -6974,7 +6981,7 @@ document.getElementById('logout-btn').addEventListener('click', function() {
         if (p.tlNextParentId)     tlNextParentId     = p.tlNextParentId;
         if (p.tlNextChildId)      tlNextChildId      = p.tlNextChildId;
         if (p.tlLogs)             Object.assign(tlLogs, p.tlLogs);
-        if (p.diaryStore)         Object.assign(diaryStore, p.diaryStore);
+        if (p.diaryStore) { Object.keys(diaryStore).forEach(k => delete diaryStore[k]); Object.assign(diaryStore, p.diaryStore); }
         if (p.retroWeeklyContent) Object.assign(retroWeeklyContent, p.retroWeeklyContent);
         if (p.retroMonthlyData)   Object.assign(retroMonthlyData, p.retroMonthlyData);
         if (p.retroQuarterlyData) Object.assign(retroQuarterlyData, p.retroQuarterlyData);
