@@ -638,7 +638,7 @@
         <div class="tab-bar">
           <div class="tab active" id="tab-today" onclick="switchTab('today')">오늘</div>
           <div class="tab" id="tab-lastweek" onclick="switchTab('lastweek')">지난주</div>
-          <div class="tab" id="tab-all" onclick="switchTab('all')" style="padding:4px 10px;"><i class="ti ti-calendar-month" style="font-size:20px;color:#7C83FD !important;"></i></div>
+          <div class="tab" id="tab-all" onclick="switchTab('all')" style="padding:4px 14px;"><i class="ti ti-calendar-month" style="font-size:17px;color:var(--text-primary) !important;"></i></div>
           <div class="tab" id="tab-manage" onclick="switchTab('manage')">루틴 관리</div>
         </div>
       </div>
@@ -653,15 +653,9 @@
 
         <!-- ② 주간 목표 & 보상 -->
         <div class="card" id="weekly-focus-card">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-            <div style="display:flex;align-items:center;gap:10px">
-              <div class="card-title"><i class="ti ti-flag"></i>주간 목표 & 보상</div>
-              <span style="font-size:13px;color:var(--text-tertiary)" id="wf-week-label"></span>
-            </div>
-            <div style="display:flex;align-items:center;gap:6px">
-              <button class="add-btn" style="padding:3px 7px" onclick="wfPrevWeek()"><i class="ti ti-chevron-left"></i></button>
-              <button class="add-btn" style="padding:3px 7px" onclick="wfNextWeek()"><i class="ti ti-chevron-right"></i></button>
-            </div>
+          <div style="display:flex;align-items:center;margin-bottom:14px">
+            <div class="card-title"><i class="ti ti-flag"></i>주간 목표 & 보상</div>
+            <span style="font-size:13px;color:var(--text-tertiary);margin-left:10px;" id="wf-week-label"></span>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
             <!-- 주간 목표 -->
@@ -717,11 +711,7 @@
         <div class="card">
           <div class="card-header">
             <div class="card-title"><i class="ti ti-flame"></i>주간 루틴 달성 현황</div>
-            <div style="display:flex;align-items:center;gap:6px;">
-              <button class="add-btn" style="padding:2px 7px;" onclick="streakPrevWeek()"><i class="ti ti-chevron-left"></i></button>
-              <span style="font-size:13px;color:var(--text-secondary);min-width:80px;text-align:center;" id="streak-week-label"></span>
-              <button class="add-btn" style="padding:2px 7px;" onclick="streakNextWeek()"><i class="ti ti-chevron-right"></i></button>
-            </div>
+            <span style="font-size:13px;color:var(--text-secondary);" id="streak-week-label"></span>
           </div>
           <div id="streak-week-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:4px;"></div>
         </div>
@@ -743,9 +733,7 @@
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
             <div class="card-title"><i class="ti ti-list-check"></i>주간 투두</div>
             <div style="display:flex;align-items:center;gap:6px">
-              <button class="add-btn" style="padding:3px 7px" onclick="prevWeek()"><i class="ti ti-chevron-left"></i></button>
-              <span style="font-size:14px;color:var(--text-secondary);min-width:80px;text-align:center" id="week-label"></span>
-              <button class="add-btn" style="padding:3px 7px" onclick="nextWeek()"><i class="ti ti-chevron-right"></i></button>
+              <span style="font-size:14px;color:var(--text-secondary);" id="week-label"></span>
               <div class="prog-bar" style="width:100px"><div class="prog-fill" id="todo-prog" style="width:0%"></div></div>
               <div class="prog-label" id="todo-prog-label" style="min-width:28px">0%</div>
             </div>
@@ -815,6 +803,30 @@
           <div id="lw-streak-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;"></div>
         </div>
 
+        <!-- 일자별 루틴 달성 내역 -->
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;"><i class="ti ti-sun"></i>일자별 루틴 달성 내역</div>
+          <div id="lw-routine-daily" style="display:flex;flex-direction:column;gap:12px;"></div>
+        </div>
+
+        <!-- 지난주 목표 & 보상 -->
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title" style="margin-bottom:12px;"><i class="ti ti-flag"></i>지난주 목표</div>
+            <div id="lw-goals-list" style="display:flex;flex-direction:column;gap:4px;"></div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:12px;"><i class="ti ti-gift"></i>지난주 보상</div>
+            <div id="lw-rewards-list" style="display:flex;flex-direction:column;gap:4px;"></div>
+          </div>
+        </div>
+
+        <!-- 지난주 BUY -->
+        <div class="card">
+          <div class="card-title" style="margin-bottom:12px;"><i class="ti ti-shopping-bag"></i>지난주 Buy</div>
+          <div id="lw-buy-content"></div>
+        </div>
+
         <!-- 주간 투두 -->
         <div class="card">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
@@ -837,22 +849,11 @@
             <div class="card-title"><i class="ti ti-calendar"></i>주간 기록 달력</div>
             <div style="display:flex;align-items:center;gap:6px;">
               <button class="add-btn" style="padding:3px 7px;" onclick="allCalPrev()"><i class="ti ti-chevron-left"></i></button>
-              <span style="font-size:14px;font-weight:600;color:var(--text-primary);min-width:80px;text-align:center;" id="all-cal-label"></span>
+              <span style="font-size:14px;font-weight:600;color:var(--text-primary);" id="all-cal-label"></span>
               <button class="add-btn" style="padding:3px 7px;" onclick="allCalNext()"><i class="ti ti-chevron-right"></i></button>
             </div>
           </div>
-          <!-- 요일 헤더 -->
-          <div style="display:grid;grid-template-columns:80px repeat(7,1fr);gap:4px;margin-bottom:6px;">
-            <div></div>
-            <div style="text-align:center;font-size:12px;font-weight:600;color:var(--text-tertiary);">월</div>
-            <div style="text-align:center;font-size:12px;font-weight:600;color:var(--text-tertiary);">화</div>
-            <div style="text-align:center;font-size:12px;font-weight:600;color:var(--text-tertiary);">수</div>
-            <div style="text-align:center;font-size:12px;font-weight:600;color:var(--text-tertiary);">목</div>
-            <div style="text-align:center;font-size:12px;font-weight:600;color:var(--text-tertiary);">금</div>
-            <div style="text-align:center;font-size:12px;font-weight:600;color:var(--text-tertiary);">토</div>
-            <div style="text-align:center;font-size:12px;font-weight:600;color:var(--text-tertiary);">일</div>
-          </div>
-          <div id="all-cal-body"></div>
+          <div id="all-cal-body" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;"></div>
         </div>
       </div><!-- /view-all -->
 
@@ -1017,7 +1018,7 @@
           <div style="display:flex;align-items:center;gap:8px;">
             <div class="tab-bar" style="margin:0;">
               <div class="tab active" id="diary-tab-list" onclick="diarySwitchTab('list')">목록</div>
-              <div class="tab" id="diary-tab-cal" onclick="diarySwitchTab('cal')"><i class="ti ti-calendar-month"></i></div>
+              <div class="tab" id="diary-tab-cal" onclick="diarySwitchTab('cal')"><i class="ti ti-calendar-month" style="font-size:17px;"></i></div>
             </div>
             <button onclick="diaryOpenNew()"
               style="display:flex;align-items:center;gap:6px;padding:7px 16px;border-radius:var(--radius-md);border:none;background:var(--text-primary);color:var(--bg-primary);font-size:16px;font-weight:600;cursor:pointer;font-family:inherit;">
@@ -1060,21 +1061,11 @@
               <div class="card-title"><i class="ti ti-calendar-month"></i>전체 달력</div>
               <div style="display:flex;align-items:center;gap:6px;">
                 <button class="add-btn" style="padding:3px 7px;" onclick="diaryFullCalPrev()"><i class="ti ti-chevron-left"></i></button>
-                <span style="font-size:14px;font-weight:600;color:var(--text-primary);min-width:80px;text-align:center;" id="diary-fullcal-label"></span>
+                <span style="font-size:14px;font-weight:600;color:var(--text-primary);" id="diary-fullcal-label"></span>
                 <button class="add-btn" style="padding:3px 7px;" onclick="diaryFullCalNext()"><i class="ti ti-chevron-right"></i></button>
               </div>
             </div>
-            <!-- 요일 헤더 -->
-            <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px;">
-              <div style="text-align:center;font-size:13px;font-weight:600;color:var(--text-tertiary);">월</div>
-              <div style="text-align:center;font-size:13px;font-weight:600;color:var(--text-tertiary);">화</div>
-              <div style="text-align:center;font-size:13px;font-weight:600;color:var(--text-tertiary);">수</div>
-              <div style="text-align:center;font-size:13px;font-weight:600;color:var(--text-tertiary);">목</div>
-              <div style="text-align:center;font-size:13px;font-weight:600;color:var(--text-tertiary);">금</div>
-              <div style="text-align:center;font-size:13px;font-weight:600;color:var(--text-secondary);">토</div>
-              <div style="text-align:center;font-size:13px;font-weight:600;color:#E24B4A;">일</div>
-            </div>
-            <div id="diary-fullcal-body" style="display:flex;flex-direction:column;gap:4px;"></div>
+            <div id="diary-fullcal-body" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;"></div>
           </div>
         </div>
 
@@ -2080,74 +2071,75 @@ function switchTab(t) {
 let allCalYear  = now.getFullYear();
 let allCalMonth = now.getMonth();
 
-function allCalPrev() { allCalMonth--; if (allCalMonth<0){allCalMonth=11;allCalYear--;} renderAllCal(); }
-function allCalNext() { allCalMonth++; if (allCalMonth>11){allCalMonth=0;allCalYear++;} renderAllCal(); }
+function allCalPrev() { allCalMonth -= 2; if (allCalMonth<0){allCalMonth+=12;allCalYear--;} renderAllCal(); }
+function allCalNext() { allCalMonth += 2; if (allCalMonth>11){allCalMonth-=12;allCalYear++;} renderAllCal(); }
 
-function renderAllCal() {
+function renderAllCalMonth(year, month) {
   const MONTH_KR = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-  document.getElementById('all-cal-label').textContent = `${allCalYear}년 ${MONTH_KR[allCalMonth]}`;
+  const firstDay = new Date(year, month, 1);
+  const firstMon = getMonday(firstDay);
+  const lastDay  = new Date(year, month+1, 0);
+  const thisWeekMon = getMonday(now);
+  const DAY_HEADER = ['월','화','수','목','금','토','일'].map(d =>
+    `<div style="text-align:center;font-size:11px;font-weight:600;color:var(--text-tertiary);">${d}</div>`
+  ).join('');
 
-  const body = document.getElementById('all-cal-body');
-  // 이번 달 첫날이 포함된 주의 월요일 구하기
-  const firstDay  = new Date(allCalYear, allCalMonth, 1);
-  const firstMon  = getMonday(firstDay);
-  // 이번 달 마지막날
-  const lastDay   = new Date(allCalYear, allCalMonth+1, 0);
+  let html = `<div>
+    <div style="font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:8px;">${year}년 ${MONTH_KR[month]}</div>
+    <div style="display:grid;grid-template-columns:60px repeat(7,1fr);gap:3px;margin-bottom:4px;">
+      <div></div>${DAY_HEADER}
+    </div>`;
 
-  let html = '';
   let cursor = new Date(firstMon);
-
   while (cursor <= lastDay) {
-    const weekMon = new Date(cursor);
-    const weekKey = `${weekMon.getFullYear()}-${String(weekMon.getMonth()+1).padStart(2,'0')}-${String(weekMon.getDate()).padStart(2,'0')}`;
+    const weekMon  = new Date(cursor);
+    const weekKey  = `${weekMon.getFullYear()}-${String(weekMon.getMonth()+1).padStart(2,'0')}-${String(weekMon.getDate()).padStart(2,'0')}`;
+    const isThisWeek = weekMon.toDateString() === thisWeekMon.toDateString();
+    const isLastWeek = weekMon.toDateString() === addDays(thisWeekMon,-7).toDateString();
+    const weekLabel  = isThisWeek ? '이번 주' : isLastWeek ? '지난주' : `${weekMon.getMonth()+1}/${weekMon.getDate()}`;
 
-    // 이번 주 여부
-    const thisWeekMon = getMonday(now);
-    const isThisWeek  = weekMon.toDateString() === thisWeekMon.toDateString();
-    const isLastWeek  = weekMon.toDateString() === addDays(thisWeekMon,-7).toDateString();
-
-    // 주 라벨
-    const weekLabel = isThisWeek ? '이번 주' : isLastWeek ? '지난주' :
-      `${weekMon.getMonth()+1}/${weekMon.getDate()}주`;
-
-    // 7일 셀
     const cells = Array.from({length:7}, (_,i) => {
       const d  = addDays(weekMon, i);
       const dk = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
       const sk = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-      const inMonth   = d.getMonth() === allCalMonth;
-      const isToday   = d.toDateString() === now.toDateString();
+      const inMonth    = d.getMonth() === month;
+      const isToday    = d.toDateString() === now.toDateString();
       const routineDone = streakData[sk];
-      const todos     = todoStore[dk] || [];
-      const todoDone  = todos.filter(t=>t.done).length;
-
-      return `<div style="
-        padding:6px 4px;border-radius:6px;text-align:center;min-height:52px;
+      const todos      = todoStore[dk] || [];
+      const todoDone   = todos.filter(t=>t.done).length;
+      return `<div style="padding:4px 2px;border-radius:5px;text-align:center;min-height:44px;
         background:${isToday?'var(--bg-secondary)':'transparent'};
         border:${isToday?'1px solid var(--border-md)':'1px solid transparent'};
-        opacity:${inMonth?1:0.3};
-      ">
-        <div style="font-size:12px;font-weight:${isToday?700:400};color:${isToday?'var(--text-primary)':'var(--text-secondary)'};">${d.getDate()}</div>
-        <div style="margin-top:3px;display:flex;flex-direction:column;align-items:center;gap:2px;">
-          ${routineDone ? '<div style="width:7px;height:7px;border-radius:50%;background:#43E97B;"></div>' : '<div style="width:7px;height:7px;border-radius:50%;background:var(--border-md);"></div>'}
-          ${todos.length ? `<div style="font-size:9px;color:${todoDone===todos.length?'#43E97B':'var(--text-tertiary)'};">${todoDone}/${todos.length}</div>` : ''}
+        opacity:${inMonth?1:0.25};">
+        <div style="font-size:11px;font-weight:${isToday?700:400};color:${isToday?'var(--text-primary)':'var(--text-secondary)'};">${d.getDate()}</div>
+        <div style="margin-top:2px;display:flex;flex-direction:column;align-items:center;gap:1px;">
+          ${routineDone ? '<div style="width:6px;height:6px;border-radius:50%;background:#43E97B;"></div>' : '<div style="width:6px;height:6px;border-radius:50%;background:var(--border-md);opacity:0.4;"></div>'}
+          ${todos.length ? `<div style="font-size:8px;color:${todoDone===todos.length?'#43E97B':'var(--text-tertiary)'};">${todoDone}/${todos.length}</div>` : ''}
         </div>
       </div>`;
     }).join('');
 
-    html += `<div style="display:grid;grid-template-columns:80px repeat(7,1fr);gap:4px;margin-bottom:4px;cursor:pointer;border-radius:8px;transition:background 0.1s;"
+    html += `<div style="display:grid;grid-template-columns:60px repeat(7,1fr);gap:3px;margin-bottom:2px;cursor:pointer;border-radius:6px;transition:background 0.1s;"
       onmouseenter="this.style.background='var(--bg-secondary)'" onmouseleave="this.style.background='transparent'"
       onclick="allCalJumpToWeek('${weekKey}')">
-      <div style="display:flex;align-items:center;padding:0 4px;">
-        <span style="font-size:11px;font-weight:600;color:${isThisWeek?'var(--text-primary)':'var(--text-tertiary)'};">${weekLabel}</span>
-      </div>
-      ${cells}
+      <div style="display:flex;align-items:center;">
+        <span style="font-size:10px;font-weight:600;color:${isThisWeek?'var(--text-primary)':'var(--text-tertiary)'};">${weekLabel}</span>
+      </div>${cells}
     </div>`;
-
     cursor = addDays(cursor, 7);
   }
+  html += '</div>';
+  return html;
+}
 
-  body.innerHTML = html || '<div style="padding:20px;text-align:center;color:var(--text-tertiary);font-size:13px;">데이터 없음</div>';
+function renderAllCal() {
+  const MONTH_KR = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const m2year  = allCalMonth === 11 ? allCalYear+1 : allCalYear;
+  const m2month = allCalMonth === 11 ? 0 : allCalMonth+1;
+  document.getElementById('all-cal-label').textContent =
+    `${allCalYear}년 ${MONTH_KR[allCalMonth]} · ${m2year}년 ${MONTH_KR[m2month]}`;
+  const body = document.getElementById('all-cal-body');
+  body.innerHTML = renderAllCalMonth(allCalYear, allCalMonth) + renderAllCalMonth(m2year, m2month);
 }
 
 function allCalJumpToWeek(weekKeyStr) {
@@ -2176,7 +2168,7 @@ function renderWeekFromMonday(mon) {
 
   const KR = ['월','화','수','목','금','토','일'];
 
-  // 루틴 달성 현황
+  // ── 루틴 달성 현황 ─────────────────────────────────────────────
   const streakGrid = document.getElementById('lw-streak-grid');
   streakGrid.innerHTML = Array.from({length:7}, (_,i) => {
     const d  = addDays(mon, i);
@@ -2192,7 +2184,101 @@ function renderWeekFromMonday(mon) {
     </div>`;
   }).join('');
 
-  // 주간 투두
+  // ── 일자별 루틴 달성 내역 ──────────────────────────────────────
+  const dailyEl = document.getElementById('lw-routine-daily');
+  if (dailyEl) {
+    dailyEl.innerHTML = Array.from({length:7}, (_,i) => {
+      const d  = addDays(mon, i);
+      const sk = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      const done = streakData[sk];
+      // 해당 요일에 해당하는 루틴 목록
+      const dayIdx = i; // 0=월 ~ 6=일
+      const dayRoutines = routines.filter(r => r.days.includes(dayIdx));
+      if (!dayRoutines.length) return '';
+      return `<div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <div style="font-size:13px;font-weight:700;color:var(--text-primary);">${KR[i]}</div>
+          <div style="font-size:12px;color:var(--text-tertiary);">${d.getMonth()+1}/${d.getDate()}</div>
+          <div style="font-size:11px;padding:1px 7px;border-radius:8px;background:${done?'#43E97B22':'var(--bg-secondary)'};color:${done?'#43E97B':'var(--text-tertiary)'};font-weight:600;">${done?'✓ 달성':'✕ 미달성'}</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:4px 10px;">
+          ${dayRoutines.map(r => {
+            const CAT_TAG = {'건강':'tag-green','자산':'tag-amber','관계':'tag-blue','경험':'tag-pink','커리어':'tag-purple','성장':'tag-teal'};
+            return `<div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary);">
+              <i class="ti ti-circle" style="font-size:8px;color:var(--text-tertiary);flex-shrink:0;"></i>${r.name}
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    }).filter(Boolean).join('<div style="border-top:0.5px solid var(--border);margin:8px 0;"></div>') ||
+    '<div style="font-size:13px;color:var(--text-tertiary);">루틴 없음</div>';
+  }
+
+  // ── 지난주 목표 & 보상 (wfStore) ──────────────────────────────
+  const wKey = `${mon.getFullYear()}-W${String(mon.getMonth()+1).padStart(2,'0')}-${String(mon.getDate()).padStart(2,'0')}`;
+  const wfData  = wfStore[wKey];
+  const goals   = wfData?.goals   || [];
+  const rewards = wfData?.rewards || [];
+
+  const goalsEl = document.getElementById('lw-goals-list');
+  if (goalsEl) {
+    goalsEl.innerHTML = goals.length
+      ? goals.map(g => `
+        <div style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:var(--radius-md);background:var(--bg-secondary);border:0.5px solid var(--border);${g.done?'opacity:0.6;':''}">
+          <div style="width:14px;height:14px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${g.done?'var(--text-primary)':'transparent'};border:1.5px solid var(--border-md);">
+            ${g.done?'<i class="ti ti-check" style="font-size:9px;color:var(--bg-primary)"></i>':''}
+          </div>
+          <span style="font-size:13px;${g.done?'text-decoration:line-through;color:var(--text-tertiary);':''}">${g.text}</span>
+        </div>`).join('')
+      : '<div style="font-size:12px;color:var(--text-tertiary);">목표 없음</div>';
+  }
+
+  const rewardsEl = document.getElementById('lw-rewards-list');
+  if (rewardsEl) {
+    rewardsEl.innerHTML = rewards.length
+      ? rewards.map(r => `
+        <div style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:var(--radius-md);background:var(--bg-secondary);border:0.5px solid var(--border);${r.claimed?'opacity:0.6;':''}">
+          <div style="width:14px;height:14px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${r.claimed?'#EF9F27':'transparent'};border:1.5px solid ${r.claimed?'transparent':'#EF9F27'};">
+            ${r.claimed?'<i class="ti ti-check" style="font-size:9px;color:#fff"></i>':''}
+          </div>
+          <span style="font-size:13px;${r.claimed?'text-decoration:line-through;color:var(--text-tertiary);':''}">${r.text}</span>
+          ${r.claimed?'<span style="font-size:11px;color:#EF9F27;font-weight:600;margin-left:auto;">🎁 획득!</span>':''}
+        </div>`).join('')
+      : '<div style="font-size:12px;color:var(--text-tertiary);">보상 없음</div>';
+  }
+
+  // ── 지난주 BUY ─────────────────────────────────────────────────
+  const buyEl = document.getElementById('lw-buy-content');
+  if (buyEl) {
+    const needItems = buyStore.need || [];
+    const wantItems = buyStore.want || [];
+    if (!needItems.length && !wantItems.length) {
+      buyEl.innerHTML = '<div style="font-size:12px;color:var(--text-tertiary);">등록된 BUY 항목이 없어요</div>';
+    } else {
+      const renderSec = (label, icon, color, items) => {
+        if (!items.length) return '';
+        return `<div style="margin-bottom:10px;">
+          <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:4px;">
+            <i class="${icon}" style="font-size:13px;color:${color};"></i>${label}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            ${items.map(item=>`
+              <div style="display:flex;align-items:center;gap:7px;padding:4px 8px;border-radius:var(--radius-md);background:var(--bg-secondary);border:0.5px solid var(--border);">
+                <div style="width:13px;height:13px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${item.done?'var(--text-primary)':'transparent'};border:1.5px solid var(--border-md);">
+                  ${item.done?'<i class="ti ti-check" style="font-size:8px;color:var(--bg-primary)"></i>':''}
+                </div>
+                <span style="font-size:12px;${item.done?'text-decoration:line-through;color:var(--text-tertiary);':''}">${item.text}</span>
+                ${item.addedDate?`<span style="font-size:10px;color:var(--text-tertiary);margin-left:auto;">입력 ${item.addedDate.slice(5).replace('-','/')}</span>`:''}
+              </div>`).join('')}
+          </div>
+        </div>`;
+      };
+      buyEl.innerHTML = renderSec('사야할 것','ti ti-alert-circle','#EF9F27',needItems) +
+                        renderSec('사고싶은 것','ti ti-heart','#E24B4A',wantItems);
+    }
+  }
+
+  // ── 주간 투두 ──────────────────────────────────────────────────
   const dayKeys = Array.from({length:7}, (_,i) => {
     const d = addDays(mon, i);
     return { d, key: `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` };
@@ -2712,10 +2798,11 @@ function renderWf() {
       const row = document.createElement('div');
       row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg-secondary);cursor:pointer;transition:opacity 0.15s;' + (r.claimed ? 'opacity:0.55;' : '');
 
-      const icon = document.createElement('i');
-      icon.className = 'ti ti-gift';
-      icon.style.cssText = `font-size:16px;color:${r.claimed?'var(--text-tertiary)':'#EF9F27'};flex-shrink:0;`;
-      icon.onclick = e => { e.stopPropagation(); r.claimed = !r.claimed; renderWf(); };
+      // 체크박스
+      const chk = document.createElement('div');
+      chk.style.cssText = `width:16px;height:16px;border-radius:50%;border:1.5px solid ${r.claimed?'transparent':'#EF9F27'};flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${r.claimed?'#EF9F27':'transparent'};transition:all 0.15s;`;
+      chk.innerHTML = r.claimed ? '<i class="ti ti-check" style="font-size:10px;color:#fff;"></i>' : '';
+      chk.onclick = e => { e.stopPropagation(); r.claimed = !r.claimed; renderWf(); lsAutoSave(); };
 
       const txt = document.createElement('span');
       txt.style.cssText = `flex:1;font-size:14px;color:var(--text-primary);outline:none;${r.claimed?'text-decoration:line-through;color:var(--text-tertiary)':''}`;
@@ -2744,14 +2831,14 @@ function renderWf() {
         if (e.key === 'Escape') { txt.textContent = r.text; txt.blur(); }
       };
 
-      const claimedBadge = r.claimed ? (() => { const s = document.createElement('span'); s.style.cssText='font-size:12px;color:var(--text-tertiary);flex-shrink:0;'; s.textContent='획득!'; return s; })() : null;
+      const claimedBadge = r.claimed ? (() => { const s = document.createElement('span'); s.style.cssText='font-size:11px;color:#EF9F27;font-weight:600;flex-shrink:0;'; s.textContent='🎁 획득!'; return s; })() : null;
       const del = document.createElement('i');
       del.className = 'ti ti-x';
       del.style.cssText = 'font-size:14px;color:var(--text-tertiary);flex-shrink:0;';
       del.onclick = e => deleteWfItem(e, k, 'rewards', r.id);
 
-      row.onclick = e => { if (e.target.closest('.ti-x') || e.target === txt) return; r.claimed = !r.claimed; renderWf(); };
-      row.appendChild(icon); row.appendChild(txt);
+      row.onclick = e => { if (e.target.closest('.ti-x') || e.target === txt) return; r.claimed = !r.claimed; renderWf(); lsAutoSave(); };
+      row.appendChild(chk); row.appendChild(txt);
       if (claimedBadge) row.appendChild(claimedBadge);
       row.appendChild(del);
       rl.appendChild(row);
@@ -3111,9 +3198,26 @@ function renderTimelog() {
       const info = document.createElement('div');
       info.style.cssText = 'flex:1;min-width:0;';
 
-      // 활동명 — 더블클릭 편집
+      // 활동명 행: 소분류 · 세부활동명 한 줄 표시
+      const labelRow = document.createElement('div');
+      labelRow.style.cssText = 'display:flex;align-items:baseline;gap:6px;';
+
+      // 소분류 뱃지 (대분류와 다를 때)
+      if (childCat && childCat.name !== parentCat.name) {
+        const subBadge = document.createElement('span');
+        subBadge.style.cssText = `font-size:12px;color:${cat.color};font-weight:600;flex-shrink:0;`;
+        subBadge.textContent = cat.name;
+        labelRow.appendChild(subBadge);
+
+        const sep = document.createElement('span');
+        sep.style.cssText = 'font-size:12px;color:var(--border-md);flex-shrink:0;';
+        sep.textContent = '·';
+        labelRow.appendChild(sep);
+      }
+
+      // 세부 활동명 — 더블클릭 편집
       const labelEl = document.createElement('div');
-      labelEl.style.cssText = 'font-size:16px;color:var(--text-primary);font-weight:500;outline:none;';
+      labelEl.style.cssText = 'font-size:16px;color:#1a1a1a;font-weight:500;outline:none;';
       labelEl.textContent = l.label || cat.name;
       labelEl.title = '더블클릭하여 편집';
       labelEl.ondblclick = e => {
@@ -3139,22 +3243,13 @@ function renderTimelog() {
         if (e.key === 'Enter') { e.preventDefault(); labelEl.blur(); }
         if (e.key === 'Escape') { labelEl.textContent = l.label || cat.name; labelEl.blur(); }
       };
-
-      // 소분류명 표시 (대분류와 다를 때만)
-      const subEl = document.createElement('div');
-      subEl.style.cssText = 'font-size:12px;color:var(--text-tertiary);margin-top:1px;display:flex;align-items:center;gap:4px;';
-      const subParts = [];
-      if (childCat && childCat.name !== parentCat.name) {
-        subParts.push(`<span style="color:${cat.color};font-weight:600;">${cat.name}</span>`);
-      }
-      subEl.innerHTML = subParts.join('');
+      labelRow.appendChild(labelEl);
 
       const timeEl = document.createElement('div');
-      timeEl.style.cssText = 'font-size:13px;color:var(--text-tertiary);margin-top:2px;';
+      timeEl.style.cssText = 'font-size:13px;color:var(--text-tertiary);margin-top:3px;';
       timeEl.innerHTML = `${l.start} ~ ${l.end} &nbsp;·&nbsp; <strong>${tlFormatDur(l.dur)}</strong>`;
 
-      info.appendChild(labelEl);
-      if (subEl.innerHTML) info.appendChild(subEl);
+      info.appendChild(labelRow);
       info.appendChild(timeEl);
 
       // 대분류 뱃지
@@ -4303,71 +4398,76 @@ let diaryFullCalYear  = now.getFullYear();
 let diaryFullCalMonth = now.getMonth();
 
 function diaryFullCalPrev() {
-  diaryFullCalMonth--;
-  if (diaryFullCalMonth < 0) { diaryFullCalMonth = 11; diaryFullCalYear--; }
+  diaryFullCalMonth -= 2;
+  if (diaryFullCalMonth < 0) { diaryFullCalMonth += 12; diaryFullCalYear--; }
   renderDiaryFullCal();
 }
 function diaryFullCalNext() {
-  diaryFullCalMonth++;
-  if (diaryFullCalMonth > 11) { diaryFullCalMonth = 0; diaryFullCalYear++; }
+  diaryFullCalMonth += 2;
+  if (diaryFullCalMonth > 11) { diaryFullCalMonth -= 12; diaryFullCalYear++; }
   renderDiaryFullCal();
 }
 
-function renderDiaryFullCal() {
+function renderDiaryOneMonth(year, month) {
   const MONTH_KR = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-  document.getElementById('diary-fullcal-label').textContent =
-    `${diaryFullCalYear}년 ${MONTH_KR[diaryFullCalMonth]}`;
+  const DAY_HEADER = ['월','화','수','목','금','토','일'].map((d,i) =>
+    `<div style="text-align:center;font-size:11px;font-weight:600;color:${i===5?'var(--text-secondary)':i===6?'#E24B4A':'var(--text-tertiary)'};">${d}</div>`
+  ).join('');
 
-  const body = document.getElementById('diary-fullcal-body');
-  const firstDay = new Date(diaryFullCalYear, diaryFullCalMonth, 1);
+  const firstDay = new Date(year, month, 1);
   const firstMon = getMonday(firstDay);
-  const lastDay  = new Date(diaryFullCalYear, diaryFullCalMonth+1, 0);
+  const lastDay  = new Date(year, month+1, 0);
 
-  let html = '';
+  let html = `<div>
+    <div style="font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:8px;">${year}년 ${MONTH_KR[month]}</div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px;">${DAY_HEADER}</div>`;
+
   let cursor = new Date(firstMon);
-
   while (cursor <= lastDay) {
-    html += `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">`;
+    html += `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:3px;">`;
     for (let i = 0; i < 7; i++) {
-      const d       = addDays(cursor, i);
-      const k       = diaryDateKey(d);
-      const inMonth = d.getMonth() === diaryFullCalMonth;
-      const isToday = k === diaryDateKey(now);
-      const v       = diaryStore[k];
+      const d        = addDays(cursor, i);
+      const k        = diaryDateKey(d);
+      const inMonth  = d.getMonth() === month;
+      const isToday  = k === diaryDateKey(now);
+      const v        = diaryStore[k];
       const hasEntry = !!(v?.title || v?.content);
-      const score   = v?.score || 0;
-      const hue     = score ? Math.round((score/10)*120) : null;
-      const isSat   = d.getDay() === 6;
-      const isSun   = d.getDay() === 0;
+      const score    = v?.score || 0;
+      const hue      = score ? Math.round((score/10)*120) : null;
+      const isSat    = d.getDay() === 6;
+      const isSun    = d.getDay() === 0;
 
-      html += `<div onclick="${hasEntry||inMonth ? `diaryFullCalOpen('${k}')` : ''}"
-        style="
-          min-height:70px;padding:7px 8px;border-radius:var(--radius-md);
+      html += `<div onclick="${hasEntry||inMonth?`diaryFullCalOpen('${k}')`:''}"
+        style="min-height:58px;padding:5px 6px;border-radius:var(--radius-md);
           border:0.5px solid ${isToday?'var(--text-primary)':hasEntry?'var(--border-md)':'var(--border)'};
           background:${isToday?'var(--text-primary)':hasEntry?'var(--bg-secondary)':'transparent'};
-          opacity:${inMonth?1:0.3};
-          cursor:${hasEntry||inMonth?'pointer':'default'};
-          transition:all 0.15s;
-          position:relative;
-        "
+          opacity:${inMonth?1:0.25};cursor:${hasEntry||inMonth?'pointer':'default'};transition:all 0.15s;"
         onmouseenter="if(${inMonth}) this.style.background='${isToday?'var(--text-primary)':'var(--bg-secondary)'}'"
-        onmouseleave="if(${inMonth}) this.style.background='${isToday?'var(--text-primary)':hasEntry?'var(--bg-secondary)':'transparent'}'"
-      >
-        <div style="font-size:14px;font-weight:${isToday||hasEntry?700:400};color:${isToday?'var(--bg-primary)':isSun?'#E24B4A':isSat?'#7C83FD':'var(--text-primary)'};">${d.getDate()}</div>
-        ${hasEntry ? `
-          <div style="margin-top:4px;">
-            ${hue!==null?`<div style="width:100%;height:3px;border-radius:2px;background:hsl(${hue},65%,50%);margin-bottom:3px;"></div>`:''}
-            <div style="font-size:11px;color:${isToday?'rgba(255,255,255,0.75)':'var(--text-secondary)'};overflow:hidden;white-space:nowrap;text-overflow:ellipsis;line-height:1.3;">${v.title||'(제목 없음)'}</div>
-            ${v.weather?`<div style="font-size:12px;margin-top:2px;">${v.weather.code!==undefined?(({'0':'☀️','1':'🌤','2':'⛅','3':'☁️','45':'🌫','48':'🌫','51':'🌦','61':'🌧','71':'🌨','80':'🌦','95':'⛈'}[v.weather.code])||'🌡️'):''} ${v.weather.temp}°</div>`:''}
-          </div>
-        ` : ''}
+        onmouseleave="if(${inMonth}) this.style.background='${isToday?'var(--text-primary)':hasEntry?'var(--bg-secondary)':'transparent'}'">
+        <div style="font-size:12px;font-weight:${isToday||hasEntry?700:400};color:${isToday?'var(--bg-primary)':isSun?'#E24B4A':isSat?'#7C83FD':'var(--text-primary)'};">${d.getDate()}</div>
+        ${hasEntry?`<div style="margin-top:2px;">
+          ${hue!==null?`<div style="width:100%;height:2px;border-radius:2px;background:hsl(${hue},65%,50%);margin-bottom:2px;"></div>`:''}
+          <div style="font-size:10px;color:${isToday?'rgba(255,255,255,0.8)':'var(--text-secondary)'};overflow:hidden;white-space:nowrap;text-overflow:ellipsis;line-height:1.3;">${v.title||'(제목 없음)'}</div>
+          ${v.weather?`<div style="font-size:10px;margin-top:1px;">${({'0':'☀️','1':'🌤','2':'⛅','3':'☁️','61':'🌧','71':'🌨','80':'🌦','95':'⛈'}[v.weather.code])||'🌡️'} ${v.weather.temp}°</div>`:''}
+        </div>`:''}
       </div>`;
     }
     html += `</div>`;
     cursor = addDays(cursor, 7);
   }
+  html += '</div>';
+  return html;
+}
 
-  body.innerHTML = html;
+function renderDiaryFullCal() {
+  const MONTH_KR = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const m2year  = diaryFullCalMonth === 11 ? diaryFullCalYear+1 : diaryFullCalYear;
+  const m2month = diaryFullCalMonth === 11 ? 0 : diaryFullCalMonth+1;
+  document.getElementById('diary-fullcal-label').textContent =
+    `${diaryFullCalYear}년 ${MONTH_KR[diaryFullCalMonth]} · ${m2year}년 ${MONTH_KR[m2month]}`;
+  const body = document.getElementById('diary-fullcal-body');
+  body.innerHTML = renderDiaryOneMonth(diaryFullCalYear, diaryFullCalMonth) +
+                   renderDiaryOneMonth(m2year, m2month);
 }
 
 function diaryFullCalOpen(k) {
