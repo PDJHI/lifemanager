@@ -654,14 +654,16 @@
           <div class="stat-card"><div class="stat-val">12일 🔥</div><div class="stat-label">연속 달성</div></div>
         </div>
 
-        <!-- ② 주간 목표 & 보상 -->
+        <!-- ② 주간 목표 -->
         <div class="card" id="weekly-focus-card">
           <div style="display:flex;align-items:center;margin-bottom:14px">
             <div class="card-title"><i class="ti ti-flag"></i>주간 목표</div>
             <span style="font-size:13px;color:var(--text-tertiary);margin-left:10px;" id="wf-week-label"></span>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-            <!-- 주간 목표 -->
+
+          <!-- 1행: 목표 | 책+필사 -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+            <!-- 목표 -->
             <div>
               <div style="font-size:13px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px">
                 <i class="ti ti-target" style="font-size:16px"></i>목표
@@ -673,39 +675,37 @@
                 <button onclick="addWfGoal()" style="padding:6px 10px;border-radius:var(--radius-md);border:none;background:var(--text-primary);color:var(--bg-primary);cursor:pointer;font-size:16px;display:flex;align-items:center;"><i class="ti ti-plus"></i></button>
               </div>
             </div>
-            <!-- 주간 보상 -->
-            <div>
-              <div style="font-size:13px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px">
-                <i class="ti ti-gift" style="font-size:16px"></i>보상
+            <!-- 책 + 필사 (세로) -->
+            <div style="display:flex;flex-direction:column;gap:14px;">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+                  <span style="font-size:15px;">📚</span>이번 주의 책
+                </div>
+                <input type="text" id="wf-book-input" placeholder="읽고 있는 책 제목..."
+                  oninput="wfSaveBook(this.value)" onchange="wfSaveBook(this.value)"
+                  style="width:100%;font-size:14px;padding:6px 10px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);outline:none;font-family:inherit;box-sizing:border-box;">
               </div>
-              <div id="wf-rewards-list" style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px"></div>
-              <div style="display:flex;gap:6px">
-                <input type="text" id="wf-reward-input" placeholder="보상 추가..." onkeydown="if(event.key==='Enter')addWfReward()"
-                  style="flex:1;font-size:14px;padding:6px 10px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);outline:none;font-family:inherit;">
-                <button onclick="addWfReward()" style="padding:6px 10px;border-radius:var(--radius-md);border:none;background:var(--text-primary);color:var(--bg-primary);cursor:pointer;font-size:16px;display:flex;align-items:center;"><i class="ti ti-plus"></i></button>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+                  <span style="font-size:15px;">✍️</span>이번 주의 필사
+                </div>
+                <input type="text" id="wf-writing-input" placeholder="필사할 책 제목..."
+                  oninput="wfSaveWriting(this.value)" onchange="wfSaveWriting(this.value)"
+                  style="width:100%;font-size:14px;padding:6px 10px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);outline:none;font-family:inherit;box-sizing:border-box;">
               </div>
             </div>
           </div>
 
-          <!-- 책 & 필사 -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;padding-top:14px;border-top:0.5px solid var(--border);">
-            <!-- 이번 주의 책 -->
-            <div>
-              <div style="font-size:13px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
-                <span style="font-size:15px;">📚</span>이번 주의 책
-              </div>
-              <input type="text" id="wf-book-input" placeholder="읽고 있는 책 제목..."
-                oninput="wfSaveBook(this.value)" onchange="wfSaveBook(this.value)"
-                style="width:100%;font-size:14px;padding:6px 10px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);outline:none;font-family:inherit;box-sizing:border-box;">
+          <!-- 2행: 보상 (가로 full width) -->
+          <div style="padding-top:14px;border-top:0.5px solid var(--border);">
+            <div style="font-size:13px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+              <i class="ti ti-gift" style="font-size:16px"></i>보상
             </div>
-            <!-- 이번 주의 필사 -->
-            <div>
-              <div style="font-size:13px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
-                <span style="font-size:15px;">✍️</span>이번 주의 필사
-              </div>
-              <textarea id="wf-writing-input" placeholder="필사할 문장이나 구절..." rows="2"
-                oninput="wfSaveWriting(this.value)"
-                style="width:100%;font-size:14px;padding:6px 10px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);outline:none;font-family:inherit;resize:none;box-sizing:border-box;line-height:1.6;"></textarea>
+            <div id="wf-rewards-list" style="display:flex;flex-direction:row;flex-wrap:wrap;gap:6px;margin-bottom:8px;"></div>
+            <div style="display:flex;gap:6px">
+              <input type="text" id="wf-reward-input" placeholder="보상 추가..." onkeydown="if(event.key==='Enter')addWfReward()"
+                style="flex:1;font-size:14px;padding:6px 10px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);outline:none;font-family:inherit;">
+              <button onclick="addWfReward()" style="padding:6px 10px;border-radius:var(--radius-md);border:none;background:var(--text-primary);color:var(--bg-primary);cursor:pointer;font-size:16px;display:flex;align-items:center;"><i class="ti ti-plus"></i></button>
             </div>
           </div>
         </div>
@@ -2036,18 +2036,52 @@ function prevWeek() { viewMonday = addDays(viewMonday, -7); renderWeeklyTodo(); 
 function nextWeek() { viewMonday = addDays(viewMonday,  7); renderWeeklyTodo(); }
 
 // ── Today routine ────────────────────────────────────────────────
+// 루틴 체크 데이터: { 'YYYY-MM-DD': { routineId: true/false } }
+const routineCheckData = {};
+
+function routineCheckKey() {
+  return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+}
+
 function syncTodayRoutines() {
   const todayIdx = now.getDay()===0?6:now.getDay()-1;
   const todayRoutines = routines.filter(r=>r.days.includes(todayIdx));
   const listEl = document.getElementById('routine-list');
-  listEl.innerHTML = todayRoutines.map(r=>`
-    <div class="routine-item" onclick="toggleItem(this)" style="border-bottom:0.5px solid var(--border);padding:7px 0;border-radius:0;">
-      <div class="check-box"><i class="ti ti-check"></i></div>
+  const ck = routineCheckKey();
+  if (!routineCheckData[ck]) routineCheckData[ck] = {};
+  const checks = routineCheckData[ck];
+
+  listEl.innerHTML = '';
+  todayRoutines.forEach(r => {
+    const isDone = !!checks[r.id];
+    const item = document.createElement('div');
+    item.className = 'routine-item' + (isDone ? ' done' : '');
+    item.style.cssText = 'border-bottom:0.5px solid var(--border);padding:7px 0;border-radius:0;';
+    item.innerHTML = `<div class="check-box"><i class="ti ti-check"></i></div>
       <div class="routine-name" style="font-size:16px">${r.name}</div>
       <div class="tag ${CAT_TAG[r.cat]}">${r.cat}</div>
-      ${r.timeSlot?`<div class="tag ${TIME_TAG[r.timeSlot]||'tag-blue'}" style="opacity:0.7">${r.timeSlot}</div>`:''}
-    </div>`).join('');
+      ${r.timeSlot?`<div class="tag ${TIME_TAG[r.timeSlot]||'tag-blue'}" style="opacity:0.7">${r.timeSlot}</div>`:''}`;
+    item.onclick = () => {
+      item.classList.toggle('done');
+      checks[r.id] = item.classList.contains('done');
+      updateStats();
+      updateStreakData();
+      lsAutoSave();
+    };
+    listEl.appendChild(item);
+  });
   updateStats();
+}
+
+function updateStreakData() {
+  // 오늘 루틴 중 하나라도 완료하면 streak 달성으로 기록
+  const ck = routineCheckKey();
+  const checks = routineCheckData[ck] || {};
+  const todayIdx = now.getDay()===0?6:now.getDay()-1;
+  const todayRoutines = routines.filter(r=>r.days.includes(todayIdx));
+  const anyDone = todayRoutines.some(r => checks[r.id]);
+  const sk = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+  streakData[sk] = anyDone;
 }
 
 function toggleItem(el) { el.classList.toggle('done'); updateStats(); }
@@ -2705,19 +2739,8 @@ function wfGetOrCreate(monday) {
   return wfStore[k];
 }
 
-// Seed this week
-(function seedWf() {
-  const d = wfGetOrCreate(getMonday(now));
-  d.goals   = [
-    { id: wfNextId++, text: '운동 5회 달성하기', done: false },
-    { id: wfNextId++, text: '영어 단어 100개 외우기', done: true },
-    { id: wfNextId++, text: '독서 100페이지 읽기', done: false },
-  ];
-  d.rewards = [
-    { id: wfNextId++, text: '좋아하는 카페 방문', claimed: false },
-    { id: wfNextId++, text: '영화 한 편 보기', claimed: false },
-  ];
-})();
+
+
 
 function wfSaveBook(val) {
   const d = wfGetOrCreate(wfViewMonday);
@@ -2800,7 +2823,7 @@ function renderWf() {
   } else {
     d.rewards.forEach(r => {
       const row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg-secondary);cursor:pointer;transition:opacity 0.15s;' + (r.claimed ? 'opacity:0.55;' : '');
+      row.style.cssText = 'display:inline-flex;align-items:center;gap:8px;padding:5px 10px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg-secondary);cursor:pointer;transition:opacity 0.15s;max-width:220px;' + (r.claimed ? 'opacity:0.55;' : '');
 
       // 체크박스
       const chk = document.createElement('div');
@@ -6741,11 +6764,12 @@ function dataImport() {
       try {
         const p = JSON.parse(ev.target.result);
         if (!confirm(`백업 파일 (${p._exported?.slice(0,10) || '날짜 없음'}) 을 불러올까요?\n현재 데이터가 덮어써집니다.`)) return;
-        if (p.routines)           routines           = p.routines;
+        if (p.routines) routines = p.routines;
         migrateRoutineCategories();
+        if (p.routineCheckData)   Object.assign(routineCheckData, p.routineCheckData);
         if (p.todoStore)          Object.assign(todoStore, p.todoStore);
         if (p.streakData)         Object.assign(streakData, p.streakData);
-        if (p.wfStore)            Object.assign(wfStore, p.wfStore);
+        if (p.wfStore) { Object.keys(wfStore).forEach(k=>delete wfStore[k]); Object.assign(wfStore, p.wfStore); }
         if (p.tlCatParents && p.tlCatParents.length)  tlCatParents  = p.tlCatParents;
         if (p.tlCatChildren && p.tlCatChildren.length) tlCatChildren = p.tlCatChildren;
         if (p.tlNextParentId)     tlNextParentId     = p.tlNextParentId;
@@ -6787,6 +6811,7 @@ function lsSave() {
   try {
     localStorage.setItem(LS_KEY, JSON.stringify({
       routines,
+      routineCheckData,
       todoStore,
       streakData,
       wfStore,
@@ -6842,11 +6867,14 @@ function lsLoad() {
     const raw = localStorage.getItem(LS_KEY);
     if (!raw) return;
     const p = JSON.parse(raw);
-    if (p.routines)           routines           = p.routines;
+    if (p.routines) routines = p.routines;
     migrateRoutineCategories();
+    if (p.routineCheckData)   Object.assign(routineCheckData, p.routineCheckData);
+    migrateRoutineCategories();
+    if (p.routineCheckData)   Object.assign(routineCheckData, p.routineCheckData);
     if (p.todoStore)          Object.assign(todoStore, p.todoStore);
     if (p.streakData)         Object.assign(streakData, p.streakData);
-    if (p.wfStore)            Object.assign(wfStore, p.wfStore);
+    if (p.wfStore) { Object.keys(wfStore).forEach(k=>delete wfStore[k]); Object.assign(wfStore, p.wfStore); }
     // 카테고리: 저장된 값 있으면 덮어쓰고, 없으면 기본값 유지
     if (p.tlCatParents  && p.tlCatParents.length)  tlCatParents  = p.tlCatParents;
     if (p.tlCatChildren && p.tlCatChildren.length) tlCatChildren = p.tlCatChildren;
@@ -6937,6 +6965,7 @@ document.getElementById('logout-btn').addEventListener('click', function() {
     try {
       const payload = {
         routines,
+        routineCheckData,
         todoStore,
         streakData,
         wfStore,
@@ -6972,10 +7001,11 @@ document.getElementById('logout-btn').addEventListener('click', function() {
       const snap = await getDoc(doc(db, 'users', uid, 'data', 'main'));
       if (snap.exists()) {
         const p = snap.data();
-        if (p.routines)           routines           = p.routines;
+        if (p.routines) routines = p.routines;
+        if (p.routineCheckData)   Object.assign(routineCheckData, p.routineCheckData);
         if (p.todoStore)          Object.assign(todoStore, p.todoStore);
         if (p.streakData)         Object.assign(streakData, p.streakData);
-        if (p.wfStore)            Object.assign(wfStore, p.wfStore);
+        if (p.wfStore) { Object.keys(wfStore).forEach(k=>delete wfStore[k]); Object.assign(wfStore, p.wfStore); }
         if (p.tlCatParents && p.tlCatParents.length)  tlCatParents  = p.tlCatParents;
         if (p.tlCatChildren && p.tlCatChildren.length) tlCatChildren = p.tlCatChildren;
         if (p.tlNextParentId)     tlNextParentId     = p.tlNextParentId;
