@@ -40,30 +40,26 @@
   #sidebar { width: var(--nav-w); background: var(--bg-primary); border-right: 0.5px solid var(--border); display: flex; flex-direction: column; padding: 20px 0; flex-shrink: 0; height: 100vh; overflow-y: auto; }
   .logo { padding: 0 16px 20px; border-bottom: 0.5px solid var(--border); margin-bottom: 8px; }
   .logo-title {
-    font-size: 18px;
-    font-weight: 900;
-    letter-spacing: -0.5px;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    background: linear-gradient(135deg, #FF6B9D 0%, #C77DFF 40%, #7C83FD 70%, #43E97B 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    line-height: 1.1;
+    color: var(--text-primary);
   }
   .logo-sub {
-    font-size: 11px;
-    font-weight: 700;
+    font-size: 10px;
+    font-weight: 400;
     color: var(--text-tertiary);
-    letter-spacing: 0.15em;
+    letter-spacing: 0.22em;
     text-transform: uppercase;
-    margin-top: 4px;
+    margin-top: 5px;
   }
   .nav-section { padding: 8px 0; }
   .nav-label { font-size:13px; font-weight: 600; color: var(--text-tertiary); letter-spacing: 0.12em; text-transform: uppercase; padding: 0 16px 4px; }
-  .nav-item { display: flex; align-items: center; gap: 9px; padding: 9px 16px; cursor: pointer; font-size:17px; color: var(--text-secondary); transition: all 0.15s; border-left: 2px solid transparent; user-select: none; }
+  .nav-item { display: flex; align-items: center; gap: 9px; padding: 9px 16px; cursor: pointer; font-size:14px; color: var(--text-secondary); transition: all 0.15s; border-left: 2px solid transparent; user-select: none; }
   .nav-item:hover { background: var(--bg-secondary); color: var(--text-primary); }
   .nav-item.active { background: var(--bg-secondary); color: var(--text-primary); border-left-color: var(--text-primary); font-weight: 600; }
-  .nav-item i { font-size:20px; }
+  .nav-item i { font-size:17px; }
   .date-block { margin: auto 16px 0; padding: 13px; background: var(--bg-secondary); border-radius: var(--radius-md); border: 0.5px solid var(--border); }
   .date-day { font-size:26px; font-weight: 600; color: var(--text-primary); }
   .date-info { font-size:14px; color: var(--text-tertiary); margin-top: 3px; }
@@ -247,7 +243,7 @@
   /* 서브 메뉴 */
   .nav-sub { display: none; flex-direction: column; }
   .nav-sub.open { display: flex; }
-  .nav-sub-item { display: flex; align-items: center; gap: 8px; padding: 7px 16px 7px 34px; cursor: pointer; font-size:13px; color: var(--text-tertiary); border-left: 2px solid transparent; transition: all 0.15s; }
+  .nav-sub-item { display: flex; align-items: center; gap: 8px; padding: 7px 16px 7px 34px; cursor: pointer; font-size:14px; color: var(--text-tertiary); border-left: 2px solid transparent; transition: all 0.15s; }
   .nav-sub-item:hover { color: var(--text-primary); background: var(--bg-secondary); }
   .nav-sub-item.active { color: var(--text-primary); font-weight: 600; border-left-color: var(--text-primary); background: var(--bg-secondary); }
   .nav-item-arrow { margin-left: auto; font-size:13px; transition: transform 0.2s; }
@@ -264,8 +260,9 @@
 <div id="login-screen" style="display:flex;position:fixed;inset:0;background:var(--bg-primary);z-index:9999;align-items:center;justify-content:center;">
   <div style="width:100%;max-width:360px;padding:0 24px;text-align:center;">
     <div style="margin-bottom:36px;">
-      <div style="font-size:38px;font-weight:800;color:var(--text-primary);letter-spacing:-0.5px;">My Life</div>
-      <div style="font-size:16px;color:var(--text-tertiary);margin-top:6px;">개인 라이프 매니저</div>
+      <div style="font-size:48px;margin-bottom:12px;">🌿</div>
+      <div style="font-size:15px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-primary);">My Life Project</div>
+      <div style="font-size:10px;font-weight:400;color:var(--text-tertiary);margin-top:5px;letter-spacing:0.22em;text-transform:uppercase;">Life goes on.</div>
     </div>
     <button id="btn-google-login"
       style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px;border-radius:var(--radius-md);border:0.5px solid var(--border-md);background:var(--bg-secondary);color:var(--text-primary);font-size:17px;font-weight:600;cursor:pointer;font-family:inherit;">
@@ -280,6 +277,7 @@
   <nav id="sidebar">
     <div class="logo" style="display:flex;align-items:center;justify-content:space-between;">
       <div style="cursor:pointer;" onclick="document.querySelector('[data-page=\'dashboard\']').click()">
+        <div style="font-size:22px;margin-bottom:4px;">🌿</div>
         <div class="logo-title">My Life Project</div>
         <div class="logo-sub">Life goes on.</div>
       </div>
