@@ -637,6 +637,8 @@
         <div class="page-title">🌿 루틴 & 투두</div>
         <div class="tab-bar">
           <div class="tab active" id="tab-today" onclick="switchTab('today')">오늘</div>
+          <div class="tab" id="tab-lastweek" onclick="switchTab('lastweek')">지난주</div>
+          <div class="tab" id="tab-all" onclick="switchTab('all')"><i class="ti ti-calendar-month"></i></div>
           <div class="tab" id="tab-manage" onclick="switchTab('manage')">루틴 관리</div>
         </div>
       </div>
@@ -685,6 +687,28 @@
                   style="flex:1;font-size:14px;padding:6px 10px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);outline:none;font-family:inherit;">
                 <button onclick="addWfReward()" style="padding:6px 10px;border-radius:var(--radius-md);border:none;background:var(--text-primary);color:var(--bg-primary);cursor:pointer;font-size:16px;display:flex;align-items:center;"><i class="ti ti-plus"></i></button>
               </div>
+            </div>
+          </div>
+
+          <!-- 책 & 필사 -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;padding-top:14px;border-top:0.5px solid var(--border);">
+            <!-- 이번 주의 책 -->
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+                <span style="font-size:15px;">📚</span>이번 주의 책
+              </div>
+              <input type="text" id="wf-book-input" placeholder="읽고 있는 책 제목..."
+                oninput="wfSaveBook(this.value)" onchange="wfSaveBook(this.value)"
+                style="width:100%;font-size:14px;padding:6px 10px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);outline:none;font-family:inherit;box-sizing:border-box;">
+            </div>
+            <!-- 이번 주의 필사 -->
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+                <span style="font-size:15px;">✍️</span>이번 주의 필사
+              </div>
+              <textarea id="wf-writing-input" placeholder="필사할 문장이나 구절..." rows="2"
+                oninput="wfSaveWriting(this.value)"
+                style="width:100%;font-size:14px;padding:6px 10px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);outline:none;font-family:inherit;resize:none;box-sizing:border-box;line-height:1.6;"></textarea>
             </div>
           </div>
         </div>
@@ -736,37 +760,95 @@
         <div class="card">
           <div class="card-header">
             <div class="card-title"><i class="ti ti-shopping-bag"></i>주간 Buy</div>
-            <button class="add-btn" onclick="buyOpenAdd('need')"><i class="ti ti-plus"></i> 추가</button>
           </div>
 
           <!-- 사야할 것 섹션 -->
           <div style="margin-bottom:12px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div style="display:flex;align-items:center;margin-bottom:6px;">
               <div style="font-size:13px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;display:flex;align-items:center;gap:5px;">
                 <i class="ti ti-alert-circle" style="font-size:16px;color:#EF9F27;"></i>사야할 것
               </div>
-              <button class="add-btn" style="padding:2px 7px;font-size:13px;" onclick="buyOpenAdd('need')"><i class="ti ti-plus"></i></button>
             </div>
             <div id="buy-need-list" style="display:flex;flex-direction:column;gap:2px;"></div>
             <div id="buy-need-empty" style="display:none;font-size:14px;color:var(--text-tertiary);padding:6px 0 2px;">아직 없어요</div>
+            <!-- 인라인 입력 -->
+            <div style="display:flex;gap:6px;margin-top:6px;">
+              <input type="text" id="buy-need-input" placeholder="항목 추가..."
+                onkeydown="if(event.key==='Enter')buyInlineAdd('need')"
+                style="flex:1;font-size:13px;padding:5px 10px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);outline:none;font-family:inherit;">
+              <button onclick="buyInlineAdd('need')" style="padding:5px 10px;border-radius:var(--radius-md);border:none;background:var(--text-primary);color:var(--bg-primary);cursor:pointer;font-size:13px;display:flex;align-items:center;"><i class="ti ti-plus"></i></button>
+            </div>
           </div>
 
           <div class="section-divider"></div>
 
           <!-- 사고싶은 것 섹션 -->
           <div style="margin-top:10px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div style="display:flex;align-items:center;margin-bottom:6px;">
               <div style="font-size:13px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;display:flex;align-items:center;gap:5px;">
                 <i class="ti ti-heart" style="font-size:16px;color:#E24B4A;"></i>사고싶은 것
               </div>
-              <button class="add-btn" style="padding:2px 7px;font-size:13px;" onclick="buyOpenAdd('want')"><i class="ti ti-plus"></i></button>
             </div>
             <div id="buy-want-list" style="display:flex;flex-direction:column;gap:2px;"></div>
             <div id="buy-want-empty" style="display:none;font-size:14px;color:var(--text-tertiary);padding:6px 0 2px;">아직 없어요</div>
+            <!-- 인라인 입력 -->
+            <div style="display:flex;gap:6px;margin-top:6px;">
+              <input type="text" id="buy-want-input" placeholder="항목 추가..."
+                onkeydown="if(event.key==='Enter')buyInlineAdd('want')"
+                style="flex:1;font-size:13px;padding:5px 10px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);outline:none;font-family:inherit;">
+              <button onclick="buyInlineAdd('want')" style="padding:5px 10px;border-radius:var(--radius-md);border:none;background:var(--text-primary);color:var(--bg-primary);cursor:pointer;font-size:13px;display:flex;align-items:center;"><i class="ti ti-plus"></i></button>
+            </div>
           </div>
         </div>
 
       </div><!-- /view-today -->
+
+      <!-- ===== 지난주 뷰 ===== -->
+      <div id="view-lastweek" style="display:none;flex-direction:column;gap:16px;">
+
+        <!-- 루틴 달성 현황 -->
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div class="card-title"><i class="ti ti-flame"></i>루틴 달성 현황</div>
+            <div style="font-size:13px;color:var(--text-tertiary);" id="lastweek-label"></div>
+          </div>
+          <div id="lw-streak-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;"></div>
+        </div>
+
+        <!-- 주간 투두 -->
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div class="card-title"><i class="ti ti-list-check"></i>주간 투두</div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div class="prog-bar" style="width:100px;"><div class="prog-fill" id="lw-todo-prog" style="width:0%"></div></div>
+              <div class="prog-label" id="lw-todo-prog-label" style="min-width:28px;">0%</div>
+            </div>
+          </div>
+          <div id="lw-todo-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-items:start;"></div>
+          <div id="lw-todo-grid2" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-items:start;margin-top:10px;"></div>
+        </div>
+
+      </div><!-- /view-lastweek -->
+
+      <!-- ===== 전체 뷰 (달력) ===== -->
+      <div id="view-all" style="display:none;flex-direction:column;gap:16px;">
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <div class="card-title"><i class="ti ti-calendar"></i>주간 기록 달력</div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <button class="add-btn" style="padding:3px 7px;" onclick="allCalPrev()"><i class="ti ti-chevron-left"></i></button>
+              <span style="font-size:14px;font-weight:600;color:var(--text-primary);min-width:80px;text-align:center;" id="all-cal-label"></span>
+              <button class="add-btn" style="padding:3px 7px;" onclick="allCalNext()"><i class="ti ti-chevron-right"></i></button>
+            </div>
+          </div>
+          <!-- 요일 헤더 -->
+          <div style="display:grid;grid-template-columns:80px repeat(7,1fr);gap:4px;margin-bottom:6px;">
+            <div></div>
+            ${['월','화','수','목','금','토','일'].map(d=>`<div style="text-align:center;font-size:12px;font-weight:600;color:var(--text-tertiary);">${d}</div>`).join('')}
+          </div>
+          <div id="all-cal-body"></div>
+        </div>
+      </div><!-- /view-all -->
 
       <div id="view-manage" style="display:none;flex-direction:column;gap:16px;">
 
@@ -887,6 +969,38 @@
       </div>
     </div>
 
+    <!-- 시간 기록 편집 모달 -->
+    <div class="modal-overlay" id="tl-edit-modal">
+      <div class="modal" style="width:400px;">
+        <div class="modal-title">
+          <span>활동 편집</span>
+          <i class="ti ti-x modal-close" onclick="tlCloseEdit()"></i>
+        </div>
+        <div class="modal-field">
+          <div class="modal-label">활동명</div>
+          <input class="modal-input" id="tl-edit-label" placeholder="활동명"/>
+        </div>
+        <div class="modal-field">
+          <div class="modal-label">카테고리</div>
+          <select class="modal-input" id="tl-edit-cat"></select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div class="modal-field">
+            <div class="modal-label">시작 시간</div>
+            <input type="time" class="modal-input" id="tl-edit-start"/>
+          </div>
+          <div class="modal-field">
+            <div class="modal-label">종료 시간</div>
+            <input type="time" class="modal-input" id="tl-edit-end"/>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" onclick="tlCloseEdit()">취소</button>
+          <button class="btn-primary" onclick="tlSaveEdit()">저장</button>
+        </div>
+      </div>
+    </div>
+
     <!-- ===== DIARY ===== -->
     <div class="page" id="page-diary">
 
@@ -894,35 +1008,66 @@
       <div id="diary-list-view">
         <div class="page-header">
           <div class="page-title">🌸 일기</div>
-          <button onclick="diaryOpenNew()"
-            style="display:flex;align-items:center;gap:6px;padding:7px 16px;border-radius:var(--radius-md);border:none;background:var(--text-primary);color:var(--bg-primary);font-size:16px;font-weight:600;cursor:pointer;font-family:inherit;">
-            <i class="ti ti-plus"></i> 새 일기
-          </button>
-        </div>
-
-        <!-- 주간 캘린더 스트립 (full width) -->
-        <div class="card" style="padding:12px 16px;">
-          <div style="display:flex;align-items:center;gap:6px;">
-            <button class="add-btn" style="padding:3px 7px;" onclick="diaryCalPrev()"><i class="ti ti-chevron-left"></i></button>
-            <div style="display:flex;flex-direction:column;align-items:flex-start;min-width:40px;">
-              <span style="font-size:15px;color:var(--text-tertiary);font-weight:400;" id="diary-cal-year"></span>
-              <span style="font-size:30px;font-weight:700;color:var(--text-primary);line-height:1.1;" id="diary-cal-label"></span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="tab-bar" style="margin:0;">
+              <div class="tab active" id="diary-tab-list" onclick="diarySwitchTab('list')">목록</div>
+              <div class="tab" id="diary-tab-cal" onclick="diarySwitchTab('cal')"><i class="ti ti-calendar-month"></i></div>
             </div>
-            <div style="display:grid;grid-template-columns:repeat(7,1fr);flex:1;gap:4px;" id="diary-cal-grid"></div>
-            <button class="add-btn" style="padding:3px 7px;" onclick="diaryCalNext()"><i class="ti ti-chevron-right"></i></button>
-            <!-- 이달 통계 -->
-            <div style="display:flex;gap:14px;padding-left:12px;border-left:0.5px solid var(--border);flex-shrink:0;">
-              <div style="text-align:center;"><div style="font-size:19px;font-weight:600;color:var(--text-primary);" id="diary-stat-count">0</div><div style="font-size:12px;color:var(--text-tertiary);">이달</div></div>
-              <div style="text-align:center;"><div style="font-size:19px;font-weight:600;color:var(--text-primary);" id="diary-stat-avg">-</div><div style="font-size:12px;color:var(--text-tertiary);">평균점수</div></div>
-              <div style="text-align:center;"><div style="font-size:19px;font-weight:600;color:var(--text-primary);" id="diary-stat-streak">0일</div><div style="font-size:12px;color:var(--text-tertiary);">연속작성</div></div>
-            </div>
+            <button onclick="diaryOpenNew()"
+              style="display:flex;align-items:center;gap:6px;padding:7px 16px;border-radius:var(--radius-md);border:none;background:var(--text-primary);color:var(--bg-primary);font-size:16px;font-weight:600;cursor:pointer;font-family:inherit;">
+              <i class="ti ti-plus"></i> 새 일기
+            </button>
           </div>
         </div>
 
-        <!-- 일기 목록 (full width) -->
+        <!-- 목록 서브뷰 -->
+        <div id="diary-sub-list">
+          <!-- 주간 캘린더 스트립 (full width) -->
+          <div class="card" style="padding:12px 16px;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <button class="add-btn" style="padding:3px 7px;" onclick="diaryCalPrev()"><i class="ti ti-chevron-left"></i></button>
+              <div style="display:flex;flex-direction:column;align-items:flex-start;min-width:40px;">
+                <span style="font-size:15px;color:var(--text-tertiary);font-weight:400;" id="diary-cal-year"></span>
+                <span style="font-size:30px;font-weight:700;color:var(--text-primary);line-height:1.1;" id="diary-cal-label"></span>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(7,1fr);flex:1;gap:4px;" id="diary-cal-grid"></div>
+              <button class="add-btn" style="padding:3px 7px;" onclick="diaryCalNext()"><i class="ti ti-chevron-right"></i></button>
+              <!-- 이달 통계 -->
+              <div style="display:flex;gap:14px;padding-left:12px;border-left:0.5px solid var(--border);flex-shrink:0;">
+                <div style="text-align:center;"><div style="font-size:19px;font-weight:600;color:var(--text-primary);" id="diary-stat-count">0</div><div style="font-size:12px;color:var(--text-tertiary);">이달</div></div>
+                <div style="text-align:center;"><div style="font-size:19px;font-weight:600;color:var(--text-primary);" id="diary-stat-avg">-</div><div style="font-size:12px;color:var(--text-tertiary);">평균점수</div></div>
+                <div style="text-align:center;"><div style="font-size:19px;font-weight:600;color:var(--text-primary);" id="diary-stat-streak">0일</div><div style="font-size:12px;color:var(--text-tertiary);">연속작성</div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 일기 목록 -->
           <div class="card">
             <div id="diary-entry-list"></div>
           </div>
+        </div>
+
+        <!-- 전체 달력 서브뷰 -->
+        <div id="diary-sub-cal" style="display:none;">
+          <div class="card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+              <div class="card-title"><i class="ti ti-calendar-month"></i>전체 달력</div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <button class="add-btn" style="padding:3px 7px;" onclick="diaryFullCalPrev()"><i class="ti ti-chevron-left"></i></button>
+                <span style="font-size:14px;font-weight:600;color:var(--text-primary);min-width:80px;text-align:center;" id="diary-fullcal-label"></span>
+                <button class="add-btn" style="padding:3px 7px;" onclick="diaryFullCalNext()"><i class="ti ti-chevron-right"></i></button>
+              </div>
+            </div>
+            <!-- 요일 헤더 -->
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px;">
+              ${['월','화','수','목','금','토','일'].map((d,i) =>
+                `<div style="text-align:center;font-size:13px;font-weight:600;color:${i>=5?'var(--text-tertiary)':'var(--text-tertiary)'};">${d}</div>`
+              ).join('')}
+            </div>
+            <div id="diary-fullcal-body" style="display:flex;flex-direction:column;gap:4px;"></div>
+          </div>
+        </div>
+
       </div>
 
       <!-- ── 에디터 뷰 ── -->
@@ -1511,24 +1656,29 @@
 
       </div>
 
-      <!-- 2행: 하루 시간 목록(왼쪽) + 카테고리 관리(오른쪽) -->
-      <div class="grid-2">
+      <!-- 2행: 하루 시간 목록 (full width) -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+          <span id="tl-total-today" style="font-size:14px;font-weight:600;color:var(--text-secondary);"></span>
+          <button id="tl-paste-btn" onclick="tlPasteLog()" style="display:none;padding:4px 10px;border-radius:var(--radius-md);border:0.5px solid var(--border-md);background:var(--bg-secondary);color:var(--text-primary);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;align-items:center;gap:4px;"><i class="ti ti-clipboard"></i> 붙여넣기</button>
+        </div>
+        <div id="tl-timeline-bar" style="height:10px;border-radius:6px;background:var(--bg-secondary);overflow:hidden;display:flex;margin-bottom:14px;margin-top:8px;"></div>
+        <div id="tl-log-list"></div>
+      </div>
 
-        <!-- 시간 기록 리스트 -->
-        <div class="card">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-            <span id="tl-total-today" style="font-size:14px;font-weight:600;color:var(--text-secondary);"></span>
+      <!-- 3행: 카테고리 관리 (접기/펼치기) -->
+      <div class="card" style="padding:0;">
+        <!-- 헤더 (항상 표시) -->
+        <div onclick="tlToggleCatPanel()" style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;user-select:none;">
+          <div class="card-title" style="margin:0;"><i class="ti ti-tag"></i>카테고리 관리</div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <button onclick="event.stopPropagation();tlCatSave(this)" style="padding:5px 14px;border-radius:var(--radius-md);border:none;background:var(--text-primary);color:var(--bg-primary);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">저장</button>
+            <i class="ti ti-chevron-down" id="tl-cat-chevron" style="font-size:16px;color:var(--text-tertiary);transition:transform 0.2s;transform:rotate(0deg);"></i>
           </div>
-          <div id="tl-timeline-bar" style="height:10px;border-radius:6px;background:var(--bg-secondary);overflow:hidden;display:flex;margin-bottom:14px;margin-top:8px;"></div>
-          <div id="tl-log-list"></div>
         </div>
 
-        <!-- 카테고리 관리 -->
-        <div class="card">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-            <div class="card-title"><i class="ti ti-tag"></i>카테고리 관리</div>
-            <button onclick="tlCatSave(this)" style="padding:5px 14px;border-radius:var(--radius-md);border:none;background:var(--text-primary);color:var(--bg-primary);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">저장</button>
-          </div>
+        <!-- 콘텐츠 (접기/펼치기) -->
+        <div id="tl-cat-panel" style="display:none;padding:0 18px 18px;">
           <div id="tl-cat-tree" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;"></div>
 
           <!-- 대분류 추가 -->
@@ -1545,17 +1695,16 @@
           <div style="font-size:12px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:6px;">소분류 추가</div>
           <div style="display:flex;flex-direction:column;gap:6px;">
             <div style="display:flex;gap:6px;">
-              <select id="tl-new-child-parent" style="font-size:14px;padding:6px 8px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);font-family:inherit;outline:none;min-width:90px;"></select>
+              <select id="tl-new-child-parent" onchange="tlOnChildParentChange()" style="font-size:14px;padding:6px 8px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);font-family:inherit;outline:none;min-width:90px;"></select>
               <input type="text" id="tl-new-child-name" placeholder="소분류 이름" onkeydown="if(event.key==='Enter')tlAddChild()" style="flex:1;font-size:14px;padding:6px 10px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);font-family:inherit;outline:none;">
               <button onclick="tlAddChild()" style="padding:6px 12px;border-radius:var(--radius-md);border:none;background:var(--text-primary);color:var(--bg-primary);font-size:14px;cursor:pointer;font-family:inherit;">추가</button>
             </div>
             <div id="tl-child-palette" style="display:flex;gap:5px;flex-wrap:wrap;"></div>
           </div>
         </div>
-
       </div>
-    </div>
 
+    </div>
   </main>
 </div>
 
@@ -1902,18 +2051,170 @@ function updateStats() {
 
 // ── Tab switch ───────────────────────────────────────────────────
 function switchTab(t) {
-  document.getElementById('tab-today').classList.toggle('active', t==='today');
-  document.getElementById('tab-manage').classList.toggle('active', t==='manage');
-  const vt = document.getElementById('view-today');
-  const vm = document.getElementById('view-manage');
-  vt.style.display = t==='today' ? 'flex' : 'none';
-  vt.style.flexDirection = 'column';
-  vt.style.gap = '16px';
-  vm.style.display = t==='manage' ? 'flex' : 'none';
-  vm.style.flexDirection = 'column';
-  vm.style.gap = '16px';
-  if (t==='manage') renderDayList();
+  ['today','lastweek','all','manage'].forEach(id => {
+    const tab = document.getElementById(`tab-${id}`);
+    if (tab) tab.classList.toggle('active', t===id);
+    const view = document.getElementById(`view-${id}`);
+    if (view) {
+      view.style.display = t===id ? 'flex' : 'none';
+      view.style.flexDirection = 'column';
+      view.style.gap = '16px';
+    }
+  });
+  if (t==='manage')   renderDayList();
+  if (t==='lastweek') renderLastWeek();
+  if (t==='all')      renderAllCal();
 }
+
+// ── 전체 달력 ────────────────────────────────────────────────────
+let allCalYear  = now.getFullYear();
+let allCalMonth = now.getMonth();
+
+function allCalPrev() { allCalMonth--; if (allCalMonth<0){allCalMonth=11;allCalYear--;} renderAllCal(); }
+function allCalNext() { allCalMonth++; if (allCalMonth>11){allCalMonth=0;allCalYear++;} renderAllCal(); }
+
+function renderAllCal() {
+  const MONTH_KR = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  document.getElementById('all-cal-label').textContent = `${allCalYear}년 ${MONTH_KR[allCalMonth]}`;
+
+  const body = document.getElementById('all-cal-body');
+  // 이번 달 첫날이 포함된 주의 월요일 구하기
+  const firstDay  = new Date(allCalYear, allCalMonth, 1);
+  const firstMon  = getMonday(firstDay);
+  // 이번 달 마지막날
+  const lastDay   = new Date(allCalYear, allCalMonth+1, 0);
+
+  let html = '';
+  let cursor = new Date(firstMon);
+
+  while (cursor <= lastDay) {
+    const weekMon = new Date(cursor);
+    const weekKey = `${weekMon.getFullYear()}-${String(weekMon.getMonth()+1).padStart(2,'0')}-${String(weekMon.getDate()).padStart(2,'0')}`;
+
+    // 이번 주 여부
+    const thisWeekMon = getMonday(now);
+    const isThisWeek  = weekMon.toDateString() === thisWeekMon.toDateString();
+    const isLastWeek  = weekMon.toDateString() === addDays(thisWeekMon,-7).toDateString();
+
+    // 주 라벨
+    const weekLabel = isThisWeek ? '이번 주' : isLastWeek ? '지난주' :
+      `${weekMon.getMonth()+1}/${weekMon.getDate()}주`;
+
+    // 7일 셀
+    const cells = Array.from({length:7}, (_,i) => {
+      const d  = addDays(weekMon, i);
+      const dk = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      const sk = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      const inMonth   = d.getMonth() === allCalMonth;
+      const isToday   = d.toDateString() === now.toDateString();
+      const routineDone = streakData[sk];
+      const todos     = todoStore[dk] || [];
+      const todoDone  = todos.filter(t=>t.done).length;
+
+      return `<div style="
+        padding:6px 4px;border-radius:6px;text-align:center;min-height:52px;
+        background:${isToday?'var(--bg-secondary)':'transparent'};
+        border:${isToday?'1px solid var(--border-md)':'1px solid transparent'};
+        opacity:${inMonth?1:0.3};
+      ">
+        <div style="font-size:12px;font-weight:${isToday?700:400};color:${isToday?'var(--text-primary)':'var(--text-secondary)'};">${d.getDate()}</div>
+        <div style="margin-top:3px;display:flex;flex-direction:column;align-items:center;gap:2px;">
+          ${routineDone ? '<div style="width:7px;height:7px;border-radius:50%;background:#43E97B;"></div>' : '<div style="width:7px;height:7px;border-radius:50%;background:var(--border-md);"></div>'}
+          ${todos.length ? `<div style="font-size:9px;color:${todoDone===todos.length?'#43E97B':'var(--text-tertiary)'};">${todoDone}/${todos.length}</div>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+
+    html += `<div style="display:grid;grid-template-columns:80px repeat(7,1fr);gap:4px;margin-bottom:4px;cursor:pointer;border-radius:8px;transition:background 0.1s;"
+      onmouseenter="this.style.background='var(--bg-secondary)'" onmouseleave="this.style.background='transparent'"
+      onclick="allCalJumpToWeek('${weekKey}')">
+      <div style="display:flex;align-items:center;padding:0 4px;">
+        <span style="font-size:11px;font-weight:600;color:${isThisWeek?'var(--text-primary)':'var(--text-tertiary)'};">${weekLabel}</span>
+      </div>
+      ${cells}
+    </div>`;
+
+    cursor = addDays(cursor, 7);
+  }
+
+  body.innerHTML = html || '<div style="padding:20px;text-align:center;color:var(--text-tertiary);font-size:13px;">데이터 없음</div>';
+}
+
+function allCalJumpToWeek(weekKeyStr) {
+  const [y,m,d] = weekKeyStr.split('-').map(Number);
+  const mon = new Date(y, m-1, d);
+  // view-lastweek 재활용: viewMonday를 해당 주로 설정하고 렌더
+  const savedViewMonday = viewMonday;
+  viewMonday = mon;
+  // lastweek 뷰에 해당 주 데이터 표시
+  document.getElementById('tab-all').classList.remove('active');
+  document.getElementById('view-all').style.display = 'none';
+  document.getElementById('tab-lastweek').classList.add('active');
+  const vl = document.getElementById('view-lastweek');
+  vl.style.display = 'flex';
+  vl.style.flexDirection = 'column';
+  vl.style.gap = '16px';
+  renderWeekFromMonday(mon);
+}
+
+function renderWeekFromMonday(mon) {
+  const fmt = d => `${d.getMonth()+1}/${d.getDate()}`;
+  const lastSun = addDays(mon, 6);
+  const isThisWeek = mon.toDateString() === getMonday(now).toDateString();
+  document.getElementById('lastweek-label').textContent =
+    isThisWeek ? '이번 주' : `${fmt(mon)} ~ ${fmt(lastSun)}`;
+
+  const KR = ['월','화','수','목','금','토','일'];
+
+  // 루틴 달성 현황
+  const streakGrid = document.getElementById('lw-streak-grid');
+  streakGrid.innerHTML = Array.from({length:7}, (_,i) => {
+    const d  = addDays(mon, i);
+    const sk = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    const done = streakData[sk];
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+      <div style="font-size:12px;color:var(--text-tertiary);">${KR[i]}</div>
+      <div style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+        background:${done?'var(--text-primary)':'var(--bg-secondary)'};border:0.5px solid var(--border);">
+        ${done?'<i class="ti ti-check" style="font-size:15px;color:var(--bg-primary)"></i>':'<span style="font-size:13px;color:var(--text-tertiary);">✕</span>'}
+      </div>
+      <div style="font-size:11px;color:var(--text-tertiary);">${d.getMonth()+1}/${d.getDate()}</div>
+    </div>`;
+  }).join('');
+
+  // 주간 투두
+  const dayKeys = Array.from({length:7}, (_,i) => {
+    const d = addDays(mon, i);
+    return { d, key: `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` };
+  });
+  const allTodos = dayKeys.flatMap(({key}) => todoStore[key]||[]);
+  const doneTodo = allTodos.filter(t=>t.done).length;
+  const pct = allTodos.length ? Math.round(doneTodo/allTodos.length*100) : 0;
+  document.getElementById('lw-todo-prog').style.width = pct+'%';
+  document.getElementById('lw-todo-prog-label').textContent = pct+'%';
+
+  const renderDay = ({d, key}) => {
+    const items = todoStore[key] || [];
+    return `<div style="border:0.5px solid var(--border);border-radius:var(--radius-md);padding:10px;">
+      <div style="font-size:12px;font-weight:600;color:var(--text-tertiary);margin-bottom:6px;">${KR[d.getDay()===0?6:d.getDay()-1]} <span style="font-weight:400;">${d.getMonth()+1}/${d.getDate()}</span></div>
+      ${items.length ? items.map(t=>`
+        <div style="display:flex;align-items:center;gap:6px;padding:3px 0;">
+          <div style="width:13px;height:13px;border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+            background:${t.done?'var(--text-primary)':'transparent'};border:1.5px solid var(--border-md);">
+            ${t.done?'<i class="ti ti-check" style="font-size:8px;color:var(--bg-primary)"></i>':''}
+          </div>
+          <span style="font-size:12px;${t.done?'text-decoration:line-through;color:var(--text-tertiary);':''}">${t.text}</span>
+        </div>`).join('') : '<div style="font-size:12px;color:var(--text-tertiary);">-</div>'}
+    </div>`;
+  };
+  document.getElementById('lw-todo-grid').innerHTML  = dayKeys.slice(0,4).map(renderDay).join('');
+  document.getElementById('lw-todo-grid2').innerHTML = dayKeys.slice(4).map(renderDay).join('');
+}
+
+function renderLastWeek() {
+  renderWeekFromMonday(addDays(getMonday(now), -7));
+}
+
 
 // ── Routine manage tab ───────────────────────────────────────────
 function renderDayList() {
@@ -2251,6 +2552,16 @@ function buySetPurchasedDate(type, id) {
   renderBuy(); lsAutoSave();
 }
 
+function buyInlineAdd(type) {
+  const input = document.getElementById(`buy-${type}-input`);
+  const text  = input.value.trim();
+  if (!text) return;
+  buyStore[type].push({ id: buyNextId++, text, done: false, addedDate: buyTodayStr(), purchasedDate: '' });
+  input.value = '';
+  input.focus();
+  renderBuy(); lsAutoSave();
+}
+
 // BUY 추가 모달
 let _buyAddType = 'need';
 function buyOpenAdd(type) {
@@ -2288,7 +2599,9 @@ function wfKey(monday) { return weekKey(monday); }
 
 function wfGetOrCreate(monday) {
   const k = wfKey(monday);
-  if (!wfStore[k]) wfStore[k] = { goals: [], rewards: [] };
+  if (!wfStore[k]) wfStore[k] = { goals: [], rewards: [], book: '', writing: '' };
+  if (!wfStore[k].book    && wfStore[k].book    !== '') wfStore[k].book    = '';
+  if (!wfStore[k].writing && wfStore[k].writing !== '') wfStore[k].writing = '';
   return wfStore[k];
 }
 
@@ -2305,6 +2618,17 @@ function wfGetOrCreate(monday) {
     { id: wfNextId++, text: '영화 한 편 보기', claimed: false },
   ];
 })();
+
+function wfSaveBook(val) {
+  const d = wfGetOrCreate(wfViewMonday);
+  d.book = val;
+  lsAutoSave();
+}
+function wfSaveWriting(val) {
+  const d = wfGetOrCreate(wfViewMonday);
+  d.writing = val;
+  lsAutoSave();
+}
 
 function renderWf() {
   const k = wfKey(wfViewMonday);
@@ -2423,6 +2747,12 @@ function renderWf() {
       rl.appendChild(row);
     });
   }
+
+  // 책 & 필사
+  const bookEl    = document.getElementById('wf-book-input');
+  const writingEl = document.getElementById('wf-writing-input');
+  if (bookEl)    bookEl.value    = d.book    || '';
+  if (writingEl) writingEl.value = d.writing || '';
 }
 
 function addWfGoal() {
@@ -2514,6 +2844,10 @@ function tlRenderPalette(elId, selectedColor, onSelect) {
 }
 
 function tlInitPalettes() {
+  // 자동 색상으로 초기 설정
+  if (tlCatParents.length > 0) {
+    tlSelectedParentColor = tlAutoParentColor();
+  }
   function renderParent(sel) {
     tlSelectedParentColor = sel;
     tlRenderPalette('tl-parent-palette', sel, renderParent);
@@ -2744,17 +3078,25 @@ function renderTimelog() {
 
   // ── Log list ────────────────────────────────────────────────────
   const listEl = document.getElementById('tl-log-list');
+  // 붙여넣기 버튼 표시
+  const pasteBtn = document.getElementById('tl-paste-btn');
+  if (pasteBtn) pasteBtn.style.display = _tlClipboard ? 'flex' : 'none';
   if (!logs.length) {
     listEl.innerHTML = `<div style="text-align:center;padding:32px 0;color:var(--text-tertiary);font-size:16px;"><i class="ti ti-clock" style="font-size:36px;display:block;margin-bottom:10px;"></i>아직 기록이 없어요<br><span style="font-size:13px;">위 폼에서 시간을 추가해보세요</span></div>`;
   } else {
     listEl.innerHTML = '';
     logs.forEach((l, idx) => {
       const cat = tlGetCat(l.catId);
+      // 대분류 찾기
+      const childCat  = tlCatChildren.find(c => c.id === l.catId);
+      const parentCat = childCat ? (tlCatParents.find(p => p.id === childCat.parentId) || cat) : cat;
+      const badgeColor = parentCat.color || cat.color;
+
       const row = document.createElement('div');
       row.style.cssText = `display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border);`;
 
       const bar = document.createElement('div');
-      bar.style.cssText = `width:3px;height:38px;border-radius:2px;background:${cat.color};flex-shrink:0;`;
+      bar.style.cssText = `width:3px;height:38px;border-radius:2px;background:${badgeColor};flex-shrink:0;`;
 
       const info = document.createElement('div');
       info.style.cssText = 'flex:1;min-width:0;';
@@ -2781,30 +3123,62 @@ function renderTimelog() {
         labelEl.style.background = '';
         labelEl.style.padding = '';
         labelEl.textContent = l.label;
+        lsAutoSave();
       };
       labelEl.onkeydown = e => {
         if (e.key === 'Enter') { e.preventDefault(); labelEl.blur(); }
         if (e.key === 'Escape') { labelEl.textContent = l.label || cat.name; labelEl.blur(); }
       };
 
+      // 소분류명 표시 (대분류와 다를 때만)
+      const subEl = document.createElement('div');
+      subEl.style.cssText = 'font-size:12px;color:var(--text-tertiary);margin-top:1px;display:flex;align-items:center;gap:4px;';
+      const subParts = [];
+      if (childCat && childCat.name !== parentCat.name) {
+        subParts.push(`<span style="color:${cat.color};font-weight:600;">${cat.name}</span>`);
+      }
+      subEl.innerHTML = subParts.join('');
+
       const timeEl = document.createElement('div');
       timeEl.style.cssText = 'font-size:13px;color:var(--text-tertiary);margin-top:2px;';
       timeEl.innerHTML = `${l.start} ~ ${l.end} &nbsp;·&nbsp; <strong>${tlFormatDur(l.dur)}</strong>`;
 
       info.appendChild(labelEl);
+      if (subEl.innerHTML) info.appendChild(subEl);
       info.appendChild(timeEl);
 
+      // 대분류 뱃지
       const catBadge = document.createElement('div');
-      catBadge.style.cssText = `font-size:13px;padding:2px 9px;border-radius:10px;background:${cat.color}22;color:${cat.color};font-weight:600;flex-shrink:0;`;
-      catBadge.textContent = cat.name;
+      catBadge.style.cssText = `font-size:13px;padding:2px 9px;border-radius:10px;background:${badgeColor}22;color:${badgeColor};font-weight:600;flex-shrink:0;cursor:pointer;`;
+      catBadge.textContent = parentCat.name;
+      catBadge.title = '클릭하여 카테고리 변경';
+      catBadge.onclick = () => tlOpenEdit(k, l.id);
+
+
+      // 시간 편집 버튼
+      const editBtn = document.createElement('i');
+      editBtn.className = 'ti ti-pencil';
+      editBtn.style.cssText = 'font-size:15px;color:var(--text-tertiary);cursor:pointer;flex-shrink:0;opacity:0;transition:opacity 0.1s;';
+      editBtn.title = '편집';
+      editBtn.onclick = () => tlOpenEdit(k, l.id);
+
+      // 복사 버튼
+      const copyBtn = document.createElement('i');
+      copyBtn.className = 'ti ti-copy';
+      copyBtn.style.cssText = 'font-size:15px;color:var(--text-tertiary);cursor:pointer;flex-shrink:0;opacity:0;transition:opacity 0.1s;';
+      copyBtn.title = '복사하여 붙여넣기';
+      copyBtn.onclick = () => tlCopyLog(k, l.id);
 
       const delBtn = document.createElement('i');
       delBtn.className = 'ti ti-trash';
-      delBtn.style.cssText = 'font-size:17px;color:var(--text-tertiary);cursor:pointer;flex-shrink:0;';
+      delBtn.style.cssText = 'font-size:15px;color:var(--text-tertiary);cursor:pointer;flex-shrink:0;opacity:0;transition:opacity 0.1s;';
       delBtn.onclick = () => tlDeleteLog(k, l.id);
 
+      row.onmouseenter = () => { editBtn.style.opacity='1'; copyBtn.style.opacity='1'; delBtn.style.opacity='1'; };
+      row.onmouseleave = () => { editBtn.style.opacity='0'; copyBtn.style.opacity='0'; delBtn.style.opacity='0'; };
+
       row.appendChild(bar); row.appendChild(info);
-      row.appendChild(catBadge); row.appendChild(delBtn);
+      row.appendChild(catBadge); row.appendChild(editBtn); row.appendChild(copyBtn); row.appendChild(delBtn);
       listEl.appendChild(row);
     });
     if (listEl.lastElementChild) listEl.lastElementChild.style.borderBottom = 'none';
@@ -3077,26 +3451,140 @@ function tlDeleteLog(k, id) {
   lsAutoSave();
 }
 
+// ── 편집 ────────────────────────────────────────────────────────
+let _tlEditKey = null, _tlEditId = null;
+
+function tlOpenEdit(k, id) {
+  const log = (tlLogs[k]||[]).find(l=>l.id===id);
+  if (!log) return;
+  _tlEditKey = k; _tlEditId = id;
+
+  // 카테고리 셀렉트 채우기
+  const sel = document.getElementById('tl-edit-cat');
+  sel.innerHTML = '';
+  tlCatChildren.forEach(c => {
+    const parent = tlCatParents.find(p=>p.id===c.parentId);
+    const opt = document.createElement('option');
+    opt.value = c.id;
+    opt.textContent = parent ? `${parent.name} > ${c.name}` : c.name;
+    if (c.id === log.catId) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  tlCatParents.forEach(p => {
+    if (tlCatChildren.some(c=>c.parentId===p.id)) return; // 소분류 있으면 스킵
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = p.name;
+    if (p.id === log.catId) opt.selected = true;
+    sel.appendChild(opt);
+  });
+
+  document.getElementById('tl-edit-label').value = log.label || '';
+  document.getElementById('tl-edit-start').value = log.start;
+  document.getElementById('tl-edit-end').value   = log.end;
+  document.getElementById('tl-edit-modal').classList.add('open');
+  setTimeout(() => document.getElementById('tl-edit-label').focus(), 50);
+}
+
+function tlSaveEdit() {
+  const log = (tlLogs[_tlEditKey]||[]).find(l=>l.id===_tlEditId);
+  if (!log) { tlCloseEdit(); return; }
+
+  const label = document.getElementById('tl-edit-label').value.trim();
+  const catId = document.getElementById('tl-edit-cat').value;
+  const start = document.getElementById('tl-edit-start').value;
+  const end   = document.getElementById('tl-edit-end').value;
+
+  if (!start || !end) { alert('시작/종료 시간을 입력해주세요.'); return; }
+  const [sh,sm] = start.split(':').map(Number);
+  const [eh,em] = end.split(':').map(Number);
+  const dur = (eh*60+em) - (sh*60+sm);
+  if (dur <= 0) { alert('종료 시간이 시작 시간보다 늦어야 해요.'); return; }
+
+  log.label = label;
+  log.catId = catId;
+  log.start = start;
+  log.end   = end;
+  log.dur   = dur;
+
+  tlCloseEdit();
+  renderTimelog();
+  lsAutoSave();
+}
+
+function tlCloseEdit() {
+  document.getElementById('tl-edit-modal').classList.remove('open');
+  _tlEditKey = null; _tlEditId = null;
+}
+
+// ── 복사 붙여넣기 ────────────────────────────────────────────────
+let _tlClipboard = null;
+
+function tlCopyLog(k, id) {
+  const log = (tlLogs[k]||[]).find(l=>l.id===id);
+  if (!log) return;
+  _tlClipboard = { ...log };
+  // 복사 완료 토스트
+  const toast = document.createElement('div');
+  toast.textContent = '✓ 복사됨 — 붙여넣기 버튼을 눌러 추가하세요';
+  toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text-primary);color:var(--bg-primary);padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;pointer-events:none;opacity:1;transition:opacity 0.3s;';
+  document.body.appendChild(toast);
+  setTimeout(() => { toast.style.opacity='0'; setTimeout(()=>toast.remove(),300); }, 2000);
+  renderTimelog(); // 붙여넣기 버튼 업데이트
+}
+
+function tlPasteLog() {
+  if (!_tlClipboard) return;
+  const k = tlDateKey(tlViewDate);
+  if (!tlLogs[k]) tlLogs[k] = [];
+  // 시간을 현재 로그 마지막 이후로 자동 배치
+  const existing = (tlLogs[k]||[]).slice().sort((a,b)=>a.start.localeCompare(b.start));
+  let newStart = _tlClipboard.start;
+  let newEnd   = _tlClipboard.end;
+  if (existing.length) {
+    const lastEnd = existing[existing.length-1].end;
+    const [eh,em] = lastEnd.split(':').map(Number);
+    const [sh,sm] = _tlClipboard.start.split(':').map(Number);
+    const [oeh,oem] = _tlClipboard.end.split(':').map(Number);
+    const dur = (oeh*60+oem) - (sh*60+sm);
+    const newStartMin = eh*60+em;
+    const newEndMin   = newStartMin + dur;
+    if (newEndMin <= 24*60) {
+      newStart = `${String(Math.floor(newStartMin/60)).padStart(2,'0')}:${String(newStartMin%60).padStart(2,'0')}`;
+      newEnd   = `${String(Math.floor(newEndMin/60)).padStart(2,'0')}:${String(newEndMin%60).padStart(2,'0')}`;
+    }
+  }
+  const [sh,sm] = newStart.split(':').map(Number);
+  const [eh,em] = newEnd.split(':').map(Number);
+  const dur = (eh*60+em) - (sh*60+sm);
+  tlLogs[k].push({ id: tlNextLogId++, catId: _tlClipboard.catId, label: _tlClipboard.label, start: newStart, end: newEnd, dur });
+  renderTimelog();
+  lsAutoSave();
+}
+
+// 모달 닫기 클릭
+document.getElementById('tl-edit-modal').addEventListener('click', function(e){ if(e.target===this) tlCloseEdit(); });
+
 // 인라인 편집 헬퍼
 function tlInlineEdit(e, el, obj, type) {
   e.stopPropagation();
   el.contentEditable = 'true';
-  el.style.background = 'var(--bg-primary)';
+  el.style.background = 'var(--bg-secondary)';
   el.style.borderRadius = '3px';
-  el.style.padding = '0 3px';
+  el.style.padding = '0 4px';
   el.focus();
   const range = document.createRange(); range.selectNodeContents(el);
   window.getSelection().removeAllRanges(); window.getSelection().addRange(range);
   el.onblur = () => {
     const val = el.textContent.trim();
-    if (val) obj.name = val; else el.textContent = obj.name;
+    if (val) obj[type] = val; else el.textContent = obj[type];
     el.contentEditable = 'false';
     el.style.background = ''; el.style.padding = '';
     renderTimelog();
   };
   el.onkeydown = ev => {
     if (ev.key === 'Enter') { ev.preventDefault(); el.blur(); }
-    if (ev.key === 'Escape') { el.textContent = obj.name; el.blur(); }
+    if (ev.key === 'Escape') { el.textContent = obj[type]; el.blur(); }
   };
 }
 
@@ -3113,11 +3601,91 @@ function tlPickColor(obj, type) {
 }
 
 // 대분류 추가
+// ── 자동 색상 선택 헬퍼 ─────────────────────────────────────────
+
+// 16진수 → HSL 변환
+function tlHexToHsl(hex) {
+  let r = parseInt(hex.slice(1,3),16)/255;
+  let g = parseInt(hex.slice(3,5),16)/255;
+  let b = parseInt(hex.slice(5,7),16)/255;
+  const max=Math.max(r,g,b), min=Math.min(r,g,b);
+  let h,s,l=(max+min)/2;
+  if(max===min){h=s=0;}else{
+    const d=max-min; s=l>0.5?d/(2-max-min):d/(max+min);
+    switch(max){case r:h=(g-b)/d+(g<b?6:0);break;case g:h=(b-r)/d+2;break;case b:h=(r-g)/d+4;break;}
+    h/=6;
+  }
+  return [Math.round(h*360), Math.round(s*100), Math.round(l*100)];
+}
+
+// HSL → 16진수
+function tlHslToHex(h,s,l) {
+  s/=100; l/=100;
+  const k=n=>(n+h/30)%12;
+  const a=s*Math.min(l,1-l);
+  const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));
+  return '#'+[f(0),f(8),f(4)].map(x=>Math.round(x*255).toString(16).padStart(2,'0')).join('');
+}
+
+// 기존 색상들과 거리가 먼 팔레트 색상 자동 선택 (대분류용)
+function tlAutoParentColor() {
+  const usedColors = tlCatParents.map(p => p.color);
+  // 사용되지 않은 팔레트 색상 우선
+  const unused = TL_PALETTE.filter(c => !usedColors.includes(c));
+  if (unused.length) return unused[0];
+  // 모두 사용됐으면 HSL 거리 기반으로 가장 다른 색 선택
+  let bestColor = TL_PALETTE[0], bestDist = 0;
+  TL_PALETTE.forEach(c => {
+    const [h1] = tlHexToHsl(c);
+    const minDist = usedColors.reduce((min, uc) => {
+      const [h2] = tlHexToHsl(uc);
+      const d = Math.min(Math.abs(h1-h2), 360-Math.abs(h1-h2));
+      return Math.min(min, d);
+    }, 360);
+    if (minDist > bestDist) { bestDist = minDist; bestColor = c; }
+  });
+  return bestColor;
+}
+
+// 대분류 색상 기반으로 소분류 종속 색상 생성
+function tlAutoChildColor(parentColor) {
+  const [h, s, l] = tlHexToHsl(parentColor);
+  // 이미 같은 대분류에 속한 소분류들의 색상
+  const siblingColors = [];
+  const parentCat = tlCatParents.find(p => p.color === parentColor);
+  if (parentCat) {
+    tlCatChildren.filter(c=>c.parentId===parentCat.id).forEach(c => siblingColors.push(c.color));
+  }
+  // 밝기를 +15~+30 범위에서 순차 변화, 채도는 -10
+  const offsets = [20, 35, 10, -15, 45, -25];
+  for (const offset of offsets) {
+    const newL = Math.min(85, Math.max(35, l + offset));
+    const newS = Math.min(90, Math.max(40, s - 10));
+    const candidate = tlHslToHex(h, newS, newL);
+    // 기존 소분류 색상과 충분히 다르면 사용
+    const tooClose = siblingColors.some(sc => {
+      const [h2,,l2] = tlHexToHsl(sc);
+      return Math.min(Math.abs(h-h2),360-Math.abs(h-h2))<15 && Math.abs(l2-newL)<12;
+    });
+    if (!tooClose) return candidate;
+  }
+  // fallback: 색조 +20도 변형
+  return tlHslToHex((h+20)%360, s, Math.min(80, l+15));
+}
+
 function tlAddParent() {
   const name = document.getElementById('tl-new-parent-name').value.trim();
   if (!name) return;
-  tlCatParents.push({ id:'p'+tlNextParentId++, name, color: tlSelectedParentColor });
+  // 자동 색상: 기존과 중복 안 되는 색상 선택
+  const autoColor = tlAutoParentColor();
+  const color = tlSelectedParentColor !== TL_PALETTE[0]
+    ? tlSelectedParentColor  // 사용자가 직접 바꿨으면 존중
+    : autoColor;
+  tlCatParents.push({ id:'p'+tlNextParentId++, name, color });
   document.getElementById('tl-new-parent-name').value = '';
+  // 다음 추가를 위해 자동 색상 미리 설정
+  tlSelectedParentColor = tlAutoParentColor();
+  tlInitPalettes();
   renderTimelog();
   lsAutoSave();
 }
@@ -3127,10 +3695,31 @@ function tlAddChild() {
   const parentId = document.getElementById('tl-new-child-parent').value;
   const name     = document.getElementById('tl-new-child-name').value.trim();
   if (!name || !parentId) return;
-  tlCatChildren.push({ id:'c'+tlNextChildId++, parentId, name, color: tlSelectedChildColor });
+  // 소분류 색상: 대분류 기반 종속 색상 자동 생성
+  const parent = tlCatParents.find(p=>p.id===parentId);
+  const autoColor = parent ? tlAutoChildColor(parent.color) : tlSelectedChildColor;
+  const color = tlSelectedChildColor !== TL_PALETTE[3]
+    ? tlSelectedChildColor
+    : autoColor;
+  tlCatChildren.push({ id:'c'+tlNextChildId++, parentId, name, color });
   document.getElementById('tl-new-child-name').value = '';
+  // 같은 대분류 선택 시 다음 소분류 색상 자동 설정
+  if (parent) {
+    tlSelectedChildColor = tlAutoChildColor(parent.color);
+    tlInitPalettes();
+  }
   renderTimelog();
   lsAutoSave();
+}
+
+// 소분류 대분류 선택 변경 시 색상 자동 업데이트
+function tlOnChildParentChange() {
+  const parentId = document.getElementById('tl-new-child-parent').value;
+  const parent   = tlCatParents.find(p=>p.id===parentId);
+  if (parent) {
+    tlSelectedChildColor = tlAutoChildColor(parent.color);
+    tlInitPalettes();
+  }
 }
 
 // 카테고리 저장 (명시적)
@@ -3142,6 +3731,14 @@ function tlCatSave(btn) {
     btn.textContent = '저장됨 ✓'; btn.style.background = '#43E97B';
     setTimeout(() => { btn.textContent = orig; btn.style.background = 'var(--text-primary)'; }, 1400);
   }
+}
+
+function tlToggleCatPanel() {
+  const panel   = document.getElementById('tl-cat-panel');
+  const chevron = document.getElementById('tl-cat-chevron');
+  const isOpen  = panel.style.display !== 'none';
+  panel.style.display   = isOpen ? 'none' : 'block';
+  chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
 }
 
 // 구 함수 호환성 유지
@@ -3679,6 +4276,93 @@ function renderDiaryCal() {
 
 function diaryCalPrev() { diaryCalWeekMonday = addDays(diaryCalWeekMonday, -7); renderDiaryCal(); }
 function diaryCalNext() { diaryCalWeekMonday = addDays(diaryCalWeekMonday,  7); renderDiaryCal(); }
+
+// ── 일기 탭 전환 ─────────────────────────────────────────────────
+function diarySwitchTab(tab) {
+  document.getElementById('diary-tab-list').classList.toggle('active', tab==='list');
+  document.getElementById('diary-tab-cal').classList.toggle('active', tab==='cal');
+  document.getElementById('diary-sub-list').style.display = tab==='list' ? '' : 'none';
+  document.getElementById('diary-sub-cal').style.display  = tab==='cal'  ? '' : 'none';
+  if (tab==='cal') renderDiaryFullCal();
+}
+
+// ── 전체 달력 ─────────────────────────────────────────────────────
+let diaryFullCalYear  = now.getFullYear();
+let diaryFullCalMonth = now.getMonth();
+
+function diaryFullCalPrev() {
+  diaryFullCalMonth--;
+  if (diaryFullCalMonth < 0) { diaryFullCalMonth = 11; diaryFullCalYear--; }
+  renderDiaryFullCal();
+}
+function diaryFullCalNext() {
+  diaryFullCalMonth++;
+  if (diaryFullCalMonth > 11) { diaryFullCalMonth = 0; diaryFullCalYear++; }
+  renderDiaryFullCal();
+}
+
+function renderDiaryFullCal() {
+  const MONTH_KR = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  document.getElementById('diary-fullcal-label').textContent =
+    `${diaryFullCalYear}년 ${MONTH_KR[diaryFullCalMonth]}`;
+
+  const body = document.getElementById('diary-fullcal-body');
+  const firstDay = new Date(diaryFullCalYear, diaryFullCalMonth, 1);
+  const firstMon = getMonday(firstDay);
+  const lastDay  = new Date(diaryFullCalYear, diaryFullCalMonth+1, 0);
+
+  let html = '';
+  let cursor = new Date(firstMon);
+
+  while (cursor <= lastDay) {
+    html += `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">`;
+    for (let i = 0; i < 7; i++) {
+      const d       = addDays(cursor, i);
+      const k       = diaryDateKey(d);
+      const inMonth = d.getMonth() === diaryFullCalMonth;
+      const isToday = k === diaryDateKey(now);
+      const v       = diaryStore[k];
+      const hasEntry = !!(v?.title || v?.content);
+      const score   = v?.score || 0;
+      const hue     = score ? Math.round((score/10)*120) : null;
+      const isSat   = d.getDay() === 6;
+      const isSun   = d.getDay() === 0;
+
+      html += `<div onclick="${hasEntry||inMonth ? `diaryFullCalOpen('${k}')` : ''}"
+        style="
+          min-height:70px;padding:7px 8px;border-radius:var(--radius-md);
+          border:0.5px solid ${isToday?'var(--text-primary)':hasEntry?'var(--border-md)':'var(--border)'};
+          background:${isToday?'var(--text-primary)':hasEntry?'var(--bg-secondary)':'transparent'};
+          opacity:${inMonth?1:0.3};
+          cursor:${hasEntry||inMonth?'pointer':'default'};
+          transition:all 0.15s;
+          position:relative;
+        "
+        onmouseenter="if(${inMonth}) this.style.background='${isToday?'var(--text-primary)':'var(--bg-secondary)'}'"
+        onmouseleave="if(${inMonth}) this.style.background='${isToday?'var(--text-primary)':hasEntry?'var(--bg-secondary)':'transparent'}'"
+      >
+        <div style="font-size:14px;font-weight:${isToday||hasEntry?700:400};color:${isToday?'var(--bg-primary)':isSun?'#E24B4A':isSat?'#7C83FD':'var(--text-primary)'};">${d.getDate()}</div>
+        ${hasEntry ? `
+          <div style="margin-top:4px;">
+            ${hue!==null?`<div style="width:100%;height:3px;border-radius:2px;background:hsl(${hue},65%,50%);margin-bottom:3px;"></div>`:''}
+            <div style="font-size:11px;color:${isToday?'rgba(255,255,255,0.75)':'var(--text-secondary)'};overflow:hidden;white-space:nowrap;text-overflow:ellipsis;line-height:1.3;">${v.title||'(제목 없음)'}</div>
+            ${v.weather?`<div style="font-size:12px;margin-top:2px;">${v.weather.code!==undefined?(({'0':'☀️','1':'🌤','2':'⛅','3':'☁️','45':'🌫','48':'🌫','51':'🌦','61':'🌧','71':'🌨','80':'🌦','95':'⛈'}[v.weather.code])||'🌡️'):''} ${v.weather.temp}°</div>`:''}
+          </div>
+        ` : ''}
+      </div>`;
+    }
+    html += `</div>`;
+    cursor = addDays(cursor, 7);
+  }
+
+  body.innerHTML = html;
+}
+
+function diaryFullCalOpen(k) {
+  const d = diaryKeyToDate(k);
+  diaryViewDate = d;
+  diaryShowEditor(k);
+}
 
 // ── 회고 목록/상세 전환 ──────────────────────────────────────────
 function retroShowList(type) {
@@ -4858,8 +5542,8 @@ function retroQuarterlyRenderForm() {
 }
 
 
-const RETRO_MONTHLY_CATS   = ['자산','관계','건강','경험','커리어','성장'];
-const RETRO_MONTHLY_EMOJIS = { '자산':'💰','관계':'🤝','건강':'💪','경험':'🌟','커리어':'🚀','성장':'🌱' };
+const RETRO_MONTHLY_CATS   = ['자산','관계','가족','건강','경험','커리어','성장'];
+const RETRO_MONTHLY_EMOJIS = { '자산':'💰','관계':'🤝','가족':'🏡','건강':'💪','경험':'🌟','커리어':'🚀','성장':'🌱' };
 let retroMonthlyData = {};
 
 function retroMonthlyKey() { return retroKey('monthly', retroCursor['monthly']); }
