@@ -627,7 +627,14 @@
       </div>
 
       <div id="view-today" style="display:flex;flex-direction:column;gap:16px;">
-        <!-- ① 주간 목표 & 보상 -->
+        <!-- ① Stats row -->
+        <div class="grid-3">
+          <div class="stat-card"><div class="stat-val" id="stat-routine">0/0</div><div class="stat-label">오늘 루틴</div></div>
+          <div class="stat-card"><div class="stat-val" id="stat-todo">0/0</div><div class="stat-label">이번 주 투두</div></div>
+          <div class="stat-card"><div class="stat-val">12일 🔥</div><div class="stat-label">연속 달성</div></div>
+        </div>
+
+        <!-- ② 주간 목표 & 보상 -->
         <div class="card" id="weekly-focus-card">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
             <div style="display:flex;align-items:center;gap:10px">
@@ -667,14 +674,7 @@
           </div>
         </div>
 
-        <!-- ② Stats row -->
-        <div class="grid-3">
-          <div class="stat-card"><div class="stat-val" id="stat-routine">0/0</div><div class="stat-label">오늘 루틴</div></div>
-          <div class="stat-card"><div class="stat-val" id="stat-todo">0/0</div><div class="stat-label">이번 주 투두</div></div>
-          <div class="stat-card"><div class="stat-val">12일 🔥</div><div class="stat-label">연속 달성</div></div>
-        </div>
-
-        <!-- ② 오늘의 루틴 — full width -->
+        <!-- ③ 오늘의 루틴 — full width -->
         <div class="card">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
             <div class="card-title"><i class="ti ti-sun"></i>오늘의 루틴</div>
@@ -717,57 +717,39 @@
           </div>
         </div>
 
-        <!-- ⑤ 오늘의 부처 & BUY — 2열 그리드 -->
-        <div class="grid-2">
-
-          <!-- 오늘의 부처 카드 -->
-          <div class="card">
-            <div class="card-header">
-              <div class="card-title"><i class="ti ti-sparkles"></i>오늘의 부처</div>
-              <button class="add-btn" onclick="desireOpenAdd()"><i class="ti ti-plus"></i> 추가</button>
-            </div>
-            <div id="desire-list" style="display:flex;flex-direction:column;gap:2px;"></div>
-            <div id="desire-empty" style="display:none;padding:18px 0;text-align:center;color:var(--text-tertiary);font-size:13px;">
-              <i class="ti ti-mood-smile-dizzy" style="font-size:26px;display:block;margin-bottom:6px;"></i>
-              오늘 원하는 것을 적어보세요
-            </div>
+        <!-- ⑤ 주간 Buy -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="ti ti-shopping-bag"></i>주간 Buy</div>
+            <button class="add-btn" onclick="buyOpenAdd('need')"><i class="ti ti-plus"></i> 추가</button>
           </div>
 
-          <!-- BUY 카드 -->
-          <div class="card">
-            <div class="card-header">
-              <div class="card-title"><i class="ti ti-shopping-bag"></i>BUY</div>
-              <button class="add-btn" onclick="buyOpenAdd('need')"><i class="ti ti-plus"></i> 추가</button>
-            </div>
-
-            <!-- 사야할 것 섹션 -->
-            <div style="margin-bottom:12px;">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-                <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;display:flex;align-items:center;gap:5px;">
-                  <i class="ti ti-alert-circle" style="font-size:13px;color:#EF9F27;"></i>사야할 것
-                </div>
-                <button class="add-btn" style="padding:2px 7px;font-size:11px;" onclick="buyOpenAdd('need')"><i class="ti ti-plus"></i></button>
+          <!-- 사야할 것 섹션 -->
+          <div style="margin-bottom:12px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;display:flex;align-items:center;gap:5px;">
+                <i class="ti ti-alert-circle" style="font-size:13px;color:#EF9F27;"></i>사야할 것
               </div>
-              <div id="buy-need-list" style="display:flex;flex-direction:column;gap:2px;"></div>
-              <div id="buy-need-empty" style="display:none;font-size:12px;color:var(--text-tertiary);padding:6px 0 2px;">아직 없어요</div>
+              <button class="add-btn" style="padding:2px 7px;font-size:11px;" onclick="buyOpenAdd('need')"><i class="ti ti-plus"></i></button>
             </div>
-
-            <div class="section-divider"></div>
-
-            <!-- 사고싶은 것 섹션 -->
-            <div style="margin-top:10px;">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-                <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;display:flex;align-items:center;gap:5px;">
-                  <i class="ti ti-heart" style="font-size:13px;color:#E24B4A;"></i>사고싶은 것
-                </div>
-                <button class="add-btn" style="padding:2px 7px;font-size:11px;" onclick="buyOpenAdd('want')"><i class="ti ti-plus"></i></button>
-              </div>
-              <div id="buy-want-list" style="display:flex;flex-direction:column;gap:2px;"></div>
-              <div id="buy-want-empty" style="display:none;font-size:12px;color:var(--text-tertiary);padding:6px 0 2px;">아직 없어요</div>
-            </div>
+            <div id="buy-need-list" style="display:flex;flex-direction:column;gap:2px;"></div>
+            <div id="buy-need-empty" style="display:none;font-size:12px;color:var(--text-tertiary);padding:6px 0 2px;">아직 없어요</div>
           </div>
 
-        </div><!-- /grid-2 욕망&BUY -->
+          <div class="section-divider"></div>
+
+          <!-- 사고싶은 것 섹션 -->
+          <div style="margin-top:10px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;display:flex;align-items:center;gap:5px;">
+                <i class="ti ti-heart" style="font-size:13px;color:#E24B4A;"></i>사고싶은 것
+              </div>
+              <button class="add-btn" style="padding:2px 7px;font-size:11px;" onclick="buyOpenAdd('want')"><i class="ti ti-plus"></i></button>
+            </div>
+            <div id="buy-want-list" style="display:flex;flex-direction:column;gap:2px;"></div>
+            <div id="buy-want-empty" style="display:none;font-size:12px;color:var(--text-tertiary);padding:6px 0 2px;">아직 없어요</div>
+          </div>
+        </div>
 
       </div><!-- /view-today -->
 
@@ -859,6 +841,33 @@
             <button class="btn-secondary" onclick="closeModal()">취소</button>
             <button class="btn-primary" onclick="saveRoutine()">저장</button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BUY 추가 모달 -->
+    <div class="modal-overlay" id="buy-modal">
+      <div class="modal" style="width:360px;">
+        <div class="modal-title">
+          <span id="buy-modal-title">추가</span>
+          <i class="ti ti-x modal-close" onclick="buyModalClose()"></i>
+        </div>
+        <div class="modal-field">
+          <div class="modal-label">항목</div>
+          <input class="modal-input" id="buy-modal-text" placeholder="예: 러닝화"
+            onkeydown="if(event.key==='Enter')buyModalSave()"/>
+        </div>
+        <div class="modal-field">
+          <div class="modal-label">입력일</div>
+          <input type="date" class="modal-input" id="buy-modal-added"/>
+        </div>
+        <div class="modal-field">
+          <div class="modal-label">구매일 <span style="font-size:10px;color:var(--text-tertiary);font-weight:400;">(선택)</span></div>
+          <input type="date" class="modal-input" id="buy-modal-purchased"/>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" onclick="buyModalClose()">취소</button>
+          <button class="btn-primary" onclick="buyModalSave()">추가</button>
         </div>
       </div>
     </div>
@@ -1027,6 +1036,19 @@
             </div>
           </div>
 
+          <!-- 오늘의 부처 -->
+          <div class="card" style="padding:12px 16px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+              <div class="card-title"><i class="ti ti-sparkles"></i>오늘의 부처</div>
+              <button class="add-btn" onclick="desireOpenAdd()"><i class="ti ti-plus"></i> 추가</button>
+            </div>
+            <div id="desire-list" style="display:flex;flex-direction:column;gap:2px;"></div>
+            <div id="desire-empty" style="display:none;padding:14px 0;text-align:center;color:var(--text-tertiary);font-size:13px;">
+              <i class="ti ti-mood-smile-dizzy" style="font-size:24px;display:block;margin-bottom:6px;"></i>
+              오늘 원하는 것을 적어보세요
+            </div>
+          </div>
+
           <!-- 5행: 오늘의 기록 -->
           <div class="card" style="padding:12px 16px;">
             <div class="card-title" style="margin-bottom:8px;"><i class="ti ti-pencil"></i>오늘의 기록</div>
@@ -1119,7 +1141,7 @@
             <!-- 이번 주 BUY -->
             <div class="card">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-                <div class="card-title"><i class="ti ti-shopping-bag"></i>BUY</div>
+                <div class="card-title"><i class="ti ti-shopping-bag"></i>주간 Buy 요약</div>
               </div>
               <div id="retro-buy-week"></div>
             </div>
@@ -1185,7 +1207,7 @@
               <div id="retro-monthly-desire"></div>
             </div>
             <div class="card">
-              <div class="card-title" style="margin-bottom:12px;"><i class="ti ti-shopping-bag"></i>BUY</div>
+              <div class="card-title" style="margin-bottom:12px;"><i class="ti ti-shopping-bag"></i>월간 Buy 요약</div>
               <div id="retro-monthly-buy"></div>
             </div>
           </div>
@@ -1242,7 +1264,7 @@
               <div id="retro-quarterly-desire"></div>
             </div>
             <div class="card">
-              <div class="card-title" style="margin-bottom:12px;"><i class="ti ti-shopping-bag"></i>BUY</div>
+              <div class="card-title" style="margin-bottom:12px;"><i class="ti ti-shopping-bag"></i>분기 Buy 요약</div>
               <div id="retro-quarterly-buy"></div>
             </div>
           </div>
@@ -1299,7 +1321,7 @@
               <div id="retro-yearly-desire"></div>
             </div>
             <div class="card">
-              <div class="card-title" style="margin-bottom:12px;"><i class="ti ti-shopping-bag"></i>BUY</div>
+              <div class="card-title" style="margin-bottom:12px;"><i class="ti ti-shopping-bag"></i>연간 Buy 요약</div>
               <div id="retro-yearly-buy"></div>
             </div>
           </div>
@@ -1954,6 +1976,7 @@ function saveRoutine(){
 }
 
 document.getElementById('routine-modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+document.getElementById('buy-modal').addEventListener('click',function(e){if(e.target===this)buyModalClose();});
 
 // ── 오늘의 부처 데이터 ─────────────────────────────────────────
 // { [dateKey]: [{id, text, done}] }
@@ -2034,9 +2057,15 @@ function desireOpenAdd() {
 }
 
 // ── BUY 데이터 ─────────────────────────────────────────────────
-// { need: [{id,text,done}], want: [{id,text,done}] }
+// { need: [{id,text,done,addedDate,purchasedDate}], want: [{id,text,done,addedDate,purchasedDate}] }
 let buyStore = { need: [], want: [] };
 let buyNextId = 1;
+
+function buyFmtDate(dateStr) {
+  if (!dateStr) return '';
+  const [y,m,d] = dateStr.split('-');
+  return `${parseInt(m)}/${parseInt(d)}`;
+}
 
 function renderBuy() {
   ['need','want'].forEach(type => {
@@ -2050,16 +2079,21 @@ function renderBuy() {
     items.forEach(item => {
       const row = document.createElement('div');
       row.className = 'routine-item' + (item.done ? ' done' : '');
-      row.style.cssText = 'padding:6px 4px;';
+      row.style.cssText = 'padding:6px 4px;align-items:flex-start;';
 
       const chk = document.createElement('div');
       chk.className = 'check-box';
+      chk.style.marginTop = '2px';
       chk.innerHTML = '<i class="ti ti-check"></i>';
       chk.onclick = e => { e.stopPropagation(); item.done = !item.done; renderBuy(); lsAutoSave(); };
 
+      // 텍스트 + 날짜 묶음
+      const info = document.createElement('div');
+      info.style.cssText = 'flex:1;min-width:0;';
+
       const txt = document.createElement('span');
       txt.className = 'routine-name';
-      txt.style.fontSize = '13px';
+      txt.style.cssText = `font-size:13px;display:block;`;
       txt.textContent = item.text;
       txt.title = '더블클릭 편집';
       txt.ondblclick = e => {
@@ -2083,25 +2117,79 @@ function renderBuy() {
         if (e.key === 'Escape') { txt.textContent = item.text; txt.blur(); }
       };
 
+      // 날짜 태그 행
+      const dates = document.createElement('div');
+      dates.style.cssText = 'display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap;';
+      if (item.addedDate) {
+        dates.innerHTML += `<span style="font-size:10px;color:var(--text-tertiary);display:flex;align-items:center;gap:2px;"><i class="ti ti-calendar-plus" style="font-size:10px;"></i>입력 ${buyFmtDate(item.addedDate)}</span>`;
+      }
+      if (item.purchasedDate) {
+        dates.innerHTML += `<span style="font-size:10px;color:#43E97B;display:flex;align-items:center;gap:2px;"><i class="ti ti-shopping-cart-check" style="font-size:10px;"></i>구매 ${buyFmtDate(item.purchasedDate)}</span>`;
+      } else {
+        // 구매일 입력 인라인 버튼
+        const pBtn = document.createElement('span');
+        pBtn.style.cssText = 'font-size:10px;color:var(--text-tertiary);cursor:pointer;display:flex;align-items:center;gap:2px;padding:1px 5px;border:0.5px dashed var(--border-md);border-radius:6px;';
+        pBtn.innerHTML = '<i class="ti ti-calendar-check" style="font-size:10px;"></i>구매일';
+        pBtn.onclick = e => { e.stopPropagation(); buySetPurchasedDate(type, item.id); };
+        dates.appendChild(pBtn);
+      }
+
+      info.appendChild(txt);
+      info.appendChild(dates);
+
       const del = document.createElement('i');
       del.className = 'ti ti-x';
-      del.style.cssText = 'font-size:10px;color:var(--text-tertiary);cursor:pointer;opacity:0;transition:opacity 0.1s;flex-shrink:0;';
+      del.style.cssText = 'font-size:10px;color:var(--text-tertiary);cursor:pointer;opacity:0;transition:opacity 0.1s;flex-shrink:0;margin-top:3px;';
       del.onclick = e => { e.stopPropagation(); buyStore[type] = buyStore[type].filter(x=>x.id!==item.id); renderBuy(); lsAutoSave(); };
       row.onmouseenter = () => del.style.opacity = '1';
       row.onmouseleave = () => del.style.opacity = '0';
 
-      row.appendChild(chk); row.appendChild(txt); row.appendChild(del);
+      row.appendChild(chk); row.appendChild(info); row.appendChild(del);
       list.appendChild(row);
     });
   });
 }
 
-function buyOpenAdd(type) {
-  const label = type === 'need' ? '사야할 것' : '사고싶은 것';
-  const text = prompt(`${label}을 입력하세요`);
-  if (!text || !text.trim()) return;
-  buyStore[type].push({ id: buyNextId++, text: text.trim(), done: false });
+function buyTodayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function buySetPurchasedDate(type, id) {
+  const item = buyStore[type].find(x => x.id === id);
+  if (!item) return;
+  const val = prompt('구매일을 입력하세요 (예: 2026-05-28)', buyTodayStr());
+  if (!val || !val.trim()) return;
+  item.purchasedDate = val.trim();
+  item.done = true;
   renderBuy(); lsAutoSave();
+}
+
+// BUY 추가 모달
+let _buyAddType = 'need';
+function buyOpenAdd(type) {
+  _buyAddType = type;
+  const label = type === 'need' ? '사야할 것' : '사고싶은 것';
+  document.getElementById('buy-modal-title').textContent = label + ' 추가';
+  document.getElementById('buy-modal-text').value = '';
+  document.getElementById('buy-modal-added').value = buyTodayStr();
+  document.getElementById('buy-modal-purchased').value = '';
+  document.getElementById('buy-modal').classList.add('open');
+  setTimeout(() => document.getElementById('buy-modal-text').focus(), 50);
+}
+
+function buyModalSave() {
+  const text = document.getElementById('buy-modal-text').value.trim();
+  if (!text) { document.getElementById('buy-modal-text').focus(); return; }
+  const addedDate     = document.getElementById('buy-modal-added').value.trim() || buyTodayStr();
+  const purchasedDate = document.getElementById('buy-modal-purchased').value.trim() || '';
+  buyStore[_buyAddType].push({ id: buyNextId++, text, done: !!purchasedDate, addedDate, purchasedDate });
+  document.getElementById('buy-modal').classList.remove('open');
+  renderBuy(); lsAutoSave();
+}
+
+function buyModalClose() {
+  document.getElementById('buy-modal').classList.remove('open');
 }
 
 // ── Weekly focus: goals & rewards ───────────────────────────────
@@ -3027,6 +3115,7 @@ function diaryShowEditor(k) {
   document.getElementById('diary-list-view').style.display = 'none';
   document.getElementById('diary-editor-view').style.display = '';
   renderDiaryEditor();
+  renderDesire();
 }
 
 function diaryOpenNew() {
