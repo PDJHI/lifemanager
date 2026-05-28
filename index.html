@@ -638,7 +638,7 @@
         <div class="tab-bar">
           <div class="tab active" id="tab-today" onclick="switchTab('today')">오늘</div>
           <div class="tab" id="tab-lastweek" onclick="switchTab('lastweek')">지난주</div>
-          <div class="tab" id="tab-all" onclick="switchTab('all')"><i class="ti ti-calendar-month"></i></div>
+          <div class="tab" id="tab-all" onclick="switchTab('all')" style="padding:4px 10px;"><i class="ti ti-calendar-month" style="font-size:20px;color:#7C83FD !important;"></i></div>
           <div class="tab" id="tab-manage" onclick="switchTab('manage')">루틴 관리</div>
         </div>
       </div>
@@ -844,7 +844,13 @@
           <!-- 요일 헤더 -->
           <div style="display:grid;grid-template-columns:80px repeat(7,1fr);gap:4px;margin-bottom:6px;">
             <div></div>
-            ${['월','화','수','목','금','토','일'].map(d=>`<div style="text-align:center;font-size:12px;font-weight:600;color:var(--text-tertiary);">${d}</div>`).join('')}
+            <div style="text-align:center;font-size:12px;font-weight:600;color:var(--text-tertiary);">월</div>
+            <div style="text-align:center;font-size:12px;font-weight:600;color:var(--text-tertiary);">화</div>
+            <div style="text-align:center;font-size:12px;font-weight:600;color:var(--text-tertiary);">수</div>
+            <div style="text-align:center;font-size:12px;font-weight:600;color:var(--text-tertiary);">목</div>
+            <div style="text-align:center;font-size:12px;font-weight:600;color:var(--text-tertiary);">금</div>
+            <div style="text-align:center;font-size:12px;font-weight:600;color:var(--text-tertiary);">토</div>
+            <div style="text-align:center;font-size:12px;font-weight:600;color:var(--text-tertiary);">일</div>
           </div>
           <div id="all-cal-body"></div>
         </div>
@@ -1060,9 +1066,13 @@
             </div>
             <!-- 요일 헤더 -->
             <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px;">
-              ${['월','화','수','목','금','토','일'].map((d,i) =>
-                `<div style="text-align:center;font-size:13px;font-weight:600;color:${i>=5?'var(--text-tertiary)':'var(--text-tertiary)'};">${d}</div>`
-              ).join('')}
+              <div style="text-align:center;font-size:13px;font-weight:600;color:var(--text-tertiary);">월</div>
+              <div style="text-align:center;font-size:13px;font-weight:600;color:var(--text-tertiary);">화</div>
+              <div style="text-align:center;font-size:13px;font-weight:600;color:var(--text-tertiary);">수</div>
+              <div style="text-align:center;font-size:13px;font-weight:600;color:var(--text-tertiary);">목</div>
+              <div style="text-align:center;font-size:13px;font-weight:600;color:var(--text-tertiary);">금</div>
+              <div style="text-align:center;font-size:13px;font-weight:600;color:var(--text-secondary);">토</div>
+              <div style="text-align:center;font-size:13px;font-weight:600;color:#E24B4A;">일</div>
             </div>
             <div id="diary-fullcal-body" style="display:flex;flex-direction:column;gap:4px;"></div>
           </div>
@@ -4200,7 +4210,9 @@ function diaryDelete() {
   if (!confirm('이 일기를 삭제할까요?')) return;
   delete diaryStore[diaryDateKey(diaryViewDate)];
   diaryShowList();
-  lsAutoSave();
+  // 즉시 저장 (디바운스 없이)
+  if (window._fbUid) fsSave(window._fbUid);
+  else lsSave();
 }
 
 // ── Calendar — weekly strip ───────────────────────────────────────
