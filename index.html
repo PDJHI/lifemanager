@@ -40,22 +40,21 @@
   #sidebar { width: var(--nav-w); background: var(--bg-primary); border-right: 0.5px solid var(--border); display: flex; flex-direction: column; padding: 20px 0; flex-shrink: 0; height: 100vh; overflow-y: auto; }
   .logo { padding: 0 16px 20px; border-bottom: 0.5px solid var(--border); margin-bottom: 8px; }
   .logo-title {
-    font-size: 15px;
-    font-weight: 800;
-    letter-spacing: 0.18em;
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    background: linear-gradient(135deg, #0077B6 0%, #00B4D8 50%, #90E0EF 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--text-primary);
+    line-height: 1;
   }
   .logo-sub {
     font-size: 10px;
     font-weight: 400;
+    font-style: italic;
     color: var(--text-tertiary);
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    margin-top: 5px;
+    letter-spacing: 0.12em;
+    font-family: Georgia, 'Times New Roman', serif;
+    margin-top: 6px;
   }
   .nav-section { padding: 8px 0; }
   .nav-label { font-size:12px; font-weight: 600; color: var(--text-tertiary); letter-spacing: 0.12em; text-transform: uppercase; padding: 0 16px 4px; }
@@ -263,9 +262,12 @@
 <div id="login-screen" style="display:flex;position:fixed;inset:0;background:var(--bg-primary);z-index:9999;align-items:center;justify-content:center;">
   <div style="width:100%;max-width:360px;padding:0 24px;text-align:center;">
     <div style="margin-bottom:36px;">
-      <div style="font-size:46px;margin-bottom:12px;">🌊</div>
-      <div style="font-size:14px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;background:linear-gradient(135deg,#0077B6 0%,#00B4D8 50%,#90E0EF 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">My Life Project</div>
-      <div style="font-size:10px;font-weight:400;color:var(--text-tertiary);margin-top:5px;letter-spacing:0.22em;text-transform:uppercase;">Life goes on.</div>
+      <svg width="48" height="20" viewBox="0 0 48 20" fill="none" style="display:block;margin:0 auto 16px;">
+        <path d="M0 10 C6 4, 12 4, 18 10 C24 16, 30 16, 36 10 C42 4, 45 4, 48 7" stroke="var(--text-primary)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+        <path d="M0 16 C6 10, 12 10, 18 16 C24 22, 30 22, 36 16 C42 10, 45 10, 48 13" stroke="var(--text-primary)" stroke-width="1.4" stroke-linecap="round" fill="none" opacity="0.3"/>
+      </svg>
+      <div style="font-size:14px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-primary);line-height:1;">My Life Project</div>
+      <div style="font-size:10px;font-weight:400;font-style:italic;font-family:Georgia,'Times New Roman',serif;color:var(--text-tertiary);margin-top:7px;letter-spacing:0.12em;">Life goes on.</div>
     </div>
     <button id="btn-google-login"
       style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px;border-radius:var(--radius-md);border:0.5px solid var(--border-md);background:var(--bg-secondary);color:var(--text-primary);font-size:16px;font-weight:600;cursor:pointer;font-family:inherit;">
@@ -280,7 +282,10 @@
   <nav id="sidebar">
     <div class="logo" style="display:flex;align-items:center;justify-content:space-between;">
       <div style="cursor:pointer;" onclick="document.querySelector('[data-page=\'dashboard\']').click()">
-        <div style="font-size:21px;margin-bottom:4px;">🌊</div>
+        <svg width="32" height="14" viewBox="0 0 32 14" fill="none" style="display:block;margin-bottom:8px;">
+          <path d="M0 7 C4 3, 8 3, 12 7 C16 11, 20 11, 24 7 C28 3, 30 3, 32 5" stroke="var(--text-primary)" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+          <path d="M0 11 C4 7, 8 7, 12 11 C16 15, 20 15, 24 11 C28 7, 30 7, 32 9" stroke="var(--text-primary)" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.35"/>
+        </svg>
         <div class="logo-title">My Life Project</div>
         <div class="logo-sub">Life goes on.</div>
       </div>
@@ -956,13 +961,14 @@
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
             <div class="card-title"><i class="ti ti-list-check"></i>다음주 투두</div>
             <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:13px;color:var(--text-secondary);" id="nw-week-label"></span>
               <div class="prog-bar" style="width:100px"><div class="prog-fill" id="nw-todo-prog" style="width:0%"></div></div>
               <div class="prog-label" id="nw-todo-prog-label" style="min-width:28px">0%</div>
             </div>
           </div>
           <div style="display:flex;flex-direction:column;gap:10px;">
-            <div id="nw-todo-grid"  style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-items:start;"></div>
-            <div id="nw-todo-grid2" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-items:start;"></div>
+            <div id="nw-todo-days-row1" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-items:start;"></div>
+            <div id="nw-todo-days-row2" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-items:start;"></div>
           </div>
         </div>
 
@@ -1089,6 +1095,7 @@
             <div style="display:flex;gap:6px;flex-wrap:wrap" id="modal-cats">
               <div class="modal-day-btn selected" data-cat="자산" onclick="selectCat(this)" style="flex:none;padding:6px 12px">자산</div>
               <div class="modal-day-btn" data-cat="관계" onclick="selectCat(this)" style="flex:none;padding:6px 12px">관계</div>
+              <div class="modal-day-btn" data-cat="가족" onclick="selectCat(this)" style="flex:none;padding:6px 12px">가족</div>
               <div class="modal-day-btn" data-cat="건강" onclick="selectCat(this)" style="flex:none;padding:6px 12px">건강</div>
               <div class="modal-day-btn" data-cat="경험" onclick="selectCat(this)" style="flex:none;padding:6px 12px">경험</div>
               <div class="modal-day-btn" data-cat="커리어" onclick="selectCat(this)" style="flex:none;padding:6px 12px">커리어</div>
@@ -1259,6 +1266,7 @@
           <div class="card" style="padding:12px 18px;">
             <div style="display:flex;align-items:center;gap:12px;">
               <input type="text" id="diary-title" placeholder="오늘의 제목..." maxlength="60"
+                oninput="diaryAutoSave()"
                 style="flex:1;font-size:19px;font-weight:600;border:none;outline:none;background:transparent;color:var(--text-primary);font-family:inherit;">
 
               <!-- 날씨 -->
@@ -1395,13 +1403,13 @@
             <div class="card-title" style="margin-bottom:8px;"><i class="ti ti-pencil"></i>오늘의 기록</div>
             <textarea id="diary-content" rows="10" placeholder="▪ 오늘 하루를 자유롭게 기록해보세요..."
               onkeydown="diaryContentKeydown(event)"
-              oninput="diaryContentInit(this)"
+              oninput="diaryContentInit(this);diaryAutoSave()"
               style="width:100%;resize:none;border:none;outline:none;background:transparent;font-size:15px;color:var(--text-primary);font-family:inherit;line-height:1.9;"></textarea>
           </div>
 
           <!-- 저장 버튼 -->
           <div style="display:flex;justify-content:flex-end;">
-            <button onclick="diarySave()"
+            <button onclick="diarySaveAndBack()"
               style="padding:9px 32px;border-radius:var(--radius-md);border:none;background:var(--text-primary);color:var(--bg-primary);font-size:16px;font-weight:600;cursor:pointer;font-family:inherit;">
               저장
             </button>
@@ -3262,12 +3270,88 @@ function renderNextWeek() {
       ${items.length ? items.map(t=>`<div style="display:flex;align-items:center;gap:6px;padding:3px 0;"><div style="width:13px;height:13px;border-radius:3px;flex-shrink:0;background:${t.done?'var(--text-primary)':'transparent'};border:1.5px solid var(--border-md);display:flex;align-items:center;justify-content:center;">${t.done?'<i class="ti ti-check" style="font-size:8px;color:var(--bg-primary)"></i>':''}</div><span style="font-size:11px;${t.done?'text-decoration:line-through;color:var(--text-tertiary);':''}">${t.text}</span></div>`).join('') : '<div style="font-size:11px;color:var(--text-tertiary);">-</div>'}
     </div>`;
   };
-  document.getElementById('nw-todo-grid').innerHTML  = nwKeys.slice(0,4).map(renderDay).join('');
-  document.getElementById('nw-todo-grid2').innerHTML = nwKeys.slice(4).map(renderDay).join('');
-
   // Buy 렌더
   renderNwBuy();
+  // 다음주 투두 렌더
+  renderNextWeekTodo();
 }
+
+function renderNextWeekTodo() {
+  const mon = nwMonday();
+  const sun = addDays(mon, 6);
+  const wLabel = document.getElementById('nw-week-label');
+  if (wLabel) wLabel.textContent = `${formatDate(mon)} ~ ${formatDate(sun)}`;
+
+  const nwDayKeys = Array.from({length:7}, (_,i) => {
+    const dt = addDays(mon, i);
+    return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+  });
+  const allTodos = nwDayKeys.flatMap(k => todoStore[k]||[]);
+  const doneTodo = allTodos.filter(t=>t.done).length;
+  const pct = allTodos.length ? Math.round(doneTodo/allTodos.length*100) : 0;
+  const progEl = document.getElementById('nw-todo-prog');
+  const progLabelEl = document.getElementById('nw-todo-prog-label');
+  if (progEl) progEl.style.width = pct+'%';
+  if (progLabelEl) progLabelEl.textContent = pct+'%';
+
+  const row1 = document.getElementById('nw-todo-days-row1');
+  const row2 = document.getElementById('nw-todo-days-row2');
+  if (!row1 || !row2) return;
+  row1.innerHTML = ''; row2.innerHTML = '';
+
+  KR_DAYS_MON.forEach((dayName, di) => {
+    const dt = addDays(mon, di);
+    const dk = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+    if (!todoStore[dk]) todoStore[dk] = [];
+    const dayTodos = todoStore[dk];
+
+    const col = document.createElement('div');
+    col.style.cssText = 'display:flex;flex-direction:column;min-width:0;border-right:0.5px solid var(--border);padding:0 10px 0 0;';
+
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'padding:4px 8px;border-radius:var(--radius-md);margin-bottom:4px;background:var(--bg-secondary);display:flex;align-items:center;gap:5px;';
+    hdr.innerHTML = `<span style="font-size:12px;font-weight:700;color:var(--text-primary)">${dayName}</span><span style="font-size:11px;color:var(--text-tertiary)">${formatDate(dt)}</span>`;
+    col.appendChild(hdr);
+
+    dayTodos.forEach(t => {
+      const item = document.createElement('div');
+      item.style.cssText = 'display:flex;align-items:flex-start;gap:6px;padding:5px 2px;border-bottom:0.5px solid var(--border);';
+      const chk = document.createElement('div');
+      chk.style.cssText = `width:14px;height:14px;border-radius:3px;border:1.5px solid var(--border-md);flex-shrink:0;margin-top:2px;background:${t.done?'var(--text-primary)':'transparent'};display:flex;align-items:center;justify-content:center;cursor:pointer;`;
+      chk.innerHTML = t.done?'<i class="ti ti-check" style="font-size:9px;color:var(--bg-primary)"></i>':'';
+      chk.onclick = () => { t.done=!t.done; lsAutoSave(); renderNextWeekTodo(); };
+      const txt = document.createElement('span');
+      txt.style.cssText = `flex:1;font-size:13px;line-height:1.5;${t.done?'text-decoration:line-through;color:var(--text-tertiary);':''}`;
+      txt.textContent = t.text;
+      const del = document.createElement('i');
+      del.className='ti ti-x';
+      del.style.cssText='font-size:10px;color:var(--text-tertiary);cursor:pointer;flex-shrink:0;margin-top:3px;opacity:0;transition:opacity 0.1s;';
+      del.onclick = () => { todoStore[dk]=todoStore[dk].filter(x=>x.id!==t.id); lsAutoSave(); renderNextWeekTodo(); };
+      item.onmouseenter = () => del.style.opacity='1';
+      item.onmouseleave = () => del.style.opacity='0';
+      item.appendChild(chk); item.appendChild(txt); item.appendChild(del);
+      col.appendChild(item);
+    });
+
+    const addRow = document.createElement('div');
+    addRow.style.cssText = 'display:flex;align-items:center;gap:4px;padding:4px 2px;';
+    const inp = document.createElement('input');
+    inp.type='text'; inp.placeholder='+ 추가';
+    inp.style.cssText='flex:1;font-size:12px;border:none;outline:none;background:transparent;color:var(--text-primary);font-family:inherit;';
+    inp.onkeydown = e => {
+      if (e.key==='Enter') {
+        const val = inp.value.trim(); if (!val) return;
+        todoStore[dk].push({ id: nextTodoId++, dayIdx: di, text: val, priority:'mid', done: false });
+        inp.value = ''; lsAutoSave(); renderNextWeekTodo();
+      }
+    };
+    addRow.appendChild(inp);
+    col.appendChild(addRow);
+    (di < 4 ? row1 : row2).appendChild(col);
+  });
+  [row1, row2].forEach(r => { if(r.lastElementChild) r.lastElementChild.style.borderRight='none'; });
+}
+
 
 if (!window.nwBuyStore) window.nwBuyStore = { need: [], want: [] };
 let nwBuyNextId = 100;
@@ -4600,16 +4684,51 @@ function diarySetScore(val) {
 
 // ── Affirmation ────────────────────────────────────────────────
 function diaryContentKeydown(e) {
-  if (e.key !== 'Enter') return;
-  e.preventDefault();
   const ta    = e.target;
   const start = ta.selectionStart;
   const end   = ta.selectionEnd;
   const val   = ta.value;
-  const insert = '\n▪ ';
-  ta.value = val.slice(0, start) + insert + val.slice(end);
-  const pos = start + insert.length;
-  ta.selectionStart = ta.selectionEnd = pos;
+
+  // Tab 키 — 들여쓰기 (하위 글머리기호)
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    if (!e.shiftKey) {
+      const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+      const lineEnd   = val.indexOf('\n', start);
+      const line      = val.slice(lineStart, lineEnd === -1 ? undefined : lineEnd);
+      let newLine = line;
+      if (line.startsWith('▪ '))       newLine = '  ◦ ' + line.slice(2);
+      else if (line.startsWith('  ◦ ')) newLine = '    - ' + line.slice(4);
+      else                              newLine = '  ◦ ' + line;
+      const newVal = val.slice(0, lineStart) + newLine + (lineEnd === -1 ? '' : val.slice(lineEnd));
+      ta.value = newVal;
+      ta.selectionStart = ta.selectionEnd = start + (newLine.length - line.length);
+    } else {
+      const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+      const lineEnd   = val.indexOf('\n', start);
+      const line      = val.slice(lineStart, lineEnd === -1 ? undefined : lineEnd);
+      let newLine = line;
+      if (line.startsWith('    - '))   newLine = '  ◦ ' + line.slice(6);
+      else if (line.startsWith('  ◦ ')) newLine = '▪ '  + line.slice(4);
+      const newVal = val.slice(0, lineStart) + newLine + (lineEnd === -1 ? '' : val.slice(lineEnd));
+      ta.value = newVal;
+      ta.selectionStart = ta.selectionEnd = Math.max(lineStart, start - (line.length - newLine.length));
+    }
+    diaryAutoSave();
+    return;
+  }
+
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+    const line      = val.slice(lineStart, start);
+    let bullet = '\n▪ ';
+    if (line.startsWith('    - '))   bullet = '\n    · ';
+    else if (line.startsWith('  ◦ ')) bullet = '\n  ◦ ';
+    ta.value = val.slice(0, start) + bullet + val.slice(end);
+    ta.selectionStart = ta.selectionEnd = start + bullet.length;
+    diaryAutoSave();
+  }
 }
 
 function diaryContentInit(ta) {
@@ -4820,19 +4939,26 @@ function diarySave() {
   data.content     = document.getElementById('diary-content').value.trim();
   const scoreVal   = parseInt(document.getElementById('diary-score-input').value) || 0;
   data.score       = Math.max(0, Math.min(10, scoreVal));
-  diaryShowList();
   lsAutoSave();
 }
 
+// 임시저장 (입력 중 1초 debounce)
+let _diaryAutoSaveTimer = null;
+function diaryAutoSave() {
+  if (_diaryAutoSaveTimer) clearTimeout(_diaryAutoSaveTimer);
+  _diaryAutoSaveTimer = setTimeout(() => diarySave(), 1000);
+}
+
+// 일기 저장 후 목록으로
+function diarySaveAndBack() {
+  diarySave();
+  diaryShowList();
+}
+
 function diaryDelete() {
-  if (!confirm('이 일기를 삭제할까요?')) return;
   delete diaryStore[diaryDateKey(diaryViewDate)];
-  // localStorage 즉시 저장
   lsSave();
-  // Firestore도 즉시 저장 (await 없이 비동기로 실행, 실패해도 localStorage는 저장됨)
-  if (window._fbUid) {
-    fsSave(window._fbUid).catch(e => console.warn('삭제 저장 실패:', e));
-  }
+  if (window._fbUid) fsSave(window._fbUid).catch(e => console.warn('삭제 저장 실패:', e));
   diaryShowList();
 }
 
@@ -7601,17 +7727,19 @@ document.getElementById('logout-btn').addEventListener('click', function() {
       appEl.style.display  = '';
       document.querySelector('[data-page="dashboard"]').click();
 
-      // 10분 비활동 시 자동 로그아웃
+      // 10분 비활동 시 자동 로그아웃 (입력 중 포함)
       const IDLE_MS = 10 * 60 * 1000;
       let idleTimer = null;
-      function resetIdle() {
+      window._resetIdle = function() {
         clearTimeout(idleTimer);
         idleTimer = setTimeout(() => signOut(auth), IDLE_MS);
-      }
-      ['mousemove','mousedown','keydown','touchstart','scroll','click'].forEach(evt => {
-        document.addEventListener(evt, resetIdle, { passive: true });
-      });
-      resetIdle();
+      };
+      ['mousemove','mousedown','keydown','keypress','keyup',
+       'touchstart','touchmove','scroll','click','input','change','focus','wheel']
+        .forEach(evt => {
+          window.addEventListener(evt, window._resetIdle, { passive: true, capture: true });
+        });
+      window._resetIdle();
 
     } else {
       window._fbUid = null;
