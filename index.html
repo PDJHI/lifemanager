@@ -867,18 +867,27 @@
 
       <!-- ===== 다음주 뷰 ===== -->
       <div id="view-nextweek" style="display:none;flex-direction:column;gap:16px;">
+
+        <!-- ① Stats -->
+        <div class="grid-3">
+          <div class="stat-card"><div class="stat-val" id="nw-stat-routine">0/0</div><div class="stat-label">다음주 루틴</div></div>
+          <div class="stat-card"><div class="stat-val" id="nw-stat-todo">0/0</div><div class="stat-label">다음주 투두</div></div>
+          <div class="stat-card"><div class="stat-val" id="nw-stat-goal">0/0</div><div class="stat-label">목표</div></div>
+        </div>
+
+        <!-- ② 다음주 목표 -->
         <div class="card">
-          <div style="display:flex;align-items:center;margin-bottom:14px;">
+          <div style="display:flex;align-items:center;margin-bottom:14px">
             <div class="card-title"><i class="ti ti-flag"></i>다음주 목표</div>
             <span style="font-size:12px;color:var(--text-tertiary);margin-left:10px;" id="nextweek-wf-label"></span>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
             <div>
-              <div style="font-size:12px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
-                <i class="ti ti-target" style="font-size:15px;"></i>목표
+              <div style="font-size:12px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+                <i class="ti ti-target" style="font-size:15px"></i>목표
               </div>
-              <div id="nw-goals-list" style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px;"></div>
-              <div style="display:flex;gap:6px;">
+              <div id="nw-goals-list" style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px"></div>
+              <div style="display:flex;gap:6px">
                 <input type="text" id="nw-goal-input" placeholder="목표 추가..." onkeydown="if(event.key==='Enter')addNwGoal()"
                   style="flex:1;font-size:13px;padding:6px 10px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);outline:none;font-family:inherit;">
                 <button onclick="addNwGoal()" style="padding:6px 10px;border-radius:var(--radius-md);border:none;background:var(--text-primary);color:var(--bg-primary);cursor:pointer;font-size:15px;display:flex;align-items:center;"><i class="ti ti-plus"></i></button>
@@ -887,7 +896,7 @@
             <div style="display:flex;flex-direction:column;gap:14px;">
               <div>
                 <div style="font-size:12px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
-                  <span style="font-size:14px;">📚</span>이번 주의 책
+                  <span style="font-size:14px;">📚</span>다음 주의 책
                 </div>
                 <input type="text" id="nw-book-input" placeholder="읽을 책 제목..."
                   oninput="nwSaveBook(this.value)"
@@ -895,7 +904,7 @@
               </div>
               <div>
                 <div style="font-size:12px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
-                  <span style="font-size:14px;">✍️</span>이번 주의 필사
+                  <span style="font-size:14px;">✍️</span>다음 주의 필사
                 </div>
                 <input type="text" id="nw-writing-input" placeholder="필사할 책 제목..."
                   oninput="nwSaveWriting(this.value)"
@@ -904,28 +913,58 @@
             </div>
           </div>
           <div style="padding-top:14px;border-top:0.5px solid var(--border);">
-            <div style="font-size:12px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
-              <i class="ti ti-gift" style="font-size:15px;"></i>보상
+            <div style="font-size:12px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+              <i class="ti ti-gift" style="font-size:15px"></i>보상
             </div>
             <div id="nw-rewards-list" style="display:flex;flex-direction:row;flex-wrap:wrap;gap:6px;margin-bottom:8px;"></div>
-            <div style="display:flex;gap:6px;">
+            <div style="display:flex;gap:6px">
               <input type="text" id="nw-reward-input" placeholder="보상 추가..." onkeydown="if(event.key==='Enter')addNwReward()"
                 style="flex:1;font-size:13px;padding:6px 10px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);outline:none;font-family:inherit;">
               <button onclick="addNwReward()" style="padding:6px 10px;border-radius:var(--radius-md);border:none;background:var(--text-primary);color:var(--bg-primary);cursor:pointer;font-size:15px;display:flex;align-items:center;"><i class="ti ti-plus"></i></button>
             </div>
           </div>
         </div>
+
+        <!-- ③ 루틴 예정 현황 -->
         <div class="card">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div class="card-header">
+            <div class="card-title"><i class="ti ti-flame"></i>루틴 예정</div>
+          </div>
+          <div id="nw-streak-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:4px;"></div>
+        </div>
+
+        <!-- ④ 루틴 (요일별 탭) -->
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div class="card-title"><i class="ti ti-sun"></i>루틴</div>
+          </div>
+          <div style="display:flex;gap:4px;margin-bottom:10px;">
+            <button onclick="switchNwRoutineDay(0)" id="nw-day-btn-0" style="padding:4px 10px;border-radius:6px;border:0.5px solid var(--border-md);background:transparent;color:var(--text-secondary);font-size:13px;cursor:pointer;font-family:inherit;transition:all 0.15s;">월</button>
+            <button onclick="switchNwRoutineDay(1)" id="nw-day-btn-1" style="padding:4px 10px;border-radius:6px;border:0.5px solid var(--border-md);background:transparent;color:var(--text-secondary);font-size:13px;cursor:pointer;font-family:inherit;transition:all 0.15s;">화</button>
+            <button onclick="switchNwRoutineDay(2)" id="nw-day-btn-2" style="padding:4px 10px;border-radius:6px;border:0.5px solid var(--border-md);background:transparent;color:var(--text-secondary);font-size:13px;cursor:pointer;font-family:inherit;transition:all 0.15s;">수</button>
+            <button onclick="switchNwRoutineDay(3)" id="nw-day-btn-3" style="padding:4px 10px;border-radius:6px;border:0.5px solid var(--border-md);background:transparent;color:var(--text-secondary);font-size:13px;cursor:pointer;font-family:inherit;transition:all 0.15s;">목</button>
+            <button onclick="switchNwRoutineDay(4)" id="nw-day-btn-4" style="padding:4px 10px;border-radius:6px;border:0.5px solid var(--border-md);background:transparent;color:var(--text-secondary);font-size:13px;cursor:pointer;font-family:inherit;transition:all 0.15s;">금</button>
+            <button onclick="switchNwRoutineDay(5)" id="nw-day-btn-5" style="padding:4px 10px;border-radius:6px;border:0.5px solid var(--border-md);background:transparent;color:var(--text-secondary);font-size:13px;cursor:pointer;font-family:inherit;transition:all 0.15s;">토</button>
+            <button onclick="switchNwRoutineDay(6)" id="nw-day-btn-6" style="padding:4px 10px;border-radius:6px;border:0.5px solid var(--border-md);background:transparent;color:var(--text-secondary);font-size:13px;cursor:pointer;font-family:inherit;transition:all 0.15s;">일</button>
+          </div>
+          <div id="nw-routine-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:4px 12px;"></div>
+        </div>
+
+        <!-- ⑤ 주간 투두 -->
+        <div class="card" style="display:flex;flex-direction:column;gap:0">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
             <div class="card-title"><i class="ti ti-list-check"></i>다음주 투두</div>
-            <div style="display:flex;align-items:center;gap:6px;">
-              <div class="prog-bar" style="width:100px;"><div class="prog-fill" id="nw-todo-prog" style="width:0%"></div></div>
-              <div class="prog-label" id="nw-todo-prog-label" style="min-width:28px;">0%</div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="prog-bar" style="width:100px"><div class="prog-fill" id="nw-todo-prog" style="width:0%"></div></div>
+              <div class="prog-label" id="nw-todo-prog-label" style="min-width:28px">0%</div>
             </div>
           </div>
-          <div id="nw-todo-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-items:start;"></div>
-          <div id="nw-todo-grid2" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-items:start;margin-top:10px;"></div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div id="nw-todo-grid"  style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-items:start;"></div>
+            <div id="nw-todo-grid2" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-items:start;"></div>
+          </div>
         </div>
+
       </div><!-- /view-nextweek -->
 
       <!-- ===== 전체 뷰 (달력) ===== -->
@@ -1430,20 +1469,42 @@
                 <div id="retro-time-cats"></div>
               </div>
             </div>
-            <!-- 주간 목표 & 보상 (wfStore 연동) -->
-            <div class="grid-2">
-              <div class="card">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-                  <div class="card-title"><i class="ti ti-flag"></i>이번 주 목표</div>
-                  <button class="add-btn" style="font-size:12px;padding:3px 8px;" onclick="retroGoToWf()"><i class="ti ti-external-link" style="font-size:12px;"></i> 루틴&투두에서 편집</button>
-                </div>
-                <div id="retro-wf-goals"></div>
+            <!-- 주간 목표 (wfStore 연동 - 루틴&투두와 동일 구조) -->
+            <div class="card">
+              <div style="display:flex;align-items:center;margin-bottom:14px;">
+                <div class="card-title"><i class="ti ti-flag"></i>주간 목표</div>
+                <span style="font-size:12px;color:var(--text-tertiary);margin-left:10px;" id="retro-wf-week-label"></span>
+                <button class="add-btn" style="font-size:12px;padding:3px 8px;margin-left:auto;" onclick="retroGoToWf()"><i class="ti ti-external-link" style="font-size:12px;"></i> 루틴&투두에서 편집</button>
               </div>
-              <div class="card">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-                  <div class="card-title"><i class="ti ti-gift"></i>이번 주 보상</div>
+              <!-- 1행: 목표 | 책+필사 -->
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+                <div>
+                  <div style="font-size:12px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+                    <i class="ti ti-target" style="font-size:14px;"></i>목표
+                  </div>
+                  <div id="retro-wf-goals"></div>
                 </div>
-                <div id="retro-wf-rewards"></div>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                  <div>
+                    <div style="font-size:12px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:5px;">
+                      <span style="font-size:13px;">📚</span>이번 주의 책
+                    </div>
+                    <div id="retro-wf-book" style="font-size:13px;color:var(--text-primary);padding:5px 8px;border-radius:var(--radius-md);background:var(--bg-secondary);border:0.5px solid var(--border);min-height:28px;"></div>
+                  </div>
+                  <div>
+                    <div style="font-size:12px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:5px;">
+                      <span style="font-size:13px;">✍️</span>이번 주의 필사
+                    </div>
+                    <div id="retro-wf-writing" style="font-size:13px;color:var(--text-primary);padding:5px 8px;border-radius:var(--radius-md);background:var(--bg-secondary);border:0.5px solid var(--border);min-height:28px;"></div>
+                  </div>
+                </div>
+              </div>
+              <!-- 2행: 보상 -->
+              <div style="padding-top:12px;border-top:0.5px solid var(--border);">
+                <div style="font-size:12px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+                  <i class="ti ti-gift" style="font-size:14px;"></i>보상
+                </div>
+                <div id="retro-wf-rewards" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
               </div>
             </div>
             <!-- 이번 주의 부처 + 주간 Buy 요약 -->
@@ -3020,12 +3081,6 @@ function addWfReward() {
   inp.value = ''; renderWf();
 }
 
-function deleteWfItem(e, k, type, id) {
-  e.stopPropagation();
-  if (!wfStore[k]) return;
-  wfStore[k][type] = wfStore[k][type].filter(x => x.id !== id);
-  renderWf();
-}
 
 function deleteWfItem(e, k, type, id) {
   e.stopPropagation();
@@ -3055,6 +3110,52 @@ function addNwReward() {
   const text = inp.value.trim(); if (!text) return;
   wfGetOrCreate(nwMonday()).rewards.push({ id: wfNextId++, text, claimed: false });
   inp.value = ''; renderNextWeek(); lsAutoSave();
+}
+
+let _nwRoutineDayIdx = 0;
+function switchNwRoutineDay(idx) {
+  _nwRoutineDayIdx = idx;
+  window._nwRoutineDayIdx = idx;
+  for (let i = 0; i < 7; i++) {
+    const btn = document.getElementById(`nw-day-btn-${i}`);
+    if (!btn) continue;
+    if (i === idx) {
+      btn.style.background = 'var(--text-primary)';
+      btn.style.color = 'var(--bg-primary)';
+      btn.style.fontWeight = '600';
+      btn.style.borderColor = 'transparent';
+    } else {
+      btn.style.background = 'transparent';
+      btn.style.color = 'var(--text-secondary)';
+      btn.style.fontWeight = '400';
+      btn.style.borderColor = 'var(--border-md)';
+    }
+  }
+  const CAT_ORDER = { '건강':0, '자산':1, '관계':2, '가족':3, '경험':4, '커리어':5, '성장':6 };
+  const TIME_ORDER = { '아침':0, '오전':1, '오후':2, '저녁':3, '공통':4 };
+  const dayRoutines = routines
+    .filter(r => r.days.includes(idx))
+    .sort((a,b) => {
+      const cs = (CAT_ORDER[a.cat]??9) - (CAT_ORDER[b.cat]??9);
+      if (cs !== 0) return cs;
+      return (TIME_ORDER[a.timeSlot||'공통']??4) - (TIME_ORDER[b.timeSlot||'공통']??4);
+    });
+  const listEl = document.getElementById('nw-routine-list');
+  if (!listEl) return;
+  listEl.innerHTML = '';
+  if (!dayRoutines.length) {
+    listEl.innerHTML = '<div style="font-size:13px;color:var(--text-tertiary);padding:8px 0;">이 요일에 설정된 루틴이 없어요</div>';
+    return;
+  }
+  dayRoutines.forEach(r => {
+    const item = document.createElement('div');
+    item.className = 'routine-item';
+    item.style.cssText = 'border-bottom:0.5px solid var(--border);padding:7px 0;border-radius:0;cursor:default;';
+    item.innerHTML = `<div class="routine-name" style="font-size:15px;">${r.name}</div>
+      <div class="tag ${CAT_TAG[r.cat]||''}">${r.cat}</div>
+      ${r.timeSlot?`<div class="tag ${TIME_TAG[r.timeSlot]||'tag-blue'}" style="opacity:0.7;">${r.timeSlot}</div>`:''}`;
+    listEl.appendChild(item);
+  });
 }
 function renderNextWeek() {
   const mon = nwMonday();
@@ -3627,7 +3728,7 @@ function renderTimelog() {
 }
 
 // ── Slider time picker ───────────────────────────────────────────
-const TL_START_H = 6;   // 슬라이더 표시 시작: 06:00
+const TL_START_H = 0;   // 슬라이더 표시 시작: 00:00
 const TL_END_H   = 24;  // 슬라이더 표시 끝:   24:00
 const TL_TOTAL   = (TL_END_H - TL_START_H) * 60; // 분 단위 총 범위
 const TL_STEP    = 30;  // 스냅 단위 (분)
@@ -4487,12 +4588,23 @@ function affmPrev() {
   affmRenderCurrent();
 }
 function affmAddNew() {
-  const text = prompt('새 확언을 입력하세요\n예) 나는 오늘도 성장하고 있다.');
-  if (!text || !text.trim()) return;
-  affirmationStore.push({ id: affNextId++, text: text.trim() });
+  // 새 빈 확언 추가 후 바로 편집 모드 진입
+  affirmationStore.push({ id: affNextId++, text: '' });
   affirmationIdx = affirmationStore.length - 1;
-  affmRenderCurrent();
-  lsAutoSave();
+  // 편집 모드 직접 진입
+  const disp = document.getElementById('affm-display');
+  const ta   = document.getElementById('diary-affirmation');
+  if (disp) disp.style.display = 'none';
+  if (ta) {
+    ta.value = '';
+    ta.placeholder = '확언을 입력하세요. 예) 나는 오늘도 성장하고 있다.';
+    ta.style.display = '';
+    ta.focus();
+  }
+  const label = document.getElementById('affm-index-label');
+  if (label) label.textContent = `${affirmationIdx+1}/${affirmationStore.length}`;
+  const delBtn = document.getElementById('affm-delete-btn');
+  if (delBtn) delBtn.style.display = '';
 }
 function affmDeleteCurrent() {
   if (!affirmationStore.length) return;
@@ -4516,8 +4628,14 @@ function affmSaveEdit() {
   const ta = document.getElementById('diary-affirmation');
   const val = ta.value.trim();
   ta.style.display = 'none';
-  if (val && affirmationStore.length) {
-    affirmationStore[affirmationIdx].text = val;
+  if (affirmationStore.length) {
+    if (val) {
+      affirmationStore[affirmationIdx].text = val;
+    } else {
+      // 빈 텍스트면 삭제
+      affirmationStore.splice(affirmationIdx, 1);
+      affirmationIdx = Math.min(affirmationIdx, Math.max(0, affirmationStore.length-1));
+    }
     lsAutoSave();
   }
   affmRenderCurrent();
@@ -5223,49 +5341,54 @@ function renderRetroWeeklyDashboard() {
 
   const wfGoalsEl   = document.getElementById('retro-wf-goals');
   const wfRewardsEl = document.getElementById('retro-wf-rewards');
+  const wfBookEl    = document.getElementById('retro-wf-book');
+  const wfWritingEl = document.getElementById('retro-wf-writing');
+  const wfWeekLabel = document.getElementById('retro-wf-week-label');
   const wfData      = wfStore[wKey];
 
+  if (wfWeekLabel) wfWeekLabel.textContent = `${formatDate(mon)} ~ ${formatDate(addDays(mon,6))}`;
+
   if (wfGoalsEl) {
-    const goals   = wfData?.goals   || [];
-    const book    = wfData?.book    || '';
-    const writing = wfData?.writing || '';
-    if (!goals.length && !book && !writing) {
+    const goals = wfData?.goals || [];
+    if (!goals.length) {
       wfGoalsEl.innerHTML = '<div style="font-size:13px;color:var(--text-tertiary);padding:4px 0;">등록된 목표가 없어요</div>';
     } else {
       const doneCount = goals.filter(g => g.done).length;
-      const pct = goals.length ? Math.round(doneCount / goals.length * 100) : 0;
-      wfGoalsEl.innerHTML = (goals.length ? `
+      const pct = Math.round(doneCount / goals.length * 100);
+      wfGoalsEl.innerHTML = `
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
           <div style="flex:1;height:5px;background:var(--bg-secondary);border-radius:3px;overflow:hidden;">
             <div style="height:100%;width:${pct}%;background:#43E97B;border-radius:3px;"></div>
           </div>
           <span style="font-size:12px;color:var(--text-tertiary);">${doneCount}/${goals.length} · ${pct}%</span>
-        </div>` : '') +
+        </div>` +
         goals.map(g => `
         <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg-secondary);margin-bottom:5px;cursor:pointer;${g.done?'opacity:0.55;':''}"
           onclick="retroToggleWfGoal('${wKey}', ${g.id})">
-          <div style="width:15px;height:15px;border-radius:50%;border:1.5px solid var(--border-md);flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${g.done?'var(--text-primary)':'transparent'};">
+          <div style="width:14px;height:14px;border-radius:50%;border:1.5px solid var(--border-md);flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${g.done?'var(--text-primary)':'transparent'};">
             ${g.done ? '<i class="ti ti-check" style="font-size:9px;color:var(--bg-primary)"></i>' : ''}
           </div>
           <span style="flex:1;font-size:13px;${g.done?'text-decoration:line-through;color:var(--text-tertiary);':''}">${g.text}</span>
-        </div>`).join('') +
-        (book    ? `<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:var(--radius-md);background:var(--bg-secondary);border:0.5px solid var(--border);margin-bottom:5px;"><span style="font-size:13px;">📚</span><span style="font-size:12px;">${book}</span></div>` : '') +
-        (writing ? `<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:var(--radius-md);background:var(--bg-secondary);border:0.5px solid var(--border);"><span style="font-size:13px;">✍️</span><span style="font-size:12px;">${writing}</span></div>` : '');
+        </div>`).join('');
     }
   }
 
+  if (wfBookEl)    wfBookEl.textContent    = wfData?.book    || '';
+  if (wfWritingEl) wfWritingEl.textContent = wfData?.writing || '';
 
   if (wfRewardsEl) {
     const rewards = wfData?.rewards || [];
     if (!rewards.length) {
-      wfRewardsEl.innerHTML = '<div style="font-size:13px;color:var(--text-tertiary);padding:4px 0;">등록된 보상이 없어요</div>';
+      wfRewardsEl.innerHTML = '<div style="font-size:13px;color:var(--text-tertiary);">등록된 보상이 없어요</div>';
     } else {
       wfRewardsEl.innerHTML = rewards.map(r => `
-        <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg-secondary);margin-bottom:5px;cursor:pointer;transition:opacity 0.15s;${r.claimed?'opacity:0.55;':''}"
+        <div style="display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg-secondary);cursor:pointer;${r.claimed?'opacity:0.55;':''}"
           onclick="retroToggleWfReward('${wKey}', ${r.id})">
-          <div style="font-size:17px;">${r.claimed ? '🎁' : '🎀'}</div>
-          <span style="flex:1;font-size:13px;color:var(--text-primary);${r.claimed?'text-decoration:line-through;color:var(--text-tertiary);':''}">${r.text}</span>
-          ${r.claimed ? '<span style="font-size:11px;color:var(--text-tertiary);">달성!</span>' : ''}
+          <div style="width:13px;height:13px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${r.claimed?'#EF9F27':'transparent'};border:1.5px solid ${r.claimed?'transparent':'#EF9F27'};">
+            ${r.claimed?'<i class="ti ti-check" style="font-size:8px;color:#fff"></i>':''}
+          </div>
+          <span style="font-size:13px;${r.claimed?'text-decoration:line-through;color:var(--text-tertiary);':''}">${r.text}</span>
+          ${r.claimed?'<span style="font-size:11px;color:#EF9F27;font-weight:600;">🎁</span>':''}
         </div>`).join('');
     }
   }
