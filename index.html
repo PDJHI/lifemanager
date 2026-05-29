@@ -868,7 +868,7 @@
       <!-- ===== 다음주 뷰 ===== -->
       <div id="view-nextweek" style="display:none;flex-direction:column;gap:16px;">
 
-        <!-- ① Stats -->
+        <!-- ① Stats row -->
         <div class="grid-3">
           <div class="stat-card"><div class="stat-val" id="nw-stat-routine">0/0</div><div class="stat-label">다음주 루틴</div></div>
           <div class="stat-card"><div class="stat-val" id="nw-stat-todo">0/0</div><div class="stat-label">다음주 투두</div></div>
@@ -899,7 +899,7 @@
                   <span style="font-size:14px;">📚</span>다음 주의 책
                 </div>
                 <input type="text" id="nw-book-input" placeholder="읽을 책 제목..."
-                  oninput="nwSaveBook(this.value)"
+                  oninput="nwSaveBook(this.value)" onchange="nwSaveBook(this.value)"
                   style="width:100%;font-size:13px;padding:6px 10px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);outline:none;font-family:inherit;box-sizing:border-box;">
               </div>
               <div>
@@ -907,7 +907,7 @@
                   <span style="font-size:14px;">✍️</span>다음 주의 필사
                 </div>
                 <input type="text" id="nw-writing-input" placeholder="필사할 책 제목..."
-                  oninput="nwSaveWriting(this.value)"
+                  oninput="nwSaveWriting(this.value)" onchange="nwSaveWriting(this.value)"
                   style="width:100%;font-size:13px;padding:6px 10px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);outline:none;font-family:inherit;box-sizing:border-box;">
               </div>
             </div>
@@ -925,18 +925,19 @@
           </div>
         </div>
 
-        <!-- ③ 루틴 예정 현황 -->
+        <!-- ③ 다음주 루틴 달성 현황 -->
         <div class="card">
           <div class="card-header">
-            <div class="card-title"><i class="ti ti-flame"></i>루틴 예정</div>
+            <div class="card-title"><i class="ti ti-flame"></i>다음주 루틴 예정</div>
+            <span style="font-size:12px;color:var(--text-secondary);" id="nw-streak-label"></span>
           </div>
           <div id="nw-streak-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:4px;"></div>
         </div>
 
-        <!-- ④ 루틴 (요일별 탭) -->
+        <!-- ④ 다음주 루틴 — full width -->
         <div class="card">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <div class="card-title"><i class="ti ti-sun"></i>루틴</div>
+            <div class="card-title"><i class="ti ti-sun"></i>다음주 루틴</div>
           </div>
           <div style="display:flex;gap:4px;margin-bottom:10px;">
             <button onclick="switchNwRoutineDay(0)" id="nw-day-btn-0" style="padding:4px 10px;border-radius:6px;border:0.5px solid var(--border-md);background:transparent;color:var(--text-secondary);font-size:13px;cursor:pointer;font-family:inherit;transition:all 0.15s;">월</button>
@@ -950,7 +951,7 @@
           <div id="nw-routine-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:4px 12px;"></div>
         </div>
 
-        <!-- ⑤ 주간 투두 -->
+        <!-- ⑤ 다음주 투두 — full width -->
         <div class="card" style="display:flex;flex-direction:column;gap:0">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
             <div class="card-title"><i class="ti ti-list-check"></i>다음주 투두</div>
@@ -962,6 +963,44 @@
           <div style="display:flex;flex-direction:column;gap:10px;">
             <div id="nw-todo-grid"  style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-items:start;"></div>
             <div id="nw-todo-grid2" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-items:start;"></div>
+          </div>
+        </div>
+
+        <!-- ⑥ 다음주 Buy -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="ti ti-shopping-bag"></i>다음주 Buy</div>
+          </div>
+          <div style="margin-bottom:12px;">
+            <div style="display:flex;align-items:center;margin-bottom:6px;">
+              <div style="font-size:12px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;display:flex;align-items:center;gap:5px;">
+                <i class="ti ti-alert-circle" style="font-size:15px;color:#EF9F27;"></i>사야할 것
+              </div>
+            </div>
+            <div id="nw-buy-need-list" style="display:flex;flex-direction:column;gap:2px;"></div>
+            <div id="nw-buy-need-empty" style="display:none;font-size:13px;color:var(--text-tertiary);padding:6px 0 2px;">아직 없어요</div>
+            <div style="display:flex;gap:6px;margin-top:6px;">
+              <input type="text" id="nw-buy-need-input" placeholder="항목 추가..."
+                onkeydown="if(event.key==='Enter')nwBuyInlineAdd('need')"
+                style="flex:1;font-size:12px;padding:5px 10px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);outline:none;font-family:inherit;">
+              <button onclick="nwBuyInlineAdd('need')" style="padding:5px 10px;border-radius:var(--radius-md);border:none;background:var(--text-primary);color:var(--bg-primary);cursor:pointer;font-size:12px;display:flex;align-items:center;"><i class="ti ti-plus"></i></button>
+            </div>
+          </div>
+          <div class="section-divider"></div>
+          <div style="margin-top:10px;">
+            <div style="display:flex;align-items:center;margin-bottom:6px;">
+              <div style="font-size:12px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;display:flex;align-items:center;gap:5px;">
+                <i class="ti ti-heart" style="font-size:15px;color:#E24B4A;"></i>사고싶은 것
+              </div>
+            </div>
+            <div id="nw-buy-want-list" style="display:flex;flex-direction:column;gap:2px;"></div>
+            <div id="nw-buy-want-empty" style="display:none;font-size:13px;color:var(--text-tertiary);padding:6px 0 2px;">아직 없어요</div>
+            <div style="display:flex;gap:6px;margin-top:6px;">
+              <input type="text" id="nw-buy-want-input" placeholder="항목 추가..."
+                onkeydown="if(event.key==='Enter')nwBuyInlineAdd('want')"
+                style="flex:1;font-size:12px;padding:5px 10px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);outline:none;font-family:inherit;">
+              <button onclick="nwBuyInlineAdd('want')" style="padding:5px 10px;border-radius:var(--radius-md);border:none;background:var(--text-primary);color:var(--bg-primary);cursor:pointer;font-size:12px;display:flex;align-items:center;"><i class="ti ti-plus"></i></button>
+            </div>
           </div>
         </div>
 
@@ -3163,6 +3202,8 @@ function renderNextWeek() {
   const k   = wfKey(mon);
   const d   = wfGetOrCreate(mon);
   document.getElementById('nextweek-wf-label').textContent = `${formatDate(mon)} ~ ${formatDate(sun)}`;
+  const nwStreakLabel = document.getElementById('nw-streak-label');
+  if (nwStreakLabel) nwStreakLabel.textContent = `${formatDate(mon)} ~ ${formatDate(sun)}`;
   const KR = ['월','화','수','목','금','토','일'];
   // 목표
   const gl = document.getElementById('nw-goals-list');
@@ -3223,6 +3264,55 @@ function renderNextWeek() {
   };
   document.getElementById('nw-todo-grid').innerHTML  = nwKeys.slice(0,4).map(renderDay).join('');
   document.getElementById('nw-todo-grid2').innerHTML = nwKeys.slice(4).map(renderDay).join('');
+
+  // Buy 렌더
+  renderNwBuy();
+}
+
+if (!window.nwBuyStore) window.nwBuyStore = { need: [], want: [] };
+let nwBuyNextId = 100;
+
+function renderNwBuy() {
+  ['need','want'].forEach(type => {
+    const items = (window.nwBuyStore[type] || []);
+    const list  = document.getElementById(`nw-buy-${type}-list`);
+    const empty = document.getElementById(`nw-buy-${type}-empty`);
+    if (!list) return;
+    list.innerHTML = '';
+    if (!items.length) { if(empty) empty.style.display='block'; return; }
+    if (empty) empty.style.display='none';
+    items.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'routine-item' + (item.done?' done':'');
+      row.style.cssText = 'padding:6px 4px;';
+      const chk = document.createElement('div');
+      chk.className = 'check-box';
+      chk.innerHTML = '<i class="ti ti-check"></i>';
+      chk.onclick = e => { e.stopPropagation(); item.done=!item.done; renderNwBuy(); lsAutoSave(); };
+      const txt = document.createElement('span');
+      txt.className = 'routine-name';
+      txt.style.fontSize = '13px';
+      txt.textContent = item.text;
+      const del = document.createElement('i');
+      del.className = 'ti ti-x';
+      del.style.cssText = 'font-size:10px;color:var(--text-tertiary);cursor:pointer;opacity:0;transition:opacity 0.1s;flex-shrink:0;';
+      del.onclick = e => { e.stopPropagation(); window.nwBuyStore[type]=window.nwBuyStore[type].filter(x=>x.id!==item.id); renderNwBuy(); lsAutoSave(); };
+      row.onmouseenter = () => del.style.opacity='1';
+      row.onmouseleave = () => del.style.opacity='0';
+      row.appendChild(chk); row.appendChild(txt); row.appendChild(del);
+      list.appendChild(row);
+    });
+  });
+}
+
+function nwBuyInlineAdd(type) {
+  const input = document.getElementById(`nw-buy-${type}-input`);
+  const text  = input.value.trim();
+  if (!text) return;
+  if (!window.nwBuyStore) window.nwBuyStore = { need:[], want:[] };
+  window.nwBuyStore[type].push({ id: nwBuyNextId++, text, done: false, addedDate: buyTodayStr() });
+  input.value = ''; input.focus();
+  renderNwBuy(); lsAutoSave();
 }
 
 // ── 팝 파스텔 컬러 팔레트 ──────────────────────────────────────
