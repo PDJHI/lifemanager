@@ -618,6 +618,10 @@
               placeholder="▪ 이번 달 목표를 달성하면 나에게 줄 보상을 적어보세요..."
               onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this)"
               style="width:100%;resize:none;border:0.5px solid var(--border-md);border-radius:var(--radius-md);outline:none;background:var(--bg-secondary);font-size:15px;color:var(--text-primary);font-family:inherit;line-height:1.8;padding:8px 10px;"></textarea>
+            <div id="mgoals-last-reward" style="margin-top:10px;display:none;">
+              <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">지난달 보상</div>
+              <div id="mgoals-last-reward-text" style="font-size:13px;color:var(--text-secondary);padding:6px 10px;border-radius:var(--radius-md);background:var(--bg-secondary);border:0.5px solid var(--border);white-space:pre-wrap;"></div>
+            </div>
           </div>
 
           <!-- 세부 목표 -->
@@ -2326,7 +2330,7 @@ function switchTab(t) {
   if (t==='manage')   renderDayList();
   if (t==='lastweek') renderLastWeek();
   if (t==='all')      renderAllCal();
-  if (t==='nextweek') renderNextWeek();
+  if (t==='nextweek') { todoCarryoverToNextWeek(); renderNextWeek(); }
 }
 
 // ── 전체 달력 ────────────────────────────────────────────────────
@@ -3330,8 +3334,29 @@ function renderNextWeekTodo() {
       chk.innerHTML = t.done?'<i class="ti ti-check" style="font-size:9px;color:var(--bg-primary)"></i>':'';
       chk.onclick = () => { t.done=!t.done; lsAutoSave(); renderNextWeekTodo(); };
       const txt = document.createElement('span');
-      txt.style.cssText = `flex:1;font-size:13px;line-height:1.5;${t.done?'text-decoration:line-through;color:var(--text-tertiary);':''}`;
+      txt.style.cssText = `flex:1;font-size:13px;line-height:1.5;cursor:text;${t.done?'text-decoration:line-through;color:var(--text-tertiary);':''}`;
       txt.textContent = t.text;
+      if (t.carriedOver && !t.done) {
+        const badge = document.createElement('span');
+        badge.style.cssText = 'font-size:10px;color:#7C83FD;font-weight:600;margin-left:4px;white-space:nowrap;';
+        badge.textContent = '↩';
+        txt.appendChild(badge);
+      }
+      txt.title = '더블클릭하여 수정';
+      txt.ondblclick = () => {
+        const editInp = document.createElement('input');
+        editInp.type='text'; editInp.value=t.text;
+        editInp.style.cssText='flex:1;font-size:13px;border:none;border-bottom:1px solid var(--text-primary);outline:none;background:transparent;color:var(--text-primary);font-family:inherit;width:100%;';
+        txt.replaceWith(editInp);
+        editInp.focus(); editInp.select();
+        const save = () => {
+          const v = editInp.value.trim();
+          if (v) t.text = v;
+          lsAutoSave(); renderNextWeekTodo();
+        };
+        editInp.onblur = save;
+        editInp.onkeydown = e => { if(e.key==='Enter') { e.preventDefault(); save(); } if(e.key==='Escape') renderNextWeekTodo(); };
+      };
       const del = document.createElement('i');
       del.className='ti ti-x';
       del.style.cssText='font-size:10px;color:var(--text-tertiary);cursor:pointer;flex-shrink:0;margin-top:3px;opacity:0;transition:opacity 0.1s;';
@@ -3362,7 +3387,28 @@ function renderNextWeekTodo() {
 }
 
 
-if (!window.nwBuyStore) window.nwBuyStore = { need: [], want: [] };
+function todoCarryoverToNextWeek() {
+  const thisMon = getMonday(now);
+  const nextMon = addDays(thisMon, 7);
+  let changed = false;
+  for (let i = 0; i < 7; i++) {
+    const thisDt = addDays(thisMon, i);
+    const nextDt = addDays(nextMon, i);
+    const thisKey = `${thisDt.getFullYear()}-${String(thisDt.getMonth()+1).padStart(2,'0')}-${String(thisDt.getDate()).padStart(2,'0')}`;
+    const nextKey = `${nextDt.getFullYear()}-${String(nextDt.getMonth()+1).padStart(2,'0')}-${String(nextDt.getDate()).padStart(2,'0')}`;
+    const undone = (todoStore[thisKey]||[]).filter(t => !t.done);
+    if (!undone.length) continue;
+    if (!todoStore[nextKey]) todoStore[nextKey] = [];
+    undone.forEach(t => {
+      // 중복 방지
+      if (!todoStore[nextKey].some(x => x.text === t.text)) {
+        todoStore[nextKey].push({ id: nextTodoId++, dayIdx: i, text: t.text, priority: t.priority||'mid', done: false, carriedOver: true });
+        changed = true;
+      }
+    });
+  }
+  if (changed) lsAutoSave();
+}
 let nwBuyNextId = 100;
 
 function renderNwBuy() {
@@ -5883,7 +5929,13 @@ function rycGoalCheck(btn, cat, li, val) {
   const anyPartial=checks.some(v=>v==='partial');const anyDone=checks.some(v=>v==='done');const anyFail=checks.some(v=>v==='fail');
   data.achieved=allDone?'달성':(anyPartial||(anyDone&&anyFail))?'부분달성':anyFail?'미달성':'';
   lsAutoSave();
-  retroYearlyRenderForm();
+  // 인라인 체크리스트 업데이트
+  const blkY = document.querySelector(`[data-ycat="${cat}"]`);
+  if (blkY) {
+    const clY = blkY.querySelectorAll(':scope > div > div')[0];
+    if (clY) { const items = clY.querySelectorAll('[style*="display:flex;align-items:center;gap:8px"]'); if(items.length) clY.innerHTML = retroBuildGoalChecklist(goalText, data.goalChecks, 'rycGoalCheck', cat); }
+  }
+
 }
 
 function rmySetAchieved(btn) {
@@ -6044,43 +6096,38 @@ function retroYearlyRenderForm() {
     const prevData   = retroYearlyData[prevYk]?.[cat];
     const yGoalVal   = yearlyGoalsData[d.getFullYear()]?.cats?.[cat]?.goal || '';
     const goalVal    = data.goal || yGoalVal || prevData?.next || '';
-    // 목표 체크리스트 (연간)
-    const yGoalLines = goalVal.split('\n').map(l=>l.replace(/^[▪◦\-\s]+/,'').trim()).filter(Boolean);
     if (!data.goalChecks) data.goalChecks = {};
-    const yGoalChecklist = yGoalLines.length
-      ? `<div style="display:flex;flex-direction:column;gap:6px;">${yGoalLines.map((line,li)=>{
-          const state=data.goalChecks?.[li]||'';
-          const btns=[{v:'done',label:'✅',tip:'달성'},{v:'partial',label:'🔶',tip:'부분달성'},{v:'fail',label:'❌',tip:'미달성'}]
-            .map(o=>`<button onclick="rycGoalCheck(this,'${cat}',${li},'${o.v}')" title="${o.tip}" style="width:26px;height:26px;border-radius:50%;border:0.5px solid ${state===o.v?'transparent':'var(--border-md)'};background:${state===o.v?'var(--text-primary)':'transparent'};font-size:13px;cursor:pointer;padding:0;">${o.label}</button>`).join('');
-          return `<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:var(--radius-md);background:var(--bg-secondary);border:0.5px solid var(--border);"><span style="flex:1;font-size:13px;">${line}</span><div style="display:flex;gap:3px;">${btns}</div></div>`;
-        }).join('')}</div>`
-      : `<div style="font-size:13px;color:var(--text-tertiary);">목표를 먼저 입력하면 체크리스트가 생성됩니다</div>`;
+    const yGoalLines = goalVal.split('\n').map(l=>l.replace(/^[▪◦\-\s]+/,'').trim()).filter(Boolean);
     const yChecks=Object.values(data.goalChecks||{});
     const yAllDone=yGoalLines.length>0&&yChecks.filter(v=>v==='done').length===yGoalLines.length;
     const yAnyDone=yChecks.some(v=>v==='done'||v==='partial');const yAnyFail=yChecks.some(v=>v==='fail');
     data.achieved=yAllDone?'달성':yAnyDone?'부분달성':yAnyFail?'미달성':data.achieved||'';
     return `
     <div data-ycat="${cat}" style="padding-bottom:22px;${ci<RETRO_MONTHLY_CATS.length-1?'border-bottom:1.5px solid var(--border);margin-bottom:4px;':''}">
-      <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:12px;">${emoji} ${cat}
-        ${data.achieved?`<span style="font-size:12px;padding:2px 8px;border-radius:10px;background:${data.achieved==='달성'?'#43E97B22':data.achieved==='부분달성'?'#EF9F2722':'#E24B4A22'};color:${data.achieved==='달성'?'#2d8a55':data.achieved==='부분달성'?'#c47a00':'#c0392b'};font-weight:600;margin-left:8px;">${data.achieved==='달성'?'✅':data.achieved==='부분달성'?'🔶':'❌'} ${data.achieved}</span>`:''}
+      <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:12px;display:flex;align-items:center;gap:8px;">${emoji} ${cat}
+        ${data.achieved?`<span style="font-size:12px;padding:2px 8px;border-radius:10px;background:${data.achieved==='달성'?'#43E97B22':data.achieved==='부분달성'?'#EF9F2722':'#E24B4A22'};color:${data.achieved==='달성'?'#2d8a55':data.achieved==='부분달성'?'#c47a00':'#c0392b'};font-weight:600;">${data.achieved==='달성'?'✅':data.achieved==='부분달성'?'🔶':'❌'} ${data.achieved}</span>`:''}
+        <span style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+          <span style="font-size:11px;color:var(--text-tertiary);font-weight:400;">총점</span>
+          <input type="number" min="0" max="10" value="${data.score||''}" placeholder="—"
+            oninput="retroQuarterlyScoreSave(this,'${cat}')"
+            style="width:48px;font-size:14px;font-weight:700;border:0.5px solid var(--border-md);border-radius:var(--radius-md);padding:2px 6px;background:var(--bg-secondary);color:var(--text-primary);outline:none;text-align:center;font-family:inherit;">
+          <span style="font-size:11px;color:var(--text-tertiary);">/ 10</span>
+        </span>
       </div>
       <div style="display:flex;flex-direction:column;gap:12px;">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;">
           <div style="display:flex;flex-direction:column;gap:6px;">
             <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;display:flex;align-items:center;gap:5px;">
-              올해의 목표
-              ${yGoalVal && !data.goal ? `<span style="font-size:10px;padding:1px 5px;border-radius:8px;background:#E6F1FB;color:#185FA5;font-weight:600;">연간목표 연동</span>` : ''}
+              올해의 목표 ${yGoalVal && !data.goal ? `<span style="font-size:10px;padding:1px 5px;border-radius:8px;background:#E6F1FB;color:#185FA5;font-weight:600;">연간목표 연동</span>` : ''}
             </div>
             <textarea data-field="goal" rows="5" placeholder="▪ 목표를 입력하세요..." onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroYearlyFieldSave(this,'${cat}','goal')" style="${taStyle}">${goalVal}</textarea>
           </div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;flex-direction:column;gap:6px;">
             <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;">달성 체크</div>
-            ${yGoalChecklist}
+            <div style="display:flex;flex-direction:column;gap:4px;">${retroBuildGoalChecklist(goalVal, data.goalChecks, 'rycGoalCheck', '${cat}')}</div>
           </div>
         </div>
-        <div><div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">달성 내용</div>
-          <textarea data-field="detail" rows="3" placeholder="▪ 달성 내용을 기록하세요..." onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroYearlyFieldSave(this,'${cat}','detail')" style="${taStyle}">${data.detail||''}</textarea>
-        </div>
+
         <div>
           <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">총평</div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
@@ -6090,8 +6137,11 @@ function retroYearlyRenderForm() {
           </div>
         </div>
         <div>
-          <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">내년 목표</div>
-          <textarea data-field="next" rows="2" placeholder="▪ 내년 목표를 입력하세요..." onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroYearlyFieldSave(this,'${cat}','next')" style="${taStyle}">${data.next}</textarea>
+          <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:6px;">
+            내년 목표
+            <span style="font-size:10px;color:var(--text-tertiary);font-weight:400;">· 편집/삭제 가능 · 연간목표에 반영</span>
+          </div>
+          <textarea data-field="next" rows="3" placeholder="▪ 내년 목표를 입력하세요..." onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroYearlyNextSave(this,'${cat}')" style="${taStyle}">${(()=>{ const yd=retroCursor['yearly'];const ny=yd.getFullYear()+1;return yearlyGoalsData[ny]?.cats?.[cat]?.goal||data.next||'';})()}</textarea>
         </div>
       </div>
     </div>`;
@@ -6143,7 +6193,13 @@ function rqcGoalCheck(btn, cat, li, val) {
   const anyPartial=checks.some(v=>v==='partial');const anyDone=checks.some(v=>v==='done');const anyFail=checks.some(v=>v==='fail');
   data.achieved=allDone?'달성':(anyPartial||(anyDone&&anyFail))?'부분달성':anyFail?'미달성':'';
   lsAutoSave();
-  retroQuarterlyRenderForm();
+  // 인라인 체크리스트 업데이트
+  const blkQ = document.querySelector(`[data-qcat="${cat}"]`);
+  if (blkQ) {
+    const clQ = blkQ.querySelectorAll(':scope > div > div')[0];
+    if (clQ) { const items = clQ.querySelectorAll('[style*="display:flex;align-items:center;gap:8px"]'); if(items.length) clQ.innerHTML = retroBuildGoalChecklist(goalText, data.goalChecks, 'rqcGoalCheck', cat); }
+  }
+
 }
 
 function rmqSetAchieved(btn) {
@@ -6338,43 +6394,38 @@ function retroQuarterlyRenderForm() {
     const qGoalKey  = `${d.getFullYear()}-Q${qNum}`;
     const qGoalVal  = qGoalsData[qGoalKey]?.cats?.[cat]?.goal || '';
     const goalVal   = data.goal || qGoalVal || prevData?.next || '';
-    // 목표 체크리스트
-    const qGoalLines = goalVal.split('\n').map(l=>l.replace(/^[▪◦\-\s]+/,'').trim()).filter(Boolean);
     if (!data.goalChecks) data.goalChecks = {};
-    const qGoalChecklist = qGoalLines.length
-      ? `<div style="display:flex;flex-direction:column;gap:6px;">${qGoalLines.map((line,li)=>{
-          const state=data.goalChecks?.[li]||'';
-          const btns=[{v:'done',label:'✅',tip:'달성'},{v:'partial',label:'🔶',tip:'부분달성'},{v:'fail',label:'❌',tip:'미달성'}]
-            .map(o=>`<button onclick="rqcGoalCheck(this,'${cat}',${li},'${o.v}')" title="${o.tip}" style="width:26px;height:26px;border-radius:50%;border:0.5px solid ${state===o.v?'transparent':'var(--border-md)'};background:${state===o.v?'var(--text-primary)':'transparent'};font-size:13px;cursor:pointer;padding:0;">${o.label}</button>`).join('');
-          return `<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:var(--radius-md);background:var(--bg-secondary);border:0.5px solid var(--border);"><span style="flex:1;font-size:13px;">${line}</span><div style="display:flex;gap:3px;">${btns}</div></div>`;
-        }).join('')}</div>`
-      : `<div style="font-size:13px;color:var(--text-tertiary);">목표를 먼저 입력하면 체크리스트가 생성됩니다</div>`;
+    const qGoalLines = goalVal.split('\n').map(l=>l.replace(/^[▪◦\-\s]+/,'').trim()).filter(Boolean);
     const qChecks=Object.values(data.goalChecks||{});
     const qAllDone=qGoalLines.length>0&&qChecks.filter(v=>v==='done').length===qGoalLines.length;
     const qAnyDone=qChecks.some(v=>v==='done'||v==='partial');const qAnyFail=qChecks.some(v=>v==='fail');
     data.achieved=qAllDone?'달성':qAnyDone?'부분달성':qAnyFail?'미달성':data.achieved||'';
     return `
     <div data-qcat="${cat}" style="padding-bottom:22px;${ci<RETRO_MONTHLY_CATS.length-1?'border-bottom:1.5px solid var(--border);margin-bottom:4px;':''}">
-      <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:12px;">${emoji} ${cat}
-        ${data.achieved?`<span style="font-size:12px;padding:2px 8px;border-radius:10px;background:${data.achieved==='달성'?'#43E97B22':data.achieved==='부분달성'?'#EF9F2722':'#E24B4A22'};color:${data.achieved==='달성'?'#2d8a55':data.achieved==='부분달성'?'#c47a00':'#c0392b'};font-weight:600;margin-left:8px;">${data.achieved==='달성'?'✅':data.achieved==='부분달성'?'🔶':'❌'} ${data.achieved}</span>`:''}
+      <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:12px;display:flex;align-items:center;gap:8px;">${emoji} ${cat}
+        ${data.achieved?`<span style="font-size:12px;padding:2px 8px;border-radius:10px;background:${data.achieved==='달성'?'#43E97B22':data.achieved==='부분달성'?'#EF9F2722':'#E24B4A22'};color:${data.achieved==='달성'?'#2d8a55':data.achieved==='부분달성'?'#c47a00':'#c0392b'};font-weight:600;">${data.achieved==='달성'?'✅':data.achieved==='부분달성'?'🔶':'❌'} ${data.achieved}</span>`:''}
+        <span style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+          <span style="font-size:11px;color:var(--text-tertiary);font-weight:400;">총점</span>
+          <input type="number" min="0" max="10" value="${data.score||''}" placeholder="—"
+            oninput="retroYearlyScoreSave(this,'${cat}')"
+            style="width:48px;font-size:14px;font-weight:700;border:0.5px solid var(--border-md);border-radius:var(--radius-md);padding:2px 6px;background:var(--bg-secondary);color:var(--text-primary);outline:none;text-align:center;font-family:inherit;">
+          <span style="font-size:11px;color:var(--text-tertiary);">/ 10</span>
+        </span>
       </div>
       <div style="display:flex;flex-direction:column;gap:12px;">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;">
           <div style="display:flex;flex-direction:column;gap:6px;">
             <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;display:flex;align-items:center;gap:5px;">
-              이번 분기 목표
-              ${qGoalVal && !data.goal ? `<span style="font-size:10px;padding:1px 5px;border-radius:8px;background:#E6F1FB;color:#185FA5;font-weight:600;">분기목표 연동</span>` : ''}
+              이번 분기 목표 ${qGoalVal && !data.goal ? `<span style="font-size:10px;padding:1px 5px;border-radius:8px;background:#E6F1FB;color:#185FA5;font-weight:600;">분기목표 연동</span>` : ''}
             </div>
             <textarea data-field="goal" rows="5" placeholder="▪ 목표를 입력하세요..." onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroQuarterlyFieldSave(this,'${cat}','goal')" style="${taStyle}">${goalVal}</textarea>
           </div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;flex-direction:column;gap:6px;">
             <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;">달성 체크</div>
-            ${qGoalChecklist}
+            <div style="display:flex;flex-direction:column;gap:4px;">${retroBuildGoalChecklist(goalVal, data.goalChecks, 'rqcGoalCheck', '${cat}')}</div>
           </div>
         </div>
-        <div><div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">달성 내용</div>
-          <textarea data-field="detail" rows="3" placeholder="▪ 달성 내용을 기록하세요..." onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroQuarterlyFieldSave(this,'${cat}','detail')" style="${taStyle}">${data.detail||''}</textarea>
-        </div>
+
         <div>
           <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">총평</div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
@@ -6384,8 +6435,11 @@ function retroQuarterlyRenderForm() {
           </div>
         </div>
         <div>
-          <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">다음 분기 목표</div>
-          <textarea data-field="next" rows="2" placeholder="▪ 다음 분기 목표를 입력하세요..." onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroQuarterlyFieldSave(this,'${cat}','next')" style="${taStyle}">${data.next}</textarea>
+          <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:6px;">
+            다음 분기 목표
+            <span style="font-size:10px;color:var(--text-tertiary);font-weight:400;">· 편집/삭제 가능 · 분기목표에 반영</span>
+          </div>
+          <textarea data-field="next" rows="3" placeholder="▪ 다음 분기 목표를 입력하세요..." onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroQuarterlyNextSave(this,'${cat}')" style="${taStyle}">${(()=>{ const qd=retroCursor['quarterly'];const nq=Math.ceil((qd.getMonth()+1)/3);const nqNum=nq>=4?1:nq+1;const nqYear=nq>=4?qd.getFullYear()+1:qd.getFullYear();const nqKey=`${nqYear}-Q${nqNum}`;return qGoalsData[nqKey]?.cats?.[cat]?.goal||data.next||'';})()}</textarea>
         </div>
       </div>
     </div>`;
@@ -6405,6 +6459,27 @@ function retroMonthlyGetCat(mk, cat) {
   return retroMonthlyData[mk][cat];
 }
 
+function retroMonthlySaveScore(el, cat) {
+  const mk = retroMonthlyKey();
+  const data = retroMonthlyGetCat(mk, cat);
+  const v = parseInt(el.value);
+  data.score = isNaN(v) ? '' : Math.max(0, Math.min(10, v));
+  lsAutoSave();
+}
+function retroQuarterlyScoreSave(el, cat) {
+  const qk = retroQuarterlyKey();
+  const data = retroQuarterlyGetCat(qk, cat);
+  const v = parseInt(el.value);
+  data.score = isNaN(v) ? '' : Math.max(0, Math.min(10, v));
+  lsAutoSave();
+}
+function retroYearlyScoreSave(el, cat) {
+  const yk = retroYearlyKey();
+  const data = retroYearlyGetCat(yk, cat);
+  const v = parseInt(el.value);
+  data.score = isNaN(v) ? '' : Math.max(0, Math.min(10, v));
+  lsAutoSave();
+}
 function rmcSetAchieved(btn) {
   const group = btn.closest('[data-achieved-group]');
   const val   = btn.dataset.val;
@@ -6440,7 +6515,13 @@ function rmcGoalCheck(btn, cat, li, val) {
   const anyFail    = checks.some(v=>v==='fail');
   data.achieved = allDone ? '달성' : (anyPartial || (anyDone && anyFail)) ? '부분달성' : anyFail ? '미달성' : '';
   lsAutoSave();
-  retroMonthlyRenderForm();
+  // 인라인 체크리스트 업데이트
+  const blk = document.querySelector(`[data-cat="${cat}"]`);
+  if (blk) {
+    const cl = blk.querySelector(`#mc-checklist-${cat}`);
+    if (cl) cl.innerHTML = retroBuildGoalChecklist(goalText, data.goalChecks, 'rmcGoalCheck', cat);
+  }
+
 }
 
 // 보상 체크 토글
@@ -6450,6 +6531,48 @@ function rmcToggleReward(el, cat) {
   data.rewardClaimed = !data.rewardClaimed;
   lsAutoSave();
   retroMonthlyRenderForm();
+}
+
+function retroMonthlyNextSave(ta, cat) {
+  const mk   = retroMonthlyKey();
+  const data = retroMonthlyGetCat(mk, cat);
+  data.next  = ta.value;
+  const d      = retroCursor['monthly'];
+  const nextD  = new Date(d.getFullYear(), d.getMonth()+1, 1);
+  const nextKey= `${nextD.getFullYear()}-${String(nextD.getMonth()+1).padStart(2,'0')}`;
+  if (!mGoalsData[nextKey]) mGoalsData[nextKey] = { cats:{}, reward:'' };
+  if (!mGoalsData[nextKey].cats) mGoalsData[nextKey].cats = {};
+  if (!mGoalsData[nextKey].cats[cat]) mGoalsData[nextKey].cats[cat] = { goal:'', reward:'' };
+  mGoalsData[nextKey].cats[cat].goal = ta.value;
+  lsAutoSave();
+}
+
+function retroQuarterlyNextSave(ta, cat) {
+  const qk   = retroQuarterlyKey();
+  const data = retroQuarterlyGetCat(qk, cat);
+  data.next  = ta.value;
+  const qd   = retroCursor['quarterly'];
+  const q    = Math.ceil((qd.getMonth()+1)/3);
+  const nqNum  = q >= 4 ? 1 : q + 1;
+  const nqYear = q >= 4 ? qd.getFullYear()+1 : qd.getFullYear();
+  const nqKey  = `${nqYear}-Q${nqNum}`;
+  if (!qGoalsData[nqKey]) qGoalsData[nqKey] = { cats:{}, reward:'' };
+  if (!qGoalsData[nqKey].cats) qGoalsData[nqKey].cats = {};
+  if (!qGoalsData[nqKey].cats[cat]) qGoalsData[nqKey].cats[cat] = { goal:'', reward:'' };
+  qGoalsData[nqKey].cats[cat].goal = ta.value;
+  lsAutoSave();
+}
+
+function retroYearlyNextSave(ta, cat) {
+  const yk   = retroYearlyKey();
+  const data = retroYearlyGetCat(yk, cat);
+  data.next  = ta.value;
+  const nextYear = retroCursor['yearly'].getFullYear() + 1;
+  if (!yearlyGoalsData[nextYear]) yearlyGoalsData[nextYear] = { cats:{}, reward:'' };
+  if (!yearlyGoalsData[nextYear].cats) yearlyGoalsData[nextYear].cats = {};
+  if (!yearlyGoalsData[nextYear].cats[cat]) yearlyGoalsData[nextYear].cats[cat] = { goal:'', reward:'' };
+  yearlyGoalsData[nextYear].cats[cat].goal = ta.value;
+  lsAutoSave();
 }
 
 function retroMonthlyFieldSave(ta, cat, field) {
@@ -6484,6 +6607,30 @@ function retroMonthlySaveCat() {
   });
 }
 
+
+// ── 회고 공통 목표 체크리스트 헬퍼 ────────────────────────────────
+function retroBuildGoalChecklist(goalVal, goalChecks, checkFn, cat) {
+  if (!goalChecks) goalChecks = {};
+  const lines = goalVal.split('\n').map(l=>l.replace(/^[▪◦\-\s]+/,'').trim()).filter(Boolean);
+  if (!lines.length) return '';
+  return lines.map((line, li) => {
+    const state = goalChecks[li] || '';
+    const colorMap = { done:'#43E97B', partial:'#EF9F27', fail:'#E24B4A', '':'var(--border-md)' };
+    const labelMap = { done:'✅', partial:'🔶', fail:'❌' };
+    const opts = [
+      {v:'done', label:'✅', tip:'달성'},
+      {v:'partial', label:'🔶', tip:'부분달성'},
+      {v:'fail', label:'❌', tip:'미달성'}
+    ];
+    const btns = opts.map(o => `<button onclick="${checkFn}(this,'${cat}',${li},'${o.v}')" title="${o.tip}"
+      style="width:24px;height:24px;border-radius:50%;border:1.5px solid ${state===o.v?'transparent':'var(--border-md)'};background:${state===o.v?'var(--text-primary)':'transparent'};font-size:12px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;">${o.label}</button>`).join('');
+    return `<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:var(--radius-md);background:${state?'var(--bg-secondary)':'transparent'};border:0.5px solid ${state?'var(--border-md)':'var(--border)'};margin-top:4px;">
+      <span style="flex:1;font-size:13px;${state==='done'?'text-decoration:line-through;color:var(--text-tertiary);':''}">${line}</span>
+      <div style="display:flex;gap:2px;">${btns}</div>
+    </div>`;
+  }).join('');
+}
+
 function retroMonthlySave(btn) {
   retroMonthlySaveCat();
   const mk = retroMonthlyKey();
@@ -6501,12 +6648,18 @@ function retroMonthlySave(btn) {
     if (!data) return;
     const lines  = (data.goal||'').split('\n').map(l=>l.replace(/^[▪◦\-\s]+/,'').trim()).filter(Boolean);
     const checks = data.goalChecks || {};
-    const unmet  = lines.filter((_,i) => !checks[i] || checks[i]==='fail' || checks[i]==='partial');
+    // ✅ 달성만 제외, 나머지(미체크/부분달성/미달성) 이월
+    const unmet  = lines.filter((_,i) => checks[i] !== 'done');
     if (!unmet.length) return;
     if (!mGoalsData[nextKey].cats[cat]) mGoalsData[nextKey].cats[cat] = { goal:'', reward:'' };
-    const existing = mGoalsData[nextKey].cats[cat].goal || '';
-    const carry    = unmet.map(l=>`▪ ${l}`).join('\n');
-    mGoalsData[nextKey].cats[cat].goal = existing ? existing + '\n' + carry : carry;
+    // 기존 목표에서 중복 제거 후 추가
+    const existing = (mGoalsData[nextKey].cats[cat].goal || '').split('\n').map(l=>l.replace(/^[▪◦\-\s]+/,'').trim()).filter(Boolean);
+    const toAdd    = unmet.filter(l => !existing.includes(l));
+    if (!toAdd.length) return;
+    const carry    = toAdd.map(l=>`▪ ${l}`).join('\n');
+    mGoalsData[nextKey].cats[cat].goal = existing.length
+      ? existing.map(l=>`▪ ${l}`).join('\n') + '\n' + carry
+      : carry;
   });
 
   lsSave();
@@ -6536,12 +6689,16 @@ function retroQuarterlySave(btn) {
     if (!data) return;
     const lines  = (data.goal||'').split('\n').map(l=>l.replace(/^[▪◦\-\s]+/,'').trim()).filter(Boolean);
     const checks = data.goalChecks || {};
-    const unmet  = lines.filter((_,i) => !checks[i] || checks[i]==='fail' || checks[i]==='partial');
+    const unmet  = lines.filter((_,i) => checks[i] !== 'done');
     if (!unmet.length) return;
     if (!qGoalsData[nextKey].cats[cat]) qGoalsData[nextKey].cats[cat] = { goal:'', reward:'' };
-    const existing = qGoalsData[nextKey].cats[cat].goal || '';
-    const carry    = unmet.map(l=>`▪ ${l}`).join('\n');
-    qGoalsData[nextKey].cats[cat].goal = existing ? existing + '\n' + carry : carry;
+    const existing = (qGoalsData[nextKey].cats[cat].goal || '').split('\n').map(l=>l.replace(/^[▪◦\-\s]+/,'').trim()).filter(Boolean);
+    const toAdd    = unmet.filter(l => !existing.includes(l));
+    if (!toAdd.length) return;
+    const carry    = toAdd.map(l=>`▪ ${l}`).join('\n');
+    qGoalsData[nextKey].cats[cat].goal = existing.length
+      ? existing.map(l=>`▪ ${l}`).join('\n') + '\n' + carry
+      : carry;
   });
 
   lsSave();
@@ -6568,12 +6725,16 @@ function retroYearlySave(btn) {
     if (!data) return;
     const lines  = (data.goal||'').split('\n').map(l=>l.replace(/^[▪◦\-\s]+/,'').trim()).filter(Boolean);
     const checks = data.goalChecks || {};
-    const unmet  = lines.filter((_,i) => !checks[i] || checks[i]==='fail' || checks[i]==='partial');
+    const unmet  = lines.filter((_,i) => checks[i] !== 'done');
     if (!unmet.length) return;
     if (!yearlyGoalsData[nextYear].cats[cat]) yearlyGoalsData[nextYear].cats[cat] = { goal:'', reward:'' };
-    const existing = yearlyGoalsData[nextYear].cats[cat].goal || '';
-    const carry    = unmet.map(l=>`▪ ${l}`).join('\n');
-    yearlyGoalsData[nextYear].cats[cat].goal = existing ? existing + '\n' + carry : carry;
+    const existing = (yearlyGoalsData[nextYear].cats[cat].goal || '').split('\n').map(l=>l.replace(/^[▪◦\-\s]+/,'').trim()).filter(Boolean);
+    const toAdd    = unmet.filter(l => !existing.includes(l));
+    if (!toAdd.length) return;
+    const carry    = toAdd.map(l=>`▪ ${l}`).join('\n');
+    yearlyGoalsData[nextYear].cats[cat].goal = existing.length
+      ? existing.map(l=>`▪ ${l}`).join('\n') + '\n' + carry
+      : carry;
   });
 
   lsSave();
@@ -6607,6 +6768,7 @@ function retroMonthlyRenderForm() {
   // 이전 달 키
   const prevD  = new Date(d.getFullYear(), d.getMonth()-1, 1);
   const prevMk = retroKey('monthly', prevD);
+  const nextD  = new Date(d.getFullYear(), d.getMonth()+1, 1);
   const form = document.getElementById('retro-monthly-cat-form');
   if (!form) return;
   const taStyle = 'width:100%;resize:none;border:0.5px solid var(--border-md);border-radius:var(--radius-md);outline:none;background:var(--bg-secondary);font-size:13px;color:var(--text-primary);font-family:inherit;line-height:1.8;padding:6px 8px;';
@@ -6621,82 +6783,40 @@ function retroMonthlyRenderForm() {
     const mGoalVal   = mGoalsData[mGoalKey]?.cats?.[cat]?.goal || '';
     const goalVal    = data.goal || mGoalVal || prevData?.next || '';
 
-    // 목표를 파싱해서 체크리스트로 변환
-    const goalLines = goalVal.split('\n')
-      .map(l => l.replace(/^[▪◦\-\s]+/, '').trim())
-      .filter(Boolean);
-
-    // 저장된 goalChecks: { lineIdx: 'done'|'partial'|'fail' }
-    if (!data.goalChecks) data.goalChecks = {};
-
-    const goalChecklist = goalLines.length
-      ? `<div style="display:flex;flex-direction:column;gap:6px;">
-          ${goalLines.map((line, li) => {
-            const state = data.goalChecks?.[li] || '';
-            const opts = [
-              {v:'done',    label:'✅', tip:'달성'},
-              {v:'partial', label:'🔶', tip:'부분달성'},
-              {v:'fail',    label:'❌', tip:'미달성'},
-            ];
-            const btns = opts.map(o =>
-              `<button onclick="rmcGoalCheck(this,'${cat}',${li},'${o.v}')" title="${o.tip}"
-                style="width:26px;height:26px;border-radius:50%;border:0.5px solid ${state===o.v?'transparent':'var(--border-md)'};background:${state===o.v?'var(--text-primary)':'transparent'};font-size:13px;cursor:pointer;padding:0;line-height:1;">${o.label}</button>`
-            ).join('');
-            return `<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:var(--radius-md);background:var(--bg-secondary);border:0.5px solid var(--border);">
-              <span style="flex:1;font-size:13px;color:${state?'var(--text-primary)':'var(--text-secondary)'};">${line}</span>
-              <div style="display:flex;gap:3px;">${btns}</div>
-            </div>`;
-          }).join('')}
-        </div>`
-      : `<div style="font-size:13px;color:var(--text-tertiary);">목표를 먼저 입력하면 체크리스트가 생성됩니다</div>`;
-
     // 목표 전체 달성 여부 자동 계산
+    if (!data.goalChecks) data.goalChecks = {};
+    const goalLines = goalVal.split('\n').map(l=>l.replace(/^[▪◦\-\s]+/,'').trim()).filter(Boolean);
     const checkVals = Object.values(data.goalChecks || {});
     const allDone    = goalLines.length > 0 && checkVals.filter(v=>v==='done').length === goalLines.length;
     const anyDone    = checkVals.some(v=>v==='done'||v==='partial');
     const anyFail    = checkVals.some(v=>v==='fail');
     data.achieved = allDone ? '달성' : anyDone ? '부분달성' : anyFail ? '미달성' : data.achieved || '';
-
-    // 보상 체크
-    const mKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    const reward = mGoalsData[mKey]?.cats?.[cat]?.reward || data.reward || '';
-    const rewardClaimed = !!data.rewardClaimed;
-    const rewardSection = reward
-      ? `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg-secondary);cursor:pointer;" onclick="rmcToggleReward(this,'${cat}')">
-          <div style="width:18px;height:18px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${rewardClaimed?'#EF9F27':'transparent'};border:1.5px solid ${rewardClaimed?'transparent':'#EF9F27'};">
-            ${rewardClaimed?'<i class="ti ti-check" style="font-size:10px;color:#fff;"></i>':''}
-          </div>
-          <span style="flex:1;font-size:13px;${rewardClaimed?'text-decoration:line-through;color:var(--text-tertiary);':''}">${reward}</span>
-          <span style="font-size:11px;color:#EF9F27;font-weight:600;">${rewardClaimed?'🎁 획득!':''}</span>
-        </div>`
-      : `<div style="font-size:13px;color:var(--text-tertiary);">월간목표 페이지에서 보상을 입력하면 여기에 표시됩니다</div>`;
+    const scoreVal = data.score || '';
 
     return `
     <div data-cat="${cat}" style="padding-bottom:22px;${ci<RETRO_MONTHLY_CATS.length-1?'border-bottom:1.5px solid var(--border);margin-bottom:4px;':''}">
-      <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:12px;">${emoji} ${cat}
-        ${data.achieved ? `<span style="font-size:12px;padding:2px 8px;border-radius:10px;background:${data.achieved==='달성'?'#43E97B22':data.achieved==='부분달성'?'#EF9F2722':'#E24B4A22'};color:${data.achieved==='달성'?'#2d8a55':data.achieved==='부분달성'?'#c47a00':'#c0392b'};font-weight:600;margin-left:8px;">${data.achieved==='달성'?'✅':data.achieved==='부분달성'?'🔶':'❌'} ${data.achieved}</span>` : ''}
+      <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:12px;display:flex;align-items:center;gap:8px;">${emoji} ${cat}
+        ${data.achieved ? `<span style="font-size:12px;padding:2px 8px;border-radius:10px;background:${data.achieved==='달성'?'#43E97B22':data.achieved==='부분달성'?'#EF9F2722':'#E24B4A22'};color:${data.achieved==='달성'?'#2d8a55':data.achieved==='부분달성'?'#c47a00':'#c0392b'};font-weight:600;">${data.achieved==='달성'?'✅':data.achieved==='부분달성'?'🔶':'❌'} ${data.achieved}</span>` : ''}
+        <span style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+          <span style="font-size:11px;color:var(--text-tertiary);font-weight:400;">총점</span>
+          <input type="number" min="0" max="10" value="${scoreVal}" placeholder="—"
+            oninput="retroMonthlySaveScore(this,'${cat}')"
+            style="width:48px;font-size:14px;font-weight:700;border:0.5px solid var(--border-md);border-radius:var(--radius-md);padding:2px 6px;background:var(--bg-secondary);color:var(--text-primary);outline:none;text-align:center;font-family:inherit;">
+          <span style="font-size:11px;color:var(--text-tertiary);">/ 10</span>
+        </span>
       </div>
       <div style="display:flex;flex-direction:column;gap:12px;">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;">
           <div style="display:flex;flex-direction:column;gap:6px;">
             <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;display:flex;align-items:center;gap:5px;">
-              이달의 목표
-              ${mGoalVal && !data.goal ? `<span style="font-size:10px;padding:1px 5px;border-radius:8px;background:#E6F1FB;color:#185FA5;font-weight:600;">월간목표 연동</span>` : ''}
+              이달의 목표 ${mGoalVal && !data.goal ? `<span style="font-size:10px;padding:1px 5px;border-radius:8px;background:#E6F1FB;color:#185FA5;font-weight:600;">월간목표 연동</span>` : ''}
             </div>
             <textarea data-field="goal" rows="5" placeholder="▪ 목표를 입력하세요..." onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroMonthlyFieldSave(this,'${cat}','goal')" style="${taStyle}">${goalVal}</textarea>
           </div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;flex-direction:column;gap:6px;">
             <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;">달성 체크</div>
-            ${goalChecklist}
+            <div id="mc-checklist-${cat}" style="display:flex;flex-direction:column;gap:4px;">${retroBuildGoalChecklist(goalVal, data.goalChecks, 'rmcGoalCheck', '${cat}')}</div>
           </div>
-        </div>
-        <div>
-          <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">달성 내용</div>
-          <textarea data-field="detail" rows="3" placeholder="▪ 달성 내용을 기록하세요..." onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroMonthlyFieldSave(this,'${cat}','detail')" style="${taStyle}">${data.detail||''}</textarea>
-        </div>
-        <div>
-          <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">보상</div>
-          ${rewardSection}
         </div>
         <div>
           <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">총평</div>
@@ -6707,8 +6827,11 @@ function retroMonthlyRenderForm() {
           </div>
         </div>
         <div>
-          <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">다음달 목표</div>
-          <textarea data-field="next" rows="2" placeholder="▪ 다음달 목표를 입력하세요..." onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroMonthlyFieldSave(this,'${cat}','next')" style="${taStyle}">${data.next}</textarea>
+          <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:6px;">
+            다음달 목표
+            <span style="font-size:10px;color:var(--text-tertiary);font-weight:400;">· 편집/삭제 가능 · 저장 시 월간목표에 반영</span>
+          </div>
+          <textarea data-field="next" rows="3" placeholder="▪ 다음달 목표를 입력하세요..." onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroMonthlyNextSave(this,'${cat}')" style="${taStyle}">${(()=>{ const nk=`${nextD.getFullYear()}-${String(nextD.getMonth()+1).padStart(2,'0')}`;return mGoalsData[nk]?.cats?.[cat]?.goal||data.next||'';})()}</textarea>
         </div>
       </div>
     </div>`;
@@ -7132,20 +7255,40 @@ function renderMGoalsList() {
       <span style="font-size:13px;">새 월간 목표 버튼으로 시작해보세요</span>
     </div>`; return;
   }
+  const ICON_OPTS = ['🌱','🔥','🌊','⭐','🎯','💎','🌸','🌙','🦋','🏔️','🌈','✨','🍀','🎵','🧭'];
   listEl.innerHTML = entries.map(([k, d]) => {
     const badges = RETRO_MONTHLY_CATS.map(cat =>
       d.cats?.[cat]?.goal ? `<span style="font-size:12px;">${RETRO_MONTHLY_EMOJIS[cat]}</span>` : ''
     ).filter(Boolean).join(' ');
-    return `<div onclick="mGoalsOpenEntry('${k}')" style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:0.5px solid var(--border);cursor:pointer;">
-      <div style="font-size:21px;font-weight:700;color:var(--text-primary);min-width:80px;">${mGoalsLabelOf(k)}</div>
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:3px;">${d.slogan||'(슬로건 없음)'}</div>
-        <div style="font-size:13px;color:var(--text-tertiary);">${badges||'목표 미작성'}</div>
+    const icon = d.icon || '📅';
+    const iconPicker = ICON_OPTS.map(ic =>
+      `<span onclick="event.stopPropagation();mGoalsSetIcon('${k}','${ic}')" style="cursor:pointer;font-size:18px;padding:2px;border-radius:4px;background:${ic===icon?'var(--bg-secondary)':'transparent'};">${ic}</span>`
+    ).join('');
+    return `<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:0.5px solid var(--border);">
+      <div onclick="mGoalsOpenEntry('${k}')" style="display:flex;align-items:center;gap:12px;flex:1;cursor:pointer;min-width:0;">
+        <div style="font-size:28px;">${icon}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:3px;">${mGoalsLabelOf(k)} ${d.slogan ? `<span style="font-size:13px;font-weight:400;color:var(--text-tertiary);">· ${d.slogan}</span>` : ''}</div>
+          <div style="font-size:13px;color:var(--text-tertiary);">${badges||'목표 미작성'}</div>
+        </div>
       </div>
-      <i class="ti ti-chevron-right" style="color:var(--text-tertiary);font-size:16px;"></i>
+      <div class="icon-picker-wrap" style="display:none;flex-wrap:wrap;gap:2px;max-width:160px;" id="icon-picker-${k}">${iconPicker}</div>
+      <button onclick="event.stopPropagation();toggleIconPicker('${k}')" style="font-size:12px;padding:3px 8px;border-radius:6px;border:0.5px solid var(--border-md);background:transparent;color:var(--text-tertiary);cursor:pointer;flex-shrink:0;">아이콘</button>
+      <i class="ti ti-chevron-right" onclick="mGoalsOpenEntry('${k}')" style="color:var(--text-tertiary);font-size:16px;cursor:pointer;"></i>
     </div>`;
   }).join('');
   if (listEl.lastElementChild) listEl.lastElementChild.style.borderBottom = 'none';
+}
+function toggleIconPicker(k) {
+  const el = document.getElementById(`icon-picker-${k}`);
+  if (!el) return;
+  el.style.display = el.style.display === 'none' ? 'flex' : 'none';
+}
+function mGoalsSetIcon(k, icon) {
+  if (!mGoalsData[k]) mGoalsData[k] = { cats:{}, reward:'' };
+  mGoalsData[k].icon = icon;
+  lsAutoSave();
+  renderMGoalsList();
 }
 function renderMGoals() {
   const data = mGoalsGet(mGoalsCurKey);
@@ -7158,6 +7301,17 @@ function renderMGoals() {
   disp.style.color = data.slogan ? 'var(--text-primary)' : 'var(--text-tertiary)';
   const rewardEl = document.getElementById('mgoals-reward-input');
   if (rewardEl) rewardEl.value = data.reward || '';
+  // 지난달 보상 표시
+  const [yr, mo] = mGoalsCurKey.split('-').map(Number);
+  const prevD = new Date(yr, mo - 2, 1);
+  const prevKey = `${prevD.getFullYear()}-${String(prevD.getMonth()+1).padStart(2,'0')}`;
+  const lastRewardEl   = document.getElementById('mgoals-last-reward');
+  const lastRewardText = document.getElementById('mgoals-last-reward-text');
+  const lastReward = mGoalsData[prevKey]?.reward || '';
+  if (lastRewardEl && lastRewardText) {
+    if (lastReward) { lastRewardEl.style.display=''; lastRewardText.textContent = lastReward; }
+    else { lastRewardEl.style.display='none'; }
+  }
   const catsEl  = document.getElementById('mgoals-cats');
   const stratEl = document.getElementById('mgoals-strategy');
   if (!catsEl || !stratEl) return;
@@ -7645,41 +7799,52 @@ async function dataReset() {
 }
 // ── 특정 날짜 이전 데이터 삭제 ──────────────────────────────────
 function dataCleanupBefore() {
-  const cutoffInput = prompt('삭제할 기준 날짜를 입력하세요 (이 날짜 이전 데이터 삭제)\n예: 2026-05-24', '2026-05-24');
+  const cutoffInput = prompt('삭제할 기준 날짜를 입력하세요 (이 날짜 포함 이전 데이터 삭제)\n예: 2026-05-24', '2026-05-24');
   if (!cutoffInput) return;
-  const cutoff = new Date(cutoffInput);
-  if (isNaN(cutoff.getTime())) { alert('날짜 형식이 올바르지 않아요. YYYY-MM-DD 형식으로 입력해주세요.'); return; }
-  if (!confirm(`${cutoffInput} 이전의 데이터를 삭제할까요?\n(일기, 투두, 시간가계부 로그, 루틴체크, streak 포함)`)) return;
+  // YYYY-MM-DD를 로컬 자정으로 파싱 (UTC 오프셋 문제 방지)
+  const [cy, cm, cd] = cutoffInput.split('-').map(Number);
+  if (!cy || !cm || !cd) { alert('날짜 형식이 올바르지 않아요. YYYY-MM-DD 형식으로 입력해주세요.'); return; }
+  // cutoff 다음날 자정 기준 (해당 날짜 포함 삭제)
+  const cutoff = new Date(cy, cm - 1, cd + 1); // 로컬 시간 기준
+  if (!confirm(`${cutoffInput} 이하의 데이터를 삭제할까요?\n(일기, 투두, 시간가계부 로그, 루틴체크, streak 포함)`)) return;
 
   let count = 0;
 
+  // 날짜 키 파싱 헬퍼 (YYYY-MM-DD → 로컬 Date)
+  const parseLocalDate = k => {
+    const [y,m,d] = k.split('-').map(Number);
+    return new Date(y, m-1, d);
+  };
+
   // 일기
   Object.keys(diaryStore).forEach(k => {
-    if (new Date(k) < cutoff) { delete diaryStore[k]; count++; }
+    if (parseLocalDate(k) < cutoff) { delete diaryStore[k]; count++; }
   });
   // 투두
   Object.keys(todoStore).forEach(k => {
-    if (new Date(k) < cutoff) { delete todoStore[k]; count++; }
+    if (parseLocalDate(k) < cutoff) { delete todoStore[k]; count++; }
   });
   // 시간가계부 로그
   Object.keys(tlLogs).forEach(k => {
-    if (new Date(k) < cutoff) { delete tlLogs[k]; count++; }
+    if (parseLocalDate(k) < cutoff) { delete tlLogs[k]; count++; }
   });
   // 루틴 체크
   Object.keys(routineCheckData).forEach(k => {
-    if (new Date(k) < cutoff) { delete routineCheckData[k]; count++; }
+    if (parseLocalDate(k) < cutoff) { delete routineCheckData[k]; count++; }
   });
   // streak (키 형식: YYYY-M-D)
   Object.keys(streakData).forEach(k => {
     const p = k.split('-');
     if (p.length === 3) {
-      if (new Date(+p[0], +p[1], +p[2]) < cutoff) { delete streakData[k]; count++; }
+      // month는 0-indexed이므로 p[1]-1
+      const d = new Date(+p[0], +p[1] - 1, +p[2] + 1); // 해당 날 포함 삭제
+      if (d < cutoff) { delete streakData[k]; count++; }
     }
   });
 
   lsSave();
   if (window._fbUid) fsSave(window._fbUid).catch(()=>{});
-  alert(`✅ ${cutoffInput} 이전 데이터 ${count}건 삭제 완료!`);
+  alert(`✅ ${cutoffInput} 이하 데이터 ${count}건 삭제 완료!`);
   location.reload();
 }
 
