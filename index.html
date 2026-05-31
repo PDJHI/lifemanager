@@ -8303,6 +8303,8 @@ document.getElementById('logout-btn').addEventListener('click', function() {
         buyCheckCarryover();
         renderBuy();
         todoCarryoverPastDue();
+      }
+
       window.lsAutoSave = function() {
         clearTimeout(window._lsTimer);
         window._lsTimer = setTimeout(() => {
