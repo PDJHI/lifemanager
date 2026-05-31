@@ -2257,9 +2257,9 @@ function syncTodayRoutines() {
   const todayRoutines = routines
     .filter(r => r.days.includes(todayIdx))
     .sort((a,b) => {
-      const cs = (CAT_ORDER[a.cat]??9) - (CAT_ORDER[b.cat]??9);
+      const cs = (CAT_ORDER[a.cat]||9) - (CAT_ORDER[b.cat]||9);
       if (cs !== 0) return cs;
-      return (TIME_ORDER[a.timeSlot||'공통']??4) - (TIME_ORDER[b.timeSlot||'공통']??4);
+      return (TIME_ORDER[a.timeSlot||'공통']||4) - (TIME_ORDER[b.timeSlot||'공통']||4);
     });
   const listEl = document.getElementById('routine-list');
   const realTodayIdx = now.getDay()===0?6:now.getDay()-1;
@@ -2490,8 +2490,8 @@ function renderWeekFromMonday(mon) {
   // ── 지난주 목표 & 보상 (wfStore) ──────────────────────────────
   const wKey = `${mon.getFullYear()}-W${String(mon.getMonth()+1).padStart(2,'0')}-${String(mon.getDate()).padStart(2,'0')}`;
   const wfData  = wfStore[wKey];
-  const goals   = wfData?.goals   || [];
-  const rewards = wfData?.rewards || [];
+  const goals   = (wfData && wfData.goals)   || [];
+  const rewards = (wfData && wfData.rewards) || [];
 
   const goalsEl = document.getElementById('lw-goals-list');
   if (goalsEl) {
@@ -2721,7 +2721,7 @@ function selectTime(btn){ document.querySelectorAll('.modal-day-btn[data-time]')
 function saveRoutine(){
   const name=document.getElementById('modal-name').value.trim();
   if(!name){document.getElementById('modal-name').focus();return;}
-  const days=[...document.querySelectorAll('.modal-day-btn[data-d].selected')].map(b=>parseInt(b.dataset.d));
+  const days=Array.from(document.querySelectorAll('.modal-day-btn[data-d].selected')).map(b=>parseInt(b.dataset.d));
   const catBtn=document.querySelector('.modal-day-btn[data-cat].selected');
   const cat=catBtn?catBtn.dataset.cat:'자산';
   const timeBtn=document.querySelector('.modal-day-btn[data-time].selected');
@@ -2829,7 +2829,7 @@ function buyCheckCarryover() {
   buyStore.need = (buyStore.need || []).filter(x => !x.done);
   buyStore.want = (buyStore.want || []).filter(x => !x.done);
   // 이월된 항목에 이월 표시
-  [...buyStore.need, ...buyStore.want].forEach(x => {
+  buyStore.need.concat(buyStore.want).forEach(x => {
     x.carriedOver = true;
   });
   buyStore._weekKey = thisMonday;
@@ -3211,9 +3211,9 @@ function switchNwRoutineDay(idx) {
   const dayRoutines = routines
     .filter(r => r.days.includes(idx))
     .sort((a,b) => {
-      const cs = (CAT_ORDER[a.cat]??9) - (CAT_ORDER[b.cat]??9);
+      const cs = (CAT_ORDER[a.cat]||9) - (CAT_ORDER[b.cat]||9);
       if (cs !== 0) return cs;
-      return (TIME_ORDER[a.timeSlot||'공통']??4) - (TIME_ORDER[b.timeSlot||'공통']??4);
+      return (TIME_ORDER[a.timeSlot||'공통']||4) - (TIME_ORDER[b.timeSlot||'공통']||4);
     });
   const listEl = document.getElementById('nw-routine-list');
   if (!listEl) return;
@@ -3605,7 +3605,7 @@ function tlGetCat(id) {
   const child = tlCatChildren.find(c=>c.id===id);
   if (child) {
     const parent = tlCatParents.find(p=>p.id===child.parentId);
-    return { id:child.id, name:child.name, color: child.color||parent?.color||'#aaa', parentName: parent?.name||'' };
+    return { id:child.id, name:child.name, color: child.color||(parent && parent.color)||'#aaa', parentName: (parent && parent.name)||'' };
   }
   const parent = tlCatParents.find(p=>p.id===id);
   if (parent) return { id:parent.id, name:parent.name, color:parent.color, parentName:'' };
@@ -3909,7 +3909,7 @@ function renderTimelog() {
     weekTotal += mins;
     return mins;
   });
-  const maxDay = Math.max(...dayTotals, 1);
+  const maxDay = Math.max.apply(null, dayTotals.concat([1]));
   weekDayEl.innerHTML = dayTotals.map((mins, i) => {
     const dt = addDays(mon, i);
     const isCurDay = tlDateKey(dt) === k;
@@ -4205,7 +4205,7 @@ let _tlClipboard = null;
 function tlCopyLog(k, id) {
   const log = (tlLogs[k]||[]).find(l=>l.id===id);
   if (!log) return;
-  _tlClipboard = { ...log };
+  _tlClipboard = Object.assign({}, log);
   // 복사 완료 토스트
   const toast = document.createElement('div');
   toast.textContent = '✓ 복사됨 — 붙여넣기 버튼을 눌러 추가하세요';
@@ -4515,7 +4515,7 @@ function renderDiaryList() {
   let streak = 0;
   for (let i = 0; ; i++) {
     const k = diaryDateKey(addDays(now, -i));
-    if (diaryStore[k]?.content || diaryStore[k]?.title) streak++;
+    if ((diaryStore[k] && diaryStore[k].content) || (diaryStore[k] && diaryStore[k].title)) streak++;
     else break;
   }
 
@@ -4556,12 +4556,12 @@ function renderDiaryList() {
       <div style="flex:1;min-width:0;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
           <span style="font-size:15px;font-weight:600;color:var(--text-primary);">${v.title||'제목 없음'}</span>
-          ${v.weather ? `<span style="font-size:15px;" title="${WMO_LABELS?.[v.weather.code]||''} ${v.weather.temp}°C">${WMO_CODES?.[v.weather.code]||'🌡️'} <span style="font-size:11px;color:var(--text-tertiary);">${v.weather.temp}°C</span></span>` : ''}
+          ${v.weather ? `<span style="font-size:15px;" title="${(WMO_LABELS && WMO_LABELS[v.weather.code])||''} ${v.weather.temp}°C">${(WMO_CODES && WMO_CODES[v.weather.code])||'🌡️'} <span style="font-size:11px;color:var(--text-tertiary);">${v.weather.temp}°C</span></span>` : ''}
           ${moodChips}
         </div>
         ${scoreStars ? `<div style="font-size:12px;color:#F6A623;letter-spacing:-1px;margin-bottom:3px;">${scoreStars} <span style="color:var(--text-tertiary);font-size:11px;">${v.score}점</span></div>` : ''}
         ${preview ? `<div style="font-size:13px;color:var(--text-tertiary);line-height:1.5;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${preview}</div>` : ''}
-        ${v.body ? `<div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;">${DIARY_BODY_OPTIONS.find(b=>b.label===v.body)?.emoji||''} ${v.body}</div>` : ''}
+        ${v.body ? `<div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;">${DIARY_BODY_OPTIONS.find(b=>b.label===v.body) ? DIARY_BODY_OPTIONS.find(b=>b.label===v.body).emoji : ''} ${v.body}</div>` : ''}
       </div>
       <i class="ti ti-chevron-right" style="color:var(--text-tertiary);font-size:16px;flex-shrink:0;align-self:center;"></i>
     </div>`;
@@ -5031,8 +5031,8 @@ function renderDiaryCal() {
     const k   = diaryDateKey(dt);
     const isT = diaryDateKey(now) === k;
     const v   = diaryStore[k];
-    const hasEntry = !!(v?.title || v?.content);
-    const score    = v?.score || 0;
+    const hasEntry = !!((v && v.title) || (v && v.content));
+    const score    = (v && v.score) || 0;
     const hue      = score ? Math.round((score/10)*120) : null;
 
     const cell = document.createElement('div');
@@ -5073,7 +5073,7 @@ function renderDiaryCal() {
   const scores = entries.map(([,v])=>v.score).filter(s=>s>0);
   const avg    = scores.length ? (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1) : '-';
   let streak = 0, cur = new Date(now);
-  while (diaryStore[diaryDateKey(cur)]?.content || diaryStore[diaryDateKey(cur)]?.title) {
+  while ((diaryStore[diaryDateKey(cur)] && diaryStore[diaryDateKey(cur)].content) || (diaryStore[diaryDateKey(cur)] && diaryStore[diaryDateKey(cur)].title)) {
     streak++; cur = addDays(cur, -1);
   }
   document.getElementById('diary-stat-count').textContent  = entries.length;
@@ -5131,8 +5131,8 @@ function renderDiaryOneMonth(year, month) {
       const inMonth  = d.getMonth() === month;
       const isToday  = k === diaryDateKey(now);
       const v        = diaryStore[k];
-      const hasEntry = !!(v?.title || v?.content);
-      const score    = v?.score || 0;
+      const hasEntry = !!((v && v.title) || (v && v.content));
+      const score    = (v && v.score) || 0;
       const hue      = score ? Math.round((score/10)*120) : null;
       const isSat    = d.getDay() === 6;
       const isSun    = d.getDay() === 0;
@@ -5225,7 +5225,7 @@ function retroShowDetail(type) {
     }
     renderRoutineCatSummary('retro-quarterly-routine-cat', allDays);
     const qDays = [];
-    for (let m = qStart; m < qStart+3; m++) qDays.push(...collectDaysInMonth(year, m));
+    for (let m = qStart; m < qStart+3; m++) qDays.push.apply(qDays, collectDaysInMonth(year, m));
     renderRetroDesire('retro-quarterly-desire', qDays);
     renderRetroBuy('retro-quarterly-buy');
   }
@@ -5242,7 +5242,7 @@ function retroShowDetail(type) {
     }
     renderRoutineCatSummary('retro-yearly-routine-cat', allDays);
     const yDays = [];
-    for (let m = 0; m < 12; m++) yDays.push(...collectDaysInMonth(year, m));
+    for (let m = 0; m < 12; m++) yDays.push.apply(yDays, collectDaysInMonth(year, m));
     renderRetroDesire('retro-yearly-desire', yDays);
     renderRetroBuy('retro-yearly-buy');
   }
@@ -5389,8 +5389,8 @@ function renderRetroWeeklyDashboard() {
     const todoTotal = todos.length;
     // 일기
     const diary = diaryStore[dk];
-    const hasDiary = !!(diary?.title || diary?.content);
-    const score = diary?.score || 0;
+    const hasDiary = !!((diary && diary.title) || (diary && diary.content));
+    const score = (diary && diary.score) || 0;
     // 시간
     const timeLogs = tlLogs[dk] || [];
     const totalMins = timeLogs.reduce((s,l)=>s+l.dur, 0);
@@ -5437,7 +5437,7 @@ function renderRetroWeeklyDashboard() {
     const CAT_COLORS = { '자산':'#FFD93D','관계':'#4FC3F7','건강':'#43E97B','경험':'#FF6B9D','커리어':'#7C83FD','성장':'#C77DFF' };
     // 이번 주 해당 요일들의 루틴 데이터 집계
     const TIME_SLOTS = ['공통','아침','오전','오후','저녁'];
-    const cats = [...new Set(routines.map(r => r.cat))].filter(c => !TIME_SLOTS.includes(c));
+    const cats = Array.from(new Set(routines.map(function(r){return r.cat}))).filter(c => !TIME_SLOTS.includes(c));
     if (!cats.length) {
       routineCatEl.innerHTML = '<div style="font-size:13px;color:var(--text-tertiary);">루틴 데이터가 없습니다.</div>';
     } else {
@@ -5473,7 +5473,7 @@ function renderRetroWeeklyDashboard() {
       // 해당 요일에 스케줄된 루틴 중 달성한 카테고리 색상 계산
       const CAT_COLORS = { '자산':'#FFD93D','관계':'#4FC3F7','건강':'#43E97B','경험':'#FF6B9D','커리어':'#7C83FD','성장':'#C77DFF' };
       const dayRoutines = routines.filter(r => r.days.includes(d.i));
-      const cats = [...new Set(dayRoutines.map(r => r.cat))];
+      const cats = Array.from(new Set(dayRoutines.map(function(r){return r.cat})));
       const dotColor = d.routineAchieved && cats.length ? (CAT_COLORS[cats[0]] || '#43E97B') : '#43E97B';
       return `
       <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
@@ -5615,7 +5615,7 @@ function renderRetroWeeklyDashboard() {
   if (wfWeekLabel) wfWeekLabel.textContent = `${formatDate(mon)} ~ ${formatDate(addDays(mon,6))}`;
 
   if (wfGoalsEl) {
-    const goals = wfData?.goals || [];
+    const goals = (wfData && wfData.goals) || [];
     if (!goals.length) {
       wfGoalsEl.innerHTML = '<div style="font-size:13px;color:var(--text-tertiary);padding:4px 0;">등록된 목표가 없어요</div>';
     } else {
@@ -5639,11 +5639,11 @@ function renderRetroWeeklyDashboard() {
     }
   }
 
-  if (wfBookEl)    wfBookEl.textContent    = wfData?.book    || '';
-  if (wfWritingEl) wfWritingEl.textContent = wfData?.writing || '';
+  if (wfBookEl)    wfBookEl.textContent    = (wfData && wfData.book)    || '';
+  if (wfWritingEl) wfWritingEl.textContent = (wfData && wfData.writing) || '';
 
   if (wfRewardsEl) {
-    const rewards = wfData?.rewards || [];
+    const rewards = (wfData && wfData.rewards) || [];
     if (!rewards.length) {
       wfRewardsEl.innerHTML = '<div style="font-size:13px;color:var(--text-tertiary);">등록된 보상이 없어요</div>';
     } else {
@@ -5742,8 +5742,8 @@ function renderRetroMonthlyDashboard() {
     const dt = new Date(year, month, i+1);
     const dk = `${year}-${String(month+1).padStart(2,'0')}-${String(i+1).padStart(2,'0')}`;
     const diary = diaryStore[dk];
-    const hasDiary = !!(diary?.title || diary?.content);
-    const score = diary?.score || 0;
+    const hasDiary = !!((diary && diary.title) || (diary && diary.content));
+    const score = (diary && diary.score) || 0;
     const wk = weekKey(getMonday(dt));
     const dowIdx = dt.getDay()===0?6:dt.getDay()-1;
     const todos = (todoStore[wk]||[]).filter(t=>t.dayIdx===dowIdx);
@@ -5845,14 +5845,14 @@ function renderRetroMonthlyDashboard() {
   // ── 일별 점수 & 기록 시간 ─────────────────────────────────────
   const dailyEl = document.getElementById('retro-monthly-daily');
   if (dailyEl) {
-    const maxMins = Math.max(...allDays.map(d=>d.totalMins), 1);
+    const maxMins = Math.max.apply(null, allDays.map(function(d){return d.totalMins;}).concat([1]));
     dailyEl.innerHTML = allDays.map(d => {
       const hue = d.score ? Math.round(d.score/10*120) : null;
       const barW = Math.round(d.totalMins/maxMins*100);
       return `
       <div style="display:grid;grid-template-columns:28px 14px 1fr 50px;gap:6px;align-items:center;padding:3px 0;border-bottom:0.5px solid var(--border);">
         <div style="font-size:11px;color:var(--text-tertiary);">${d.dt.getDate()}일</div>
-        <div style="font-size:11px;font-weight:700;${hue?`color:hsl(${hue},50%,40%)`:'color:var(--border)'};">${d.score||'·'}</div>
+        <div style="font-size:11px;font-weight:700;${hue?'color:hsl('+hue+',50%,40%)':'color:var(--border)'};">${d.score||'·'}</div>
         <div style="height:5px;background:var(--bg-secondary);border-radius:2px;overflow:hidden;">
           <div style="height:100%;width:${barW}%;background:#FFD93D;border-radius:2px;"></div>
         </div>
@@ -5906,7 +5906,7 @@ function renderRetroMonthlyDashboard() {
     const d  = retroCursor['monthly'];
     if (!retroMonthlyData[mk]) retroMonthlyData[mk] = {};
     const mGoalKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    const mGoalReward = mGoalsData[mGoalKey]?.reward || '';
+    const mGoalReward = (mGoalsData[mGoalKey] && mGoalsData[mGoalKey].reward) || '';
     // 목표 페이지 보상을 우선 참조 (회고에 직접 입력한 값 없을 때)
     if (!retroMonthlyData[mk]['_reward'] && mGoalReward) {
       retroMonthlyData[mk]['_reward'] = mGoalReward;
@@ -6013,8 +6013,8 @@ function renderRetroYearlyDashboard() {
       const dt = new Date(year, m, dd);
       const dk = `${year}-${String(m+1).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
       const diary = diaryStore[dk];
-      const hasDiary = !!(diary?.title || diary?.content);
-      const score = diary?.score || 0;
+      const hasDiary = !!((diary && diary.title) || (diary && diary.content));
+      const score = (diary && diary.score) || 0;
       const timeLogs = tlLogs[dk] || [];
       const totalMins = timeLogs.reduce((s,l)=>s+l.dur, 0);
       const wk = weekKey(getMonday(dt));
@@ -6076,7 +6076,7 @@ function renderRetroYearlyDashboard() {
   const rewardEl = document.getElementById('retro-yearly-reward-grid');
   if (rewardEl) {
     if (!retroYearlyData[yk]) retroYearlyData[yk] = {};
-    const yGoalReward = yearlyGoalsData[retroCursor['yearly'].getFullYear()]?.reward || '';
+    const yGoalReward = (yearlyGoalsData[retroCursor['yearly'].getFullYear()] && yearlyGoalsData[retroCursor['yearly'].getFullYear()].reward) || '';
     if (!retroYearlyData[yk]['_reward'] && yGoalReward) {
       retroYearlyData[yk]['_reward'] = yGoalReward;
     }
@@ -6117,9 +6117,9 @@ function retroYearlyRenderForm() {
   form.innerHTML = RETRO_MONTHLY_CATS.map((cat, ci) => {
     const data     = retroYearlyGetCat(yk, cat);
     const emoji    = RETRO_MONTHLY_EMOJIS[cat];
-    const prevData   = retroYearlyData[prevYk]?.[cat];
-    const yGoalVal   = yearlyGoalsData[d.getFullYear()]?.cats?.[cat]?.goal || '';
-    const goalVal    = data.goal || yGoalVal || prevData?.next || '';
+    const prevData   = (retroYearlyData[prevYk] && retroYearlyData[prevYk][cat]);
+    const yGoalVal   = (yearlyGoalsData[d.getFullYear()] && yearlyGoalsData[d.getFullYear()].cats && yearlyGoalsData[d.getFullYear()].cats[cat] && yearlyGoalsData[d.getFullYear()].cats[cat].goal) || '';
+    const goalVal    = data.goal || yGoalVal || (prevData && prevData.next) || '';
     if (!data.goalChecks) data.goalChecks = {};
     const yGoalLines = goalVal.split('\n').map(l=>l.replace(/^[▪◦\-\s]+/,'').trim()).filter(Boolean);
     const yChecks=Object.values(data.goalChecks||{});
@@ -6301,8 +6301,8 @@ function renderRetroQuarterlyDashboard() {
       const dt = new Date(year, m, dd);
       const dk = `${year}-${String(m+1).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
       const diary = diaryStore[dk];
-      const hasDiary = !!(diary?.title || diary?.content);
-      const score = diary?.score || 0;
+      const hasDiary = !!((diary && diary.title) || (diary && diary.content));
+      const score = (diary && diary.score) || 0;
       const timeLogs = tlLogs[dk] || [];
       const totalMins = timeLogs.reduce((s,l)=>s+l.dur, 0);
       const wk = weekKey(getMonday(dt));
@@ -6391,7 +6391,7 @@ function renderRetroQuarterlyDashboard() {
     if (!retroQuarterlyData[qk]) retroQuarterlyData[qk] = {};
     const qNum = Math.ceil((retroCursor['quarterly'].getMonth()+1)/3);
     const qGoalKey = `${retroCursor['quarterly'].getFullYear()}-Q${qNum}`;
-    const qGoalReward = qGoalsData[qGoalKey]?.reward || '';
+    const qGoalReward = (qGoalsData[qGoalKey] && qGoalsData[qGoalKey].reward) || '';
     if (!retroQuarterlyData[qk]['_reward'] && qGoalReward) {
       retroQuarterlyData[qk]['_reward'] = qGoalReward;
     }
@@ -6417,11 +6417,11 @@ function retroQuarterlyRenderForm() {
   form.innerHTML = RETRO_MONTHLY_CATS.map((cat, ci) => {
     const data  = retroQuarterlyGetCat(qk, cat);
     const emoji = RETRO_MONTHLY_EMOJIS[cat];
-    const prevData  = retroQuarterlyData[prevQk]?.[cat];
+    const prevData  = (retroQuarterlyData[prevQk] && retroQuarterlyData[prevQk][cat]);
     const qNum      = Math.ceil((d.getMonth()+1)/3);
     const qGoalKey  = `${d.getFullYear()}-Q${qNum}`;
-    const qGoalVal  = qGoalsData[qGoalKey]?.cats?.[cat]?.goal || '';
-    const goalVal   = data.goal || qGoalVal || prevData?.next || '';
+    const qGoalVal  = (qGoalsData[qGoalKey] && qGoalsData[qGoalKey].cats && qGoalsData[qGoalKey].cats[cat] && qGoalsData[qGoalKey].cats[cat].goal) || '';
+    const goalVal   = data.goal || qGoalVal || (prevData && prevData.next) || '';
     if (!data.goalChecks) data.goalChecks = {};
     const qGoalLines = goalVal.split('\n').map(l=>l.replace(/^[▪◦\-\s]+/,'').trim()).filter(Boolean);
     const qChecks=Object.values(data.goalChecks||{});
@@ -6489,7 +6489,7 @@ function renderMonthlyScoreCard() {
   const barEl = document.getElementById('retro-monthly-avg-bar');
   if (!avgEl) return;
   const scores = RETRO_MONTHLY_CATS
-    .map(cat => retroMonthlyData[mk]?.[cat]?.score)
+    .map(cat => (retroMonthlyData[mk] && retroMonthlyData[mk][cat] && retroMonthlyData[mk][cat].score))
     .filter(s => s !== undefined && s !== '' && s !== null)
     .map(Number);
   if (!scores.length) { avgEl.textContent = '—'; avgEl.style.color = 'var(--text-tertiary)'; if (barEl) barEl.style.width = '0%'; return; }
@@ -6505,7 +6505,7 @@ function renderQuarterlyScoreCard() {
   const barEl = document.getElementById('retro-quarterly-avg-bar');
   if (!avgEl) return;
   const scores = RETRO_MONTHLY_CATS
-    .map(cat => retroQuarterlyData[qk]?.[cat]?.score)
+    .map(cat => (retroQuarterlyData[qk] && retroQuarterlyData[qk][cat] && retroQuarterlyData[qk][cat].score))
     .filter(s => s !== undefined && s !== '' && s !== null)
     .map(Number);
   if (!scores.length) { avgEl.textContent = '—'; avgEl.style.color = 'var(--text-tertiary)'; if (barEl) barEl.style.width = '0%'; return; }
@@ -6521,7 +6521,7 @@ function renderYearlyScoreCard() {
   const barEl = document.getElementById('retro-yearly-avg-bar');
   if (!avgEl) return;
   const scores = RETRO_MONTHLY_CATS
-    .map(cat => retroYearlyData[yk]?.[cat]?.score)
+    .map(cat => (retroYearlyData[yk] && retroYearlyData[yk][cat] && retroYearlyData[yk][cat].score))
     .filter(s => s !== undefined && s !== '' && s !== null)
     .map(Number);
   if (!scores.length) { avgEl.textContent = '—'; avgEl.style.color = 'var(--text-tertiary)'; if (barEl) barEl.style.width = '0%'; return; }
@@ -6716,7 +6716,7 @@ function retroMonthlySave(btn) {
   if (!mGoalsData[nextKey]) mGoalsData[nextKey] = { cats: {}, reward: '' };
   if (!mGoalsData[nextKey].cats) mGoalsData[nextKey].cats = {};
   RETRO_MONTHLY_CATS.forEach(cat => {
-    const data = retroMonthlyData[mk]?.[cat];
+    const data = (retroMonthlyData[mk] && retroMonthlyData[mk][cat]);
     if (!data) return;
     const lines  = (data.goal||'').split('\n').map(l=>l.replace(/^[▪◦\-\s]+/,'').trim()).filter(Boolean);
     const checks = data.goalChecks || {};
@@ -6757,7 +6757,7 @@ function retroQuarterlySave(btn) {
   if (!qGoalsData[nextKey]) qGoalsData[nextKey] = { cats:{}, reward:'' };
   if (!qGoalsData[nextKey].cats) qGoalsData[nextKey].cats = {};
   RETRO_MONTHLY_CATS.forEach(cat => {
-    const data = retroQuarterlyData[qk]?.[cat];
+    const data = (retroQuarterlyData[qk] && retroQuarterlyData[qk][cat]);
     if (!data) return;
     const lines  = (data.goal||'').split('\n').map(l=>l.replace(/^[▪◦\-\s]+/,'').trim()).filter(Boolean);
     const checks = data.goalChecks || {};
@@ -6793,7 +6793,7 @@ function retroYearlySave(btn) {
   if (!yearlyGoalsData[nextYear]) yearlyGoalsData[nextYear] = { cats:{}, reward:'' };
   if (!yearlyGoalsData[nextYear].cats) yearlyGoalsData[nextYear].cats = {};
   RETRO_MONTHLY_CATS.forEach(cat => {
-    const data = retroYearlyData[yk]?.[cat];
+    const data = (retroYearlyData[yk] && retroYearlyData[yk][cat]);
     if (!data) return;
     const lines  = (data.goal||'').split('\n').map(l=>l.replace(/^[▪◦\-\s]+/,'').trim()).filter(Boolean);
     const checks = data.goalChecks || {};
@@ -6850,10 +6850,10 @@ function retroMonthlyRenderForm() {
     const emoji = RETRO_MONTHLY_EMOJIS[cat];
 
     // 이달의 목표: 월간목표 페이지 데이터 우선 → 저장된 값 → 이전달 다음달 목표 자동 채움
-    const prevData   = retroMonthlyData[prevMk]?.[cat];
+    const prevData   = (retroMonthlyData[prevMk] && retroMonthlyData[prevMk][cat]);
     const mGoalKey   = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    const mGoalVal   = mGoalsData[mGoalKey]?.cats?.[cat]?.goal || '';
-    const goalVal    = data.goal || mGoalVal || prevData?.next || '';
+    const mGoalVal   = (mGoalsData[mGoalKey] && mGoalsData[mGoalKey].cats && mGoalsData[mGoalKey].cats[cat] && mGoalsData[mGoalKey].cats[cat].goal) || '';
+    const goalVal    = data.goal || mGoalVal || (prevData && prevData.next) || '';
 
     // 목표 전체 달성 여부 자동 계산
     if (!data.goalChecks) data.goalChecks = {};
@@ -6970,7 +6970,7 @@ function renderYearlyGoalsList() {
   }
   listEl.innerHTML = entries.map(([yk, d]) => {
     const badges = RETRO_MONTHLY_CATS.map(cat => {
-      const goal = d.cats?.[cat]?.goal;
+      const goal = (d.cats && d.cats[cat] && d.cats[cat].goal);
       return goal ? `<span style="font-size:12px;">${RETRO_MONTHLY_EMOJIS[cat]}</span>` : '';
     }).filter(Boolean).join(' ');
     return `
@@ -7167,7 +7167,7 @@ function renderQGoalsList() {
   }
   listEl.innerHTML = entries.map(([k, d]) => {
     const badges = RETRO_MONTHLY_CATS.map(cat =>
-      d.cats?.[cat]?.goal ? `<span style="font-size:12px;">${RETRO_MONTHLY_EMOJIS[cat]}</span>` : ''
+      (d.cats && d.cats[cat] && d.cats[cat].goal) ? `<span style="font-size:12px;">${RETRO_MONTHLY_EMOJIS[cat]}</span>` : ''
     ).filter(Boolean).join(' ');
     return `<div onclick="qGoalsOpenEntry('${k}')" style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:0.5px solid var(--border);cursor:pointer;">
       <div style="font-size:21px;font-weight:700;color:var(--text-primary);min-width:70px;">${qGoalsLabelOf(k)}</div>
@@ -7328,7 +7328,7 @@ function renderMGoalsList() {
   const ICON_OPTS = ['🌱','🔥','🌊','⭐','🎯','💎','🌸','🌙','🦋','🏔️','🌈','✨','🍀','🎵','🧭'];
   listEl.innerHTML = entries.map(([k, d]) => {
     const badges = RETRO_MONTHLY_CATS.map(cat =>
-      d.cats?.[cat]?.goal ? `<span style="font-size:12px;">${RETRO_MONTHLY_EMOJIS[cat]}</span>` : ''
+      (d.cats && d.cats[cat] && d.cats[cat].goal) ? `<span style="font-size:12px;">${RETRO_MONTHLY_EMOJIS[cat]}</span>` : ''
     ).filter(Boolean).join(' ');
     const icon = d.icon || '📅';
     const iconPicker = ICON_OPTS.map(ic =>
@@ -7377,7 +7377,7 @@ function renderMGoals() {
   const prevKey = `${prevD.getFullYear()}-${String(prevD.getMonth()+1).padStart(2,'0')}`;
   const lastRewardEl   = document.getElementById('mgoals-last-reward');
   const lastRewardText = document.getElementById('mgoals-last-reward-text');
-  const lastReward = mGoalsData[prevKey]?.reward || '';
+  const lastReward = (mGoalsData[prevKey] && mGoalsData[prevKey].reward) || '';
   if (lastRewardEl && lastRewardText) {
     if (lastReward) { lastRewardEl.style.display=''; lastRewardText.textContent = lastReward; }
     else { lastRewardEl.style.display='none'; }
@@ -7617,7 +7617,7 @@ function renderRetro(type) {
       if (!entries.length) { listEl.innerHTML = '<div style="padding:16px 0;text-align:center;font-size:15px;color:var(--text-tertiary);">아직 작성된 회고가 없어요</div>'; return; }
       listEl.innerHTML = entries.map(([mk, cats]) => {
         const badges = RETRO_MONTHLY_CATS.map(cat => {
-          const a = cats[cat]?.achieved; if (!a) return '';
+          const a = (cats[cat] && cats[cat].achieved); if (!a) return '';
           return `<span style="font-size:12px;">${RETRO_MONTHLY_EMOJIS[cat]}${a==='달성'?'✅':a==='부분달성'?'🔶':'❌'}</span>`;
         }).filter(Boolean).join(' ');
         return `<div onclick="retroMonthlyJumpTo('${mk}')" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border);cursor:pointer;">
@@ -7636,7 +7636,7 @@ function renderRetro(type) {
       if (!entries.length) { listEl.innerHTML = '<div style="padding:16px 0;text-align:center;font-size:15px;color:var(--text-tertiary);">아직 작성된 회고가 없어요</div>'; return; }
       listEl.innerHTML = entries.map(([qk, cats]) => {
         const badges = RETRO_MONTHLY_CATS.map(cat => {
-          const a = cats[cat]?.achieved; if (!a) return '';
+          const a = (cats[cat] && cats[cat].achieved); if (!a) return '';
           return `<span style="font-size:12px;">${RETRO_MONTHLY_EMOJIS[cat]}${a==='달성'?'✅':a==='부분달성'?'🔶':'❌'}</span>`;
         }).filter(Boolean).join(' ');
         return `<div onclick="retroQuarterlyJumpTo('${qk}')" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border);cursor:pointer;">
@@ -7655,7 +7655,7 @@ function renderRetro(type) {
       if (!entries.length) { listEl.innerHTML = '<div style="padding:16px 0;text-align:center;font-size:15px;color:var(--text-tertiary);">아직 작성된 회고가 없어요</div>'; return; }
       listEl.innerHTML = entries.map(([yk, cats]) => {
         const badges = RETRO_MONTHLY_CATS.map(cat => {
-          const a = cats[cat]?.achieved; if (!a) return '';
+          const a = (cats[cat] && cats[cat].achieved); if (!a) return '';
           return `<span style="font-size:12px;">${RETRO_MONTHLY_EMOJIS[cat]}${a==='달성'?'✅':a==='부분달성'?'🔶':'❌'}</span>`;
         }).filter(Boolean).join(' ');
         return `<div onclick="retroYearlyJumpTo('${yk}')" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border);cursor:pointer;">
@@ -7766,7 +7766,7 @@ function renderRetroHome() {
     mEl.innerHTML = entries.length
       ? entries.map(([mk, cats]) => {
           const badges = ['자산','관계','건강','경험','커리어','성장'].map(cat => {
-            const a = cats[cat]?.achieved; if (!a) return '';
+            const a = (cats[cat] && cats[cat].achieved); if (!a) return '';
             return `<span style="font-size:11px;">${{자산:'💰',관계:'🤝',건강:'💪',경험:'🌟',커리어:'🚀',성장:'🌱'}[cat]}${a==='달성'?'✅':a==='부분달성'?'🔶':'❌'}</span>`;
           }).filter(Boolean).join(' ');
           return `<div onclick="selectRetro('monthly');retroMonthlyJumpTo('${mk}')" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border);cursor:pointer;">
@@ -7789,7 +7789,7 @@ function renderRetroHome() {
     qEl.innerHTML = entries.length
       ? entries.map(([qk, cats]) => {
           const badges = ['자산','관계','건강','경험','커리어','성장'].map(cat => {
-            const a = cats[cat]?.achieved; if (!a) return '';
+            const a = (cats[cat] && cats[cat].achieved); if (!a) return '';
             return `<span style="font-size:11px;">${{자산:'💰',관계:'🤝',건강:'💪',경험:'🌟',커리어:'🚀',성장:'🌱'}[cat]}${a==='달성'?'✅':a==='부분달성'?'🔶':'❌'}</span>`;
           }).filter(Boolean).join(' ');
           return `<div onclick="selectRetro('quarterly');retroQuarterlyJumpTo('${qk}')" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border);cursor:pointer;">
@@ -7812,7 +7812,7 @@ function renderRetroHome() {
     yEl.innerHTML = entries.length
       ? entries.map(([yk, cats]) => {
           const badges = ['자산','관계','건강','경험','커리어','성장'].map(cat => {
-            const a = cats[cat]?.achieved; if (!a) return '';
+            const a = (cats[cat] && cats[cat].achieved); if (!a) return '';
             return `<span style="font-size:11px;">${{자산:'💰',관계:'🤝',건강:'💪',경험:'🌟',커리어:'🚀',성장:'🌱'}[cat]}${a==='달성'?'✅':a==='부분달성'?'🔶':'❌'}</span>`;
           }).filter(Boolean).join(' ');
           return `<div onclick="selectRetro('yearly');retroYearlyJumpTo('${yk}')" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border);cursor:pointer;">
@@ -7856,15 +7856,9 @@ async function dataReset() {
   // localStorage 삭제
   localStorage.removeItem('mlm_data_v1');
 
-  // Firestore 삭제
-  if (window._fbUid && window._db) {
-    try {
-      const { doc, deleteDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-      await deleteDoc(doc(window._db, 'users', window._fbUid));
-    } catch(e) {
-      // fsSave로 빈 데이터 덮어쓰기
-      if (window._fbUid && window._fsSave) await fsSave(window._fbUid);
-    }
+  // Firestore 빈 데이터로 덮어쓰기
+  if (window._fbUid) {
+    try { await fsSave(window._fbUid); } catch(e) {}
   }
   // 빈 데이터로 Firestore 저장
   lsSave();
@@ -7966,7 +7960,7 @@ function dataImport() {
     reader.onload = ev => {
       try {
         const p = JSON.parse(ev.target.result);
-        if (!confirm(`백업 파일 (${p._exported?.slice(0,10) || '날짜 없음'}) 을 불러올까요?\n현재 데이터가 덮어써집니다.`)) return;
+        if (!confirm(`백업 파일 (${p._exported ? p._exported.slice(0,10) : '날짜 없음'}) 을 불러올까요?\n현재 데이터가 덮어써집니다.`)) return;
         if (p.routines) routines = p.routines;
         migrateRoutineCategories();
         if (p.routineCheckData)   Object.assign(routineCheckData, p.routineCheckData);
@@ -8081,9 +8075,9 @@ function migrateRoutineCategories() {
   const CAT_MAP = { '아침':'성장', '오전':'성장', '오후':'성장', '저녁':'성장' };
   routines = routines.map(r => {
     if (TIME_SLOTS.includes(r.cat)) {
-      return { ...r, timeSlot: r.timeSlot || r.cat, cat: CAT_MAP[r.cat] || '성장' };
+      return Object.assign({}, r, {timeSlot: r.timeSlot || r.cat, cat: CAT_MAP[r.cat] || '성장'});
     }
-    if (!r.timeSlot) return { ...r, timeSlot: '공통' };
+    if (!r.timeSlot) return Object.assign({}, r, {timeSlot: '공통'});
     return r;
   });
 }
