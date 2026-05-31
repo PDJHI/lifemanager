@@ -292,8 +292,17 @@
       <i id="toggle-sidebar" class="ti ti-layout-sidebar-left-collapse" onclick="toggleSidebar()" title="사이드바 접기"></i>
     </div>
     <div class="date-block" style="margin:8px 16px 4px;">
-      <div class="date-day" id="s-date"></div>
-      <div class="date-info" id="s-day"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <div style="text-align:left;">
+          <div class="date-day" id="s-date"></div>
+          <div class="date-info" id="s-day"></div>
+        </div>
+        <div id="s-weather" style="display:none;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;">
+          <span id="s-weather-icon" style="font-size:22px;line-height:1;"></span>
+          <span id="s-weather-temp" style="font-size:13px;font-weight:600;color:var(--text-primary);"></span>
+        </div>
+        <div id="s-weather-loading" style="font-size:10px;color:var(--text-tertiary);flex-shrink:0;">🌤</div>
+      </div>
     </div>
     <div class="nav-section">
       <div class="nav-label">메인</div>
@@ -694,17 +703,19 @@
                 <div style="font-size:12px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
                   <span style="font-size:14px;">📚</span>이번 주의 책
                 </div>
-                <input type="text" id="wf-book-input" placeholder="읽고 있는 책 제목..."
-                  oninput="wfSaveBook(this.value)" onchange="wfSaveBook(this.value)"
-                  style="width:100%;font-size:13px;padding:6px 10px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);outline:none;font-family:inherit;box-sizing:border-box;">
+                <div id="wf-book-list" style="display:flex;flex-direction:column;gap:4px;margin-bottom:4px;"></div>
+                <input type="text" id="wf-book-input" placeholder="+ 책 추가..."
+                  onkeydown="if(event.key==='Enter')addWfBook()"
+                  style="width:100%;font-size:13px;padding:5px 10px;border:0.5px dashed var(--border-md);border-radius:var(--radius-md);background:transparent;color:var(--text-primary);outline:none;font-family:inherit;box-sizing:border-box;">
               </div>
               <div>
                 <div style="font-size:12px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
                   <span style="font-size:14px;">✍️</span>이번 주의 필사
                 </div>
-                <input type="text" id="wf-writing-input" placeholder="필사할 책 제목..."
-                  oninput="wfSaveWriting(this.value)" onchange="wfSaveWriting(this.value)"
-                  style="width:100%;font-size:13px;padding:6px 10px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);outline:none;font-family:inherit;box-sizing:border-box;">
+                <div id="wf-writing-list" style="display:flex;flex-direction:column;gap:4px;margin-bottom:4px;"></div>
+                <input type="text" id="wf-writing-input" placeholder="+ 필사 추가..."
+                  onkeydown="if(event.key==='Enter')addWfWriting()"
+                  style="width:100%;font-size:13px;padding:5px 10px;border:0.5px dashed var(--border-md);border-radius:var(--radius-md);background:transparent;color:var(--text-primary);outline:none;font-family:inherit;box-sizing:border-box;">
               </div>
             </div>
           </div>
@@ -783,6 +794,7 @@
                 <i class="ti ti-alert-circle" style="font-size:15px;color:#EF9F27;"></i>사야할 것
               </div>
             </div>
+            <span id="buy-filter-need" data-hide="0" style="display:none;"></span>
             <div id="buy-need-list" style="display:flex;flex-direction:column;gap:2px;"></div>
             <div id="buy-need-empty" style="display:none;font-size:13px;color:var(--text-tertiary);padding:6px 0 2px;">아직 없어요</div>
             <!-- 인라인 입력 -->
@@ -803,6 +815,7 @@
                 <i class="ti ti-heart" style="font-size:15px;color:#E24B4A;"></i>사고싶은 것
               </div>
             </div>
+            <span id="buy-filter-want" data-hide="0" style="display:none;"></span>
             <div id="buy-want-list" style="display:flex;flex-direction:column;gap:2px;"></div>
             <div id="buy-want-empty" style="display:none;font-size:13px;color:var(--text-tertiary);padding:6px 0 2px;">아직 없어요</div>
             <!-- 인라인 입력 -->
@@ -976,6 +989,7 @@
           <div style="display:flex;flex-direction:column;gap:10px;">
             <div id="nw-todo-days-row1" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-items:start;"></div>
             <div id="nw-todo-days-row2" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-items:start;"></div>
+            <div id="nw-prev-undone" style="margin-top:20px;padding-top:16px;border-top:1.5px solid var(--border);"></div>
           </div>
         </div>
 
@@ -1341,34 +1355,27 @@
           <div class="card" style="padding:12px 16px;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
               <div class="card-title"><i class="ti ti-quote"></i>오늘의 확언</div>
-              <div style="display:flex;align-items:center;gap:6px;">
-                <button onclick="affmPrev()" class="add-btn" style="padding:3px 7px;"><i class="ti ti-chevron-left"></i></button>
-                <span id="affm-index-label" style="font-size:11px;color:var(--text-tertiary);min-width:36px;text-align:center;"></span>
-                <button onclick="affmNext()" class="add-btn" style="padding:3px 7px;"><i class="ti ti-chevron-right"></i></button>
-                <button onclick="affmAddNew()" class="add-btn"><i class="ti ti-plus"></i> 확언 추가</button>
-              </div>
+              <span style="font-size:11px;color:var(--text-tertiary);">매일 반복 · 더블클릭 편집</span>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1px 1fr;gap:0 20px;align-items:stretch;">
-              <!-- 왼쪽: 확언 원문 -->
+            <div style="display:grid;grid-template-columns:1fr 1px 1fr;gap:0 20px;align-items:start;">
+              <!-- 왼쪽: 확언 목록 -->
               <div style="display:flex;flex-direction:column;gap:6px;">
-                <div id="affm-display" ondblclick="affmStartEdit()"
-                  style="font-size:16px;color:var(--text-primary);line-height:1.9;min-height:48px;white-space:pre-wrap;cursor:text;"></div>
-                <textarea id="diary-affirmation" rows="3" placeholder="확언을 입력하세요. 예) 나는 오늘도 성장하고 있다."
-                  onblur="affmSaveEdit()"
-                  onkeydown="if(event.key==='Escape'){affmSaveEdit();}"
-                  style="display:none;width:100%;resize:none;border:0.5px solid var(--border-md);border-radius:var(--radius-md);outline:none;background:var(--bg-secondary);font-size:16px;color:var(--text-primary);font-family:inherit;line-height:1.8;padding:8px 10px;"></textarea>
-                <div style="display:flex;align-items:center;gap:6px;">
-                  <span style="font-size:11px;color:var(--text-tertiary);">더블클릭하여 편집</span>
-                  <button id="affm-delete-btn" onclick="affmDeleteCurrent()" style="font-size:11px;padding:2px 7px;border-radius:6px;border:0.5px solid var(--border-md);background:transparent;color:var(--text-tertiary);cursor:pointer;font-family:inherit;display:none;">삭제</button>
+                <div id="affm-list" style="display:flex;flex-direction:column;gap:4px;"></div>
+                <div style="display:flex;gap:6px;margin-top:4px;">
+                  <input type="text" id="affm-add-input" placeholder="+ 확언 추가..."
+                    style="flex:1;font-size:14px;padding:5px 10px;border:0.5px dashed var(--border-md);border-radius:var(--radius-md);background:transparent;color:var(--text-primary);font-family:inherit;outline:none;"
+                    onkeydown="if(event.key==='Enter') affmAdd()">
                 </div>
               </div>
               <!-- 구분선 -->
               <div style="background:var(--border);width:1px;align-self:stretch;"></div>
               <!-- 오른쪽: 따라 쓰기 -->
               <div style="display:flex;flex-direction:column;gap:6px;">
+                <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:2px;">오늘의 따라쓰기</div>
+                <div id="affm-typing-source" style="font-size:14px;color:var(--text-secondary);line-height:1.8;white-space:pre-wrap;min-height:32px;"></div>
                 <textarea id="affm-typing" rows="3" placeholder="왼쪽 확언을 따라 타이핑해보세요..."
-                  oninput="affmCheckTyping()"
-                  style="width:100%;resize:none;border:0.5px solid var(--border-md);border-radius:var(--radius-md);outline:none;background:var(--bg-secondary);font-size:16px;color:var(--text-primary);font-family:inherit;line-height:1.8;padding:8px 10px;transition:border-color 0.2s;"></textarea>
+                  oninput="affmCheckTyping();affmSaveTyping()"
+                  style="width:100%;resize:none;border:0.5px solid var(--border-md);border-radius:var(--radius-md);outline:none;background:var(--bg-secondary);font-size:14px;color:var(--text-primary);font-family:inherit;line-height:1.8;padding:8px 10px;transition:border-color 0.2s;"></textarea>
                 <div style="display:flex;align-items:center;justify-content:space-between;">
                   <div id="affm-feedback" style="font-size:12px;"></div>
                   <button onclick="affmReset()" style="font-size:12px;padding:3px 8px;border-radius:6px;border:0.5px solid var(--border-md);background:transparent;color:var(--text-tertiary);cursor:pointer;font-family:inherit;">다시하기</button>
@@ -1380,15 +1387,11 @@
           <!-- 4행: 오늘의 감사 -->
           <div class="card" style="padding:12px 16px;">
             <div class="card-title" style="margin-bottom:10px;"><i class="ti ti-heart"></i>오늘의 감사</div>
-            <div style="display:flex;flex-direction:column;gap:5px;" id="diary-gratitude-list"></div>
-            <div style="display:flex;gap:6px;margin-top:8px;">
-              <input type="text" id="diary-gratitude-input" placeholder="감사한 것 추가..." maxlength="80"
+            <div style="display:flex;flex-direction:column;gap:4px;" id="diary-gratitude-list"></div>
+            <div style="display:flex;gap:6px;margin-top:6px;">
+              <input type="text" id="diary-gratitude-input" placeholder="+ 감사한 것 추가..." maxlength="80"
                 onkeydown="if(event.key==='Enter')diaryAddGratitude()"
-                style="flex:1;font-size:15px;padding:6px 10px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);font-family:inherit;outline:none;">
-              <button onclick="diaryAddGratitude()"
-                style="padding:6px 12px;border-radius:var(--radius-md);border:none;background:var(--text-primary);color:var(--bg-primary);font-size:15px;cursor:pointer;">
-                <i class="ti ti-plus"></i>
-              </button>
+                style="flex:1;font-size:14px;padding:5px 10px;border:0.5px dashed var(--border-md);border-radius:var(--radius-md);background:transparent;color:var(--text-primary);font-family:inherit;outline:none;">
             </div>
           </div>
 
@@ -1396,12 +1399,12 @@
           <div class="card" style="padding:12px 16px;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
               <div class="card-title"><i class="ti ti-sparkles"></i>오늘의 부처</div>
-              <button class="add-btn" onclick="desireOpenAdd()"><i class="ti ti-plus"></i> 추가</button>
             </div>
-            <div id="desire-list" style="display:flex;flex-direction:column;gap:2px;"></div>
-            <div id="desire-empty" style="display:none;padding:14px 0;text-align:center;color:var(--text-tertiary);font-size:15px;">
-              <i class="ti ti-mood-smile-dizzy" style="font-size:28px;display:block;margin-bottom:6px;"></i>
-              오늘 원하는 것을 적어보세요
+            <div id="desire-list" style="display:flex;flex-direction:column;gap:4px;margin-bottom:6px;"></div>
+            <div style="display:flex;gap:6px;">
+              <input type="text" id="desire-add-input" placeholder="+ 오늘 원하는 것 추가..." maxlength="80"
+                onkeydown="if(event.key==='Enter')desireInlineAdd()"
+                style="flex:1;font-size:14px;padding:5px 10px;border:0.5px dashed var(--border-md);border-radius:var(--radius-md);background:transparent;color:var(--text-primary);font-family:inherit;outline:none;">
             </div>
           </div>
 
@@ -2755,8 +2758,8 @@ function renderDesire() {
   const list  = document.getElementById('desire-list');
   const empty = document.getElementById('desire-empty');
   list.innerHTML = '';
-  if (!items.length) { empty.style.display = 'block'; return; }
-  empty.style.display = 'none';
+  if (!items.length) { if (empty) empty.style.display = 'block'; return; }
+  if (empty) empty.style.display = 'none';
   items.forEach(item => {
     const row = document.createElement('div');
     row.className = 'routine-item' + (item.done ? ' done' : '');
@@ -2845,14 +2848,20 @@ function buyFmtDate(dateStr) {
 
 function renderBuy() {
   ['need','want'].forEach(type => {
-    const items = buyStore[type];
-    const list  = document.getElementById(`buy-${type}-list`);
-    const empty = document.getElementById(`buy-${type}-empty`);
+    const allItems = buyStore[type] || [];
+
+    // 필터 상태 읽기
+    const filterEl = document.getElementById('buy-filter-' + type);
+    const hideDone = filterEl ? filterEl.dataset.hide === '1' : false;
+    const items = hideDone ? allItems.filter(function(x) { return !x.done; }) : allItems;
+
+    const list  = document.getElementById('buy-' + type + '-list');
+    const empty = document.getElementById('buy-' + type + '-empty');
     list.innerHTML = '';
-    if (!items.length) { empty.style.display = 'block'; return; }
+    if (!allItems.length) { empty.style.display = 'block'; return; }
     empty.style.display = 'none';
 
-    items.forEach(item => {
+    items.forEach(function(item) {
       const row = document.createElement('div');
       row.className = 'routine-item' + (item.done ? ' done' : '');
       row.style.cssText = 'padding:6px 4px;align-items:flex-start;';
@@ -2861,26 +2870,34 @@ function renderBuy() {
       chk.className = 'check-box';
       chk.style.marginTop = '2px';
       chk.innerHTML = '<i class="ti ti-check"></i>';
-      chk.onclick = e => { e.stopPropagation(); item.done = !item.done; renderBuy(); lsAutoSave(); };
+      chk.onclick = function(e) {
+        e.stopPropagation();
+        item.done = !item.done;
+        // 체크 시 오늘 날짜를 구매일로 자동 입력, 해제 시 구매일 제거
+        if (item.done && !item.purchasedDate) {
+          item.purchasedDate = buyTodayStr();
+        } else if (!item.done) {
+          item.purchasedDate = '';
+        }
+        renderBuy(); lsAutoSave();
+      };
 
-      // 텍스트 + 날짜 묶음
       const info = document.createElement('div');
       info.style.cssText = 'flex:1;min-width:0;';
 
       const txt = document.createElement('span');
       txt.className = 'routine-name';
-      txt.style.cssText = `font-size:15px;display:block;`;
+      txt.style.cssText = 'font-size:15px;display:block;';
       txt.textContent = item.text;
       txt.title = '더블클릭 편집';
 
-      // 이월 뱃지
       if (item.carriedOver && !item.done) {
         const badge = document.createElement('span');
         badge.style.cssText = 'font-size:10px;color:#7C83FD;font-weight:600;margin-left:6px;vertical-align:middle;';
         badge.textContent = '↩ 이월';
         txt.appendChild(badge);
       }
-      txt.ondblclick = e => {
+      txt.ondblclick = function(e) {
         e.stopPropagation();
         txt.contentEditable = 'true';
         txt.style.outline = '1px solid var(--border-md)';
@@ -2890,31 +2907,36 @@ function renderBuy() {
         const range = document.createRange(); range.selectNodeContents(txt);
         window.getSelection().removeAllRanges(); window.getSelection().addRange(range);
       };
-      txt.onblur = () => {
+      txt.onblur = function() {
         const val = txt.textContent.trim();
         if (val) item.text = val; else txt.textContent = item.text;
         txt.contentEditable = 'false'; txt.style.outline = ''; txt.style.padding = '';
         lsAutoSave();
       };
-      txt.onkeydown = e => {
+      txt.onkeydown = function(e) {
         if (e.key === 'Enter') { e.preventDefault(); txt.blur(); }
         if (e.key === 'Escape') { txt.textContent = item.text; txt.blur(); }
       };
 
-      // 날짜 태그 행
       const dates = document.createElement('div');
       dates.style.cssText = 'display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap;';
       if (item.addedDate) {
-        dates.innerHTML += `<span style="font-size:11px;color:var(--text-tertiary);display:flex;align-items:center;gap:2px;"><i class="ti ti-calendar-plus" style="font-size:11px;"></i>입력 ${buyFmtDate(item.addedDate)}</span>`;
+        const addedSpan = document.createElement('span');
+        addedSpan.style.cssText = 'font-size:11px;color:var(--text-tertiary);display:flex;align-items:center;gap:2px;';
+        addedSpan.innerHTML = '<i class="ti ti-calendar-plus" style="font-size:11px;"></i>입력 ' + buyFmtDate(item.addedDate);
+        dates.appendChild(addedSpan);
       }
       if (item.purchasedDate) {
-        dates.innerHTML += `<span style="font-size:11px;color:#43E97B;display:flex;align-items:center;gap:2px;"><i class="ti ti-shopping-cart-check" style="font-size:11px;"></i>구매 ${buyFmtDate(item.purchasedDate)}</span>`;
+        const pSpan = document.createElement('span');
+        pSpan.style.cssText = 'font-size:11px;color:#43E97B;display:flex;align-items:center;gap:2px;';
+        pSpan.innerHTML = '<i class="ti ti-shopping-cart-check" style="font-size:11px;"></i>구매 ' + buyFmtDate(item.purchasedDate);
+        dates.appendChild(pSpan);
       } else {
-        // 구매일 입력 인라인 버튼
         const pBtn = document.createElement('span');
         pBtn.style.cssText = 'font-size:11px;color:var(--text-tertiary);cursor:pointer;display:flex;align-items:center;gap:2px;padding:1px 5px;border:0.5px dashed var(--border-md);border-radius:6px;';
         pBtn.innerHTML = '<i class="ti ti-calendar-check" style="font-size:11px;"></i>구매일';
-        pBtn.onclick = e => { e.stopPropagation(); buySetPurchasedDate(type, item.id); };
+        var capturedType = type; var capturedId = item.id;
+        pBtn.onclick = function(e) { e.stopPropagation(); buySetPurchasedDate(capturedType, capturedId); };
         dates.appendChild(pBtn);
       }
 
@@ -2924,13 +2946,31 @@ function renderBuy() {
       const del = document.createElement('i');
       del.className = 'ti ti-x';
       del.style.cssText = 'font-size:11px;color:var(--text-tertiary);cursor:pointer;opacity:0;transition:opacity 0.1s;flex-shrink:0;margin-top:3px;';
-      del.onclick = e => { e.stopPropagation(); buyStore[type] = buyStore[type].filter(x=>x.id!==item.id); renderBuy(); lsAutoSave(); };
-      row.onmouseenter = () => del.style.opacity = '1';
-      row.onmouseleave = () => del.style.opacity = '0';
+      var capturedType2 = type; var capturedId2 = item.id;
+      del.onclick = function(e) { e.stopPropagation(); buyStore[capturedType2] = buyStore[capturedType2].filter(function(x){return x.id!==capturedId2;}); renderBuy(); lsAutoSave(); };
+      row.onmouseenter = function() { del.style.opacity = '1'; };
+      row.onmouseleave = function() { del.style.opacity = '0'; };
 
       row.appendChild(chk); row.appendChild(info); row.appendChild(del);
       list.appendChild(row);
     });
+
+    // 완료 항목 숨기기 필터 버튼 (리스트 하단)
+    const doneCount = allItems.filter(function(x) { return x.done; }).length;
+    if (doneCount > 0) {
+      const filterRow = document.createElement('div');
+      filterRow.style.cssText = 'margin-top:6px;';
+      const filterBtn = document.createElement('button');
+      filterBtn.style.cssText = 'font-size:11px;color:var(--text-tertiary);background:transparent;border:0.5px solid var(--border-md);border-radius:6px;padding:2px 8px;cursor:pointer;font-family:inherit;';
+      filterBtn.textContent = hideDone ? ('완료 ' + doneCount + '개 보기') : ('완료 ' + doneCount + '개 숨기기');
+      filterBtn.onclick = function() {
+        if (!filterEl) return;
+        filterEl.dataset.hide = hideDone ? '0' : '1';
+        renderBuy();
+      };
+      filterRow.appendChild(filterBtn);
+      list.appendChild(filterRow);
+    }
   });
 }
 
@@ -2996,9 +3036,14 @@ function wfKey(monday) { return weekKey(monday); }
 
 function wfGetOrCreate(monday) {
   const k = wfKey(monday);
-  if (!wfStore[k]) wfStore[k] = { goals: [], rewards: [], book: '', writing: '' };
-  if (!wfStore[k].book    && wfStore[k].book    !== '') wfStore[k].book    = '';
-  if (!wfStore[k].writing && wfStore[k].writing !== '') wfStore[k].writing = '';
+  if (!wfStore[k]) wfStore[k] = { goals: [], rewards: [], book: '', writing: '', books: [], writings: [] };
+  // 기존 book/writing 문자열 → books/writings 배열 마이그레이션
+  if (!wfStore[k].books) {
+    wfStore[k].books = (wfStore[k].book && wfStore[k].book.trim()) ? [wfStore[k].book.trim()] : [];
+  }
+  if (!wfStore[k].writings) {
+    wfStore[k].writings = (wfStore[k].writing && wfStore[k].writing.trim()) ? [wfStore[k].writing.trim()] : [];
+  }
   return wfStore[k];
 }
 
@@ -3135,11 +3180,78 @@ function renderWf() {
     });
   }
 
-  // 책 & 필사
-  const bookEl    = document.getElementById('wf-book-input');
-  const writingEl = document.getElementById('wf-writing-input');
-  if (bookEl)    bookEl.value    = d.book    || '';
-  if (writingEl) writingEl.value = d.writing || '';
+  // 책 & 필사 — 항목 카드 구조
+  wfRenderItems('wf-book-list', 'wf-book-input', d.books || [], function(items) { d.books = items; });
+  wfRenderItems('wf-writing-list', 'wf-writing-input', d.writings || [], function(items) { d.writings = items; });
+}
+
+function wfRenderItems(listId, inputId, items, onUpdate) {
+  var listEl = document.getElementById(listId);
+  if (!listEl) return;
+  listEl.innerHTML = '';
+  items.forEach(function(item, idx) {
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg-secondary);transition:opacity 0.15s;';
+
+    var dot = document.createElement('div');
+    dot.style.cssText = 'width:6px;height:6px;border-radius:50%;background:var(--text-tertiary);flex-shrink:0;';
+    row.appendChild(dot);
+
+    var txt = document.createElement('span');
+    txt.style.cssText = 'flex:1;font-size:13px;color:var(--text-primary);outline:none;cursor:text;';
+    txt.textContent = item;
+    txt.title = '더블클릭하여 편집';
+    txt.ondblclick = function(e) {
+      e.stopPropagation();
+      txt.contentEditable = 'true';
+      txt.style.background = 'var(--bg-primary)'; txt.style.borderRadius = '3px'; txt.style.padding = '0 3px';
+      txt.focus();
+      var r = document.createRange(); r.selectNodeContents(txt);
+      window.getSelection().removeAllRanges(); window.getSelection().addRange(r);
+    };
+    txt.onblur = function() {
+      var v = txt.textContent.trim();
+      if (v) { items[idx] = v; } else { items.splice(idx, 1); }
+      txt.contentEditable = 'false'; txt.style.background = ''; txt.style.padding = '';
+      onUpdate(items); lsAutoSave(); wfRenderItems(listId, inputId, items, onUpdate);
+    };
+    txt.onkeydown = function(e) {
+      if (e.key==='Enter') { e.preventDefault(); txt.blur(); }
+      if (e.key==='Escape') { txt.textContent = item; txt.blur(); }
+    };
+    row.appendChild(txt);
+
+    var del = document.createElement('i');
+    del.className = 'ti ti-x';
+    del.style.cssText = 'font-size:10px;color:var(--text-tertiary);cursor:pointer;opacity:0;transition:opacity 0.1s;flex-shrink:0;';
+    (function(i) {
+      del.onclick = function(e) { e.stopPropagation(); items.splice(i, 1); onUpdate(items); lsAutoSave(); wfRenderItems(listId, inputId, items, onUpdate); };
+    })(idx);
+    row.onmouseenter = function() { del.style.opacity='1'; };
+    row.onmouseleave = function() { del.style.opacity='0'; };
+    row.appendChild(del);
+    listEl.appendChild(row);
+  });
+}
+
+function addWfBook() {
+  var inp = document.getElementById('wf-book-input');
+  var v = inp ? inp.value.trim() : ''; if (!v) return;
+  var d = wfGetOrCreate(wfViewMonday);
+  if (!d.books) d.books = [];
+  d.books.push(v);
+  inp.value = ''; lsAutoSave();
+  wfRenderItems('wf-book-list', 'wf-book-input', d.books, function(items){ d.books = items; });
+}
+
+function addWfWriting() {
+  var inp = document.getElementById('wf-writing-input');
+  var v = inp ? inp.value.trim() : ''; if (!v) return;
+  var d = wfGetOrCreate(wfViewMonday);
+  if (!d.writings) d.writings = [];
+  d.writings.push(v);
+  inp.value = ''; lsAutoSave();
+  wfRenderItems('wf-writing-list', 'wf-writing-input', d.writings, function(items){ d.writings = items; });
 }
 
 function addWfGoal() {
@@ -3279,8 +3391,9 @@ function renderNextWeek() {
   // 책/필사
   const bookEl = document.getElementById('nw-book-input');
   const writingEl = document.getElementById('nw-writing-input');
-  if (bookEl) bookEl.value = d.book || '';
-  if (writingEl) writingEl.value = d.writing || '';
+  // nw book/writing: legacy single value
+  if (bookEl) bookEl.value = (d.books && d.books.length) ? d.books[0] : (d.book || '');
+  if (writingEl) writingEl.value = (d.writings && d.writings.length) ? d.writings[0] : (d.writing || '');
   // Buy 렌더
   renderNwBuy();
   // 다음주 투두 렌더
@@ -3293,12 +3406,12 @@ function renderNextWeekTodo() {
   const wLabel = document.getElementById('nw-week-label');
   if (wLabel) wLabel.textContent = `${formatDate(mon)} ~ ${formatDate(sun)}`;
 
-  const nwDayKeys = Array.from({length:7}, (_,i) => {
+  const nwDayKeys = Array.from({length:7}, function(_,i) {
     const dt = addDays(mon, i);
-    return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+    return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
   });
-  const allTodos = nwDayKeys.flatMap(k => todoStore[k]||[]);
-  const doneTodo = allTodos.filter(t=>t.done).length;
+  const allTodos = nwDayKeys.reduce(function(acc,k){ return acc.concat(todoStore[k]||[]); }, []);
+  const doneTodo = allTodos.filter(function(t){return t.done;}).length;
   const pct = allTodos.length ? Math.round(doneTodo/allTodos.length*100) : 0;
   const progEl = document.getElementById('nw-todo-prog');
   const progLabelEl = document.getElementById('nw-todo-prog-label');
@@ -3310,9 +3423,9 @@ function renderNextWeekTodo() {
   if (!row1 || !row2) return;
   row1.innerHTML = ''; row2.innerHTML = '';
 
-  KR_DAYS_MON.forEach((dayName, di) => {
+  KR_DAYS_MON.forEach(function(dayName, di) {
     const dt = addDays(mon, di);
-    const dk = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+    const dk = dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
     if (!todoStore[dk]) todoStore[dk] = [];
     const dayTodos = todoStore[dk];
 
@@ -3321,105 +3434,112 @@ function renderNextWeekTodo() {
 
     const hdr = document.createElement('div');
     hdr.style.cssText = 'padding:4px 8px;border-radius:var(--radius-md);margin-bottom:4px;background:var(--bg-secondary);display:flex;align-items:center;gap:5px;';
-    hdr.innerHTML = `<span style="font-size:12px;font-weight:700;color:var(--text-primary)">${dayName}</span><span style="font-size:11px;color:var(--text-tertiary)">${formatDate(dt)}</span>`;
+    hdr.innerHTML = '<span style="font-size:12px;font-weight:700;color:var(--text-primary)">'+dayName+'</span><span style="font-size:11px;color:var(--text-tertiary)">'+formatDate(dt)+'</span>';
     col.appendChild(hdr);
 
-    dayTodos.forEach(t => {
+    dayTodos.forEach(function(t) {
       const item = document.createElement('div');
       item.style.cssText = 'display:flex;align-items:flex-start;gap:6px;padding:5px 2px;border-bottom:0.5px solid var(--border);';
-      const chk = document.createElement('div');
-      chk.style.cssText = `width:14px;height:14px;border-radius:3px;border:1.5px solid var(--border-md);flex-shrink:0;margin-top:2px;background:${t.done?'var(--text-primary)':'transparent'};display:flex;align-items:center;justify-content:center;cursor:pointer;`;
-      chk.innerHTML = t.done?'<i class="ti ti-check" style="font-size:9px;color:var(--bg-primary)"></i>':'';
-      chk.onclick = () => { t.done=!t.done; lsAutoSave(); renderNextWeekTodo(); };
-      const txt = document.createElement('span');
-      txt.style.cssText = `flex:1;font-size:13px;line-height:1.5;cursor:text;${t.done?'text-decoration:line-through;color:var(--text-tertiary);':''}`;
-      txt.textContent = t.text;
-      if (t.carriedOver && !t.done) {
-        const badge = document.createElement('span');
-        badge.style.cssText = 'font-size:10px;color:#7C83FD;font-weight:600;margin-left:4px;white-space:nowrap;';
-        badge.textContent = '↩';
-        txt.appendChild(badge);
-      }
-      txt.title = '더블클릭하여 수정';
-      txt.ondblclick = () => {
-        const editInp = document.createElement('input');
-        editInp.type='text'; editInp.value=t.text;
-        editInp.style.cssText='flex:1;font-size:13px;border:none;border-bottom:1px solid var(--text-primary);outline:none;background:transparent;color:var(--text-primary);font-family:inherit;width:100%;';
-        txt.replaceWith(editInp);
-        editInp.focus(); editInp.select();
-        const save = () => {
-          const v = editInp.value.trim();
-          if (v) t.text = v;
-          lsAutoSave(); renderNextWeekTodo();
-        };
-        editInp.onblur = save;
-        editInp.onkeydown = e => { if(e.key==='Enter') { e.preventDefault(); save(); } if(e.key==='Escape') renderNextWeekTodo(); };
+
+      const dot = document.createElement('div');
+      dot.style.cssText = 'width:6px;height:6px;border-radius:50%;background:'+(PRIO_COLOR[t.priority]||'#999')+';flex-shrink:0;margin-top:5px;cursor:pointer;';
+      dot.onclick = function(e) {
+        e.stopPropagation();
+        var cycle = {high:'mid', mid:'low', low:'high'};
+        t.priority = cycle[t.priority] || 'mid';
+        lsAutoSave(); renderNextWeekTodo();
       };
+
+      const chk = document.createElement('div');
+      chk.style.cssText = 'width:14px;height:14px;border-radius:3px;border:1.5px solid var(--border-md);flex-shrink:0;margin-top:2px;background:'+(t.done?'var(--text-primary)':'transparent')+';display:flex;align-items:center;justify-content:center;cursor:pointer;';
+      chk.innerHTML = t.done?'<i class="ti ti-check" style="font-size:9px;color:var(--bg-primary)"></i>':'';
+      chk.onclick = function() { t.done=!t.done; lsAutoSave(); renderNextWeekTodo(); };
+
+      const txt = document.createElement('span');
+      txt.style.cssText = 'flex:1;font-size:13px;line-height:1.5;cursor:text;'+(t.done?'text-decoration:line-through;color:var(--text-tertiary);':'');
+      txt.textContent = t.text;
+
+      txt.ondblclick = function() {
+        const inp = document.createElement('input');
+        inp.type='text'; inp.value=t.text;
+        inp.style.cssText='flex:1;font-size:13px;border:none;border-bottom:1px solid var(--text-primary);outline:none;background:transparent;color:var(--text-primary);font-family:inherit;width:100%;';
+        txt.replaceWith(inp); inp.focus(); inp.select();
+        var save = function() { var v=inp.value.trim(); if(v) t.text=v; lsAutoSave(); renderNextWeekTodo(); };
+        inp.onblur = save;
+        inp.onkeydown = function(e) { if(e.key==='Enter'){e.preventDefault();save();} if(e.key==='Escape') renderNextWeekTodo(); };
+      };
+
       const del = document.createElement('i');
       del.className='ti ti-x';
       del.style.cssText='font-size:10px;color:var(--text-tertiary);cursor:pointer;flex-shrink:0;margin-top:3px;opacity:0;transition:opacity 0.1s;';
-      del.onclick = () => { todoStore[dk]=todoStore[dk].filter(x=>x.id!==t.id); lsAutoSave(); renderNextWeekTodo(); };
-      item.onmouseenter = () => del.style.opacity='1';
-      item.onmouseleave = () => del.style.opacity='0';
-      item.appendChild(chk); item.appendChild(txt); item.appendChild(del);
+      del.onclick = function() { todoStore[dk]=todoStore[dk].filter(function(x){return x.id!==t.id;}); lsAutoSave(); renderNextWeekTodo(); };
+      item.onmouseenter = function() { del.style.opacity='1'; };
+      item.onmouseleave = function() { del.style.opacity='0'; };
+
+      item.appendChild(dot); item.appendChild(chk); item.appendChild(txt); item.appendChild(del);
       col.appendChild(item);
     });
 
+    // + 추가 입력
     const addRow = document.createElement('div');
     addRow.style.cssText = 'display:flex;align-items:center;gap:4px;padding:4px 2px;';
     const inp = document.createElement('input');
     inp.type='text'; inp.placeholder='+ 추가';
     inp.style.cssText='flex:1;font-size:12px;border:none;outline:none;background:transparent;color:var(--text-primary);font-family:inherit;';
-    inp.onkeydown = e => {
+    inp.onkeydown = function(e) {
       if (e.key==='Enter') {
-        const val = inp.value.trim(); if (!val) return;
+        var val = inp.value.trim(); if (!val) return;
         todoStore[dk].push({ id: nextTodoId++, dayIdx: di, text: val, priority:'mid', done: false });
-        inp.value = ''; lsAutoSave(); renderNextWeekTodo();
+        inp.value=''; lsAutoSave(); renderNextWeekTodo();
       }
     };
     addRow.appendChild(inp);
     col.appendChild(addRow);
     (di < 4 ? row1 : row2).appendChild(col);
   });
-  [row1, row2].forEach(r => { if(r.lastElementChild) r.lastElementChild.style.borderRight='none'; });
-}
+  [row1, row2].forEach(function(r) { if(r.lastElementChild) r.lastElementChild.style.borderRight='none'; });
 
-
-function todoCarryoverPastDue() {
-  const todayKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-  const thisMon  = getMonday(now);
-  const nextMon  = addDays(thisMon, 7);
-  let changed = false;
-
-  // 이번주 중 오늘 이전 날짜만 순회
-  for (let i = 0; i < 7; i++) {
-    const thisDt  = addDays(thisMon, i);
-    const thisKey = `${thisDt.getFullYear()}-${String(thisDt.getMonth()+1).padStart(2,'0')}-${String(thisDt.getDate()).padStart(2,'0')}`;
-    if (thisKey >= todayKey) break; // 오늘 포함 이후는 건드리지 않음
-
-    const undone = (todoStore[thisKey]||[]).filter(t => !t.done && !t.carriedOverToNext);
-    if (!undone.length) continue;
-
-    // 다음주 같은 요일
-    const nextDt  = addDays(nextMon, i);
-    const nextKey = `${nextDt.getFullYear()}-${String(nextDt.getMonth()+1).padStart(2,'0')}-${String(nextDt.getDate()).padStart(2,'0')}`;
-    if (!todoStore[nextKey]) todoStore[nextKey] = [];
-
-    undone.forEach(t => {
-      if (!todoStore[nextKey].some(x => x.text === t.text)) {
-        todoStore[nextKey].push({ id: nextTodoId++, dayIdx: i, text: t.text, priority: t.priority||'mid', done: false, carriedOver: true });
-        changed = true;
-      }
-      t.carriedOverToNext = true; // 중복 이월 방지 표시
-    });
+  // ── 지난주 미완료 투두 ──────────────────────────────────────────
+  var prevMon = addDays(mon, -7);
+  var undoneByDay = [];
+  var hasUndone = false;
+  for (var i=0; i<7; i++) {
+    var dt = addDays(prevMon, i);
+    var dk = dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+    var undone = (todoStore[dk]||[]).filter(function(t){return !t.done;});
+    undoneByDay.push({ dayName: KR_DAYS_MON[i], dt: dt, items: undone });
+    if (undone.length) hasUndone = true;
   }
 
-  if (changed) lsAutoSave();
+  var prevSection = document.getElementById('nw-prev-undone');
+  if (!prevSection) return;
+  if (!hasUndone) { prevSection.innerHTML = ''; return; }
+
+  prevSection.innerHTML = '<div style="font-size:12px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;">지난주 미완료</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:6px;" id="nw-prev-row1"></div>'
+    + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;" id="nw-prev-row2"></div>';
+
+  undoneByDay.forEach(function(day, di) {
+    if (!day.items.length) return;
+    var col = document.createElement('div');
+    col.style.cssText = 'display:flex;flex-direction:column;gap:4px;';
+    col.innerHTML = '<div style="font-size:11px;font-weight:700;color:var(--text-tertiary);padding:2px 0;border-bottom:0.5px solid var(--border);margin-bottom:2px;">'
+      + day.dayName + ' <span style="font-weight:400;">'+formatDate(day.dt)+'</span></div>';
+    day.items.forEach(function(t) {
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:5px;padding:3px 0;';
+      row.innerHTML = '<span style="font-size:12px;color:var(--text-secondary);flex:1;">'+t.text+'</span>';
+      col.appendChild(row);
+    });
+    var target = document.getElementById(di < 4 ? 'nw-prev-row1' : 'nw-prev-row2');
+    if (target) target.appendChild(col);
+  });
 }
 
-function todoCarryoverToNextWeek() {
-  // 이번주 탭 → 다음주 탭 수동 이월은 제거, todoCarryoverPastDue로 대체
-}
+
+
+
+
 let nwBuyNextId = 100;
 
 function renderNwBuy() {
@@ -4603,6 +4723,46 @@ function diaryWeatherRenderUI(data) {
   document.getElementById('diary-weather-display').style.display = 'flex';
 }
 
+function sidebarWeatherRender(weather) {
+  var icon = WMO_CODES[weather.code] || '🌡️';
+  var desc = WMO_LABELS[weather.code] || '';
+  var loadEl = document.getElementById('s-weather-loading');
+  var wEl    = document.getElementById('s-weather');
+  if (loadEl) loadEl.style.display = 'none';
+  if (document.getElementById('s-weather-icon')) document.getElementById('s-weather-icon').textContent = icon;
+  if (document.getElementById('s-weather-temp')) document.getElementById('s-weather-temp').textContent = weather.temp + '°C';
+  if (document.getElementById('s-weather-desc')) document.getElementById('s-weather-desc').textContent = desc;
+  if (wEl) { wEl.style.display = 'flex'; wEl.style.flexDirection = 'column'; }
+}
+
+async function sidebarFetchWeather() {
+  // 오늘 날씨가 일기에 이미 저장돼있으면 재사용
+  var todayKey2 = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+  var todayData = diaryStore[todayKey2];
+  if (todayData && todayData.weather && todayData.weather.temp !== undefined) {
+    sidebarWeatherRender(todayData.weather); return;
+  }
+  try {
+    var pos = await new Promise(function(res, rej) {
+      navigator.geolocation.getCurrentPosition(res, rej, { timeout: 6000 });
+    });
+    var lat = pos.coords.latitude, lon = pos.coords.longitude;
+    var url = 'https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto';
+    var resp = await fetch(url);
+    var json = await resp.json();
+    var c = json.current;
+    var weather = { temp: Math.round(c.temperature_2m), humidity: c.relative_humidity_2m, wind: Math.round(c.wind_speed_10m*10)/10, code: c.weather_code };
+    sidebarWeatherRender(weather);
+    // 일기 오늘 데이터에도 저장
+    if (!diaryStore[todayKey2]) diaryStore[todayKey2] = {};
+    diaryStore[todayKey2].weather = weather;
+    lsAutoSave();
+  } catch(e) {
+    var loadEl = document.getElementById('s-weather-loading');
+    if (loadEl) loadEl.style.display = 'none';
+  }
+}
+
 function diaryWeatherShowError() {
   document.getElementById('diary-weather-loading').style.display = 'none';
   document.getElementById('diary-weather-display').style.display = 'none';
@@ -4667,19 +4827,18 @@ function renderDiaryEditor() {
   document.getElementById('diary-weather-error').style.display   = 'none';
   document.getElementById('diary-weather-loading').style.display = '';
   diaryFetchWeather();
-  // 확언 렌더
-  affmRenderCurrent();
-  document.getElementById('diary-affirmation').value = data.affirmation;
+  // 확언 렌더 (매일 동일한 목록)
+  affmRender();
+  // 저장된 타이핑 복원
+  var affTypingEl = document.getElementById('affm-typing');
+  if (affTypingEl) { affTypingEl.value = data.affirmationTyping || ''; }
+  affmUpdateTypingSource();
+  affmReset();
   // 저장된 내용 줄마다 ▪ 붙이기 (이미 있으면 스킵)
   const rawContent = data.content || '';
   document.getElementById('diary-content').value = rawContent
     ? rawContent.split('\n').map(l => l.startsWith('▪') ? l : (l.trim() ? '▪ ' + l : l)).join('\n')
     : '';
-  // reset affirmation to display mode
-  document.getElementById('diary-affirmation').style.display = 'none';
-  document.getElementById('affm-display').style.display = '';
-  affmRenderDisplay();
-  affmReset();
 
   // Score number input
   const scoreInp = document.getElementById('diary-score-input');
@@ -4708,16 +4867,125 @@ function renderDiaryEditor() {
       `<button onclick="diaryToggleMood('${m}')" style="display:flex;align-items:center;gap:4px;padding:4px 9px;border-radius:20px;border:0.5px solid var(--text-primary);background:var(--text-primary);color:var(--bg-primary);font-size:13px;cursor:pointer;font-family:inherit;">✏️ ${m}<i class="ti ti-x" style="font-size:11px;margin-left:2px;"></i></button>`
     ).join('');
 
-  // Gratitude
-  document.getElementById('diary-gratitude-list').innerHTML = data.gratitude.map((g,i)=>`
-    <div style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:var(--radius-md);background:var(--bg-secondary);">
-      <span style="font-size:15px;">🙏</span>
-      <span style="flex:1;font-size:15px;color:var(--text-primary);">${g}</span>
-      <i class="ti ti-x" style="font-size:13px;color:var(--text-tertiary);cursor:pointer;" onclick="diaryRemoveGratitude(${i})"></i>
-    </div>`).join('');
+  // Gratitude — 카드 구조
+  var gratEl = document.getElementById('diary-gratitude-list');
+  if (gratEl) {
+    gratEl.innerHTML = '';
+    (data.gratitude || []).forEach(function(g, i) {
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg-secondary);';
+      var icon = document.createElement('span');
+      icon.textContent = '🙏'; icon.style.fontSize = '15px';
+      row.appendChild(icon);
+      var txt = document.createElement('span');
+      txt.style.cssText = 'flex:1;font-size:15px;color:var(--text-primary);cursor:text;';
+      txt.textContent = g;
+      txt.title = '더블클릭하여 편집';
+      txt.ondblclick = function(e) {
+        e.stopPropagation();
+        txt.contentEditable = 'true';
+        txt.style.outline = '1px solid var(--border-md)'; txt.style.borderRadius = '3px'; txt.style.padding = '0 3px';
+        txt.focus();
+        var r = document.createRange(); r.selectNodeContents(txt);
+        window.getSelection().removeAllRanges(); window.getSelection().addRange(r);
+      };
+      txt.onblur = function() {
+        var v = txt.textContent.trim();
+        if (v) { data.gratitude[i] = v; } else { data.gratitude.splice(i, 1); }
+        txt.contentEditable = 'false'; txt.style.outline = ''; txt.style.padding = '';
+        lsAutoSave(); diaryRenderGratitude(data);
+      };
+      txt.onkeydown = function(e) {
+        if (e.key==='Enter') { e.preventDefault(); txt.blur(); }
+        if (e.key==='Escape') { txt.textContent = g; txt.blur(); }
+      };
+      row.appendChild(txt);
+      var del = document.createElement('i');
+      del.className = 'ti ti-x';
+      del.style.cssText = 'font-size:11px;color:var(--text-tertiary);cursor:pointer;opacity:0;transition:opacity 0.1s;flex-shrink:0;';
+      (function(idx) {
+        del.onclick = function(e) { e.stopPropagation(); data.gratitude.splice(idx, 1); lsAutoSave(); diaryRenderGratitude(data); };
+      })(i);
+      row.onmouseenter = function() { del.style.opacity='1'; };
+      row.onmouseleave = function() { del.style.opacity='0'; };
+      row.appendChild(del);
+      gratEl.appendChild(row);
+    });
+  }
+function diarySetScore(val) {
+  const score = Math.max(1, Math.min(10, parseInt(val) || 0));
+  diaryGetOrCreate(diaryDateKey(diaryViewDate)).score = score || 0;
+  document.getElementById('diary-score-label').textContent =
+    score ? DIARY_SCORE_LABELS[score] : '1~10 입력';
 }
 
-function diarySetScore(val) {
+
+function diaryRenderGratitude(data) {
+  var gratEl = document.getElementById('diary-gratitude-list');
+  if (!gratEl) return;
+  gratEl.innerHTML = '';
+  (data.gratitude || []).forEach(function(g, i) {
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg-secondary);';
+    var icon = document.createElement('span');
+    icon.textContent = '🙏'; icon.style.fontSize = '15px';
+    row.appendChild(icon);
+    var txt = document.createElement('span');
+    txt.style.cssText = 'flex:1;font-size:15px;color:var(--text-primary);cursor:text;';
+    txt.textContent = g;
+    txt.title = '더블클릭하여 편집';
+    txt.ondblclick = function(e) {
+      e.stopPropagation();
+      txt.contentEditable = 'true';
+      txt.style.outline = '1px solid var(--border-md)'; txt.style.borderRadius = '3px'; txt.style.padding = '0 3px';
+      txt.focus();
+      var r = document.createRange(); r.selectNodeContents(txt);
+      window.getSelection().removeAllRanges(); window.getSelection().addRange(r);
+    };
+    txt.onblur = function() {
+      var v = txt.textContent.trim();
+      if (v) { data.gratitude[i] = v; } else { data.gratitude.splice(i, 1); }
+      txt.contentEditable = 'false'; txt.style.outline = ''; txt.style.padding = '';
+      lsAutoSave(); diaryRenderGratitude(data);
+    };
+    txt.onkeydown = function(e) {
+      if (e.key==='Enter') { e.preventDefault(); txt.blur(); }
+      if (e.key==='Escape') { txt.textContent = g; txt.blur(); }
+    };
+    row.appendChild(txt);
+    var del = document.createElement('i');
+    del.className = 'ti ti-x';
+    del.style.cssText = 'font-size:11px;color:var(--text-tertiary);cursor:pointer;opacity:0;transition:opacity 0.1s;flex-shrink:0;';
+    (function(idx) {
+      del.onclick = function(e) { e.stopPropagation(); data.gratitude.splice(idx, 1); lsAutoSave(); diaryRenderGratitude(data); };
+    })(i);
+    row.onmouseenter = function() { del.style.opacity='1'; };
+    row.onmouseleave = function() { del.style.opacity='0'; };
+    row.appendChild(del);
+    gratEl.appendChild(row);
+  });
+}
+
+function diaryAddGratitude() {
+  var inp = document.getElementById('diary-gratitude-input');
+  if (!inp) return;
+  var v = inp.value.trim(); if (!v) return;
+  var dk = diaryDateKey(diaryViewDate);
+  var data = diaryGetOrCreate(dk);
+  if (!data.gratitude) data.gratitude = [];
+  data.gratitude.push(v);
+  inp.value = '';
+  lsAutoSave(); diaryRenderGratitude(data);
+}
+
+function desireInlineAdd() {
+  var inp = document.getElementById('desire-add-input');
+  if (!inp) return;
+  var v = inp.value.trim(); if (!v) return;
+  desireGetToday().push({ id: desireNextId++, text: v, done: false });
+  inp.value = '';
+  renderDesire(); lsAutoSave();
+}
   const score = Math.max(1, Math.min(10, parseInt(val) || 0));
   diaryGetOrCreate(diaryDateKey(diaryViewDate)).score = score || 0;
   document.getElementById('diary-score-label').textContent =
@@ -4726,49 +4994,58 @@ function diarySetScore(val) {
 
 // ── Affirmation ────────────────────────────────────────────────
 function diaryContentKeydown(e) {
-  const ta    = e.target;
-  const start = ta.selectionStart;
-  const end   = ta.selectionEnd;
-  const val   = ta.value;
+  var ta    = e.target;
+  var start = ta.selectionStart;
+  var end   = ta.selectionEnd;
+  var val   = ta.value;
 
-  // Tab 키 — 들여쓰기 (하위 글머리기호)
   if (e.key === 'Tab') {
     e.preventDefault();
+    var lineStart = val.lastIndexOf('\n', start - 1) + 1;
+    var lineEnd   = val.indexOf('\n', start);
+    var line      = val.slice(lineStart, lineEnd === -1 ? undefined : lineEnd);
+    var newLine   = line;
     if (!e.shiftKey) {
-      const lineStart = val.lastIndexOf('\n', start - 1) + 1;
-      const lineEnd   = val.indexOf('\n', start);
-      const line      = val.slice(lineStart, lineEnd === -1 ? undefined : lineEnd);
-      let newLine = line;
-      if (line.startsWith('▪ '))       newLine = '  ◦ ' + line.slice(2);
-      else if (line.startsWith('  ◦ ')) newLine = '    - ' + line.slice(4);
-      else                              newLine = '  ◦ ' + line;
-      const newVal = val.slice(0, lineStart) + newLine + (lineEnd === -1 ? '' : val.slice(lineEnd));
-      ta.value = newVal;
-      ta.selectionStart = ta.selectionEnd = start + (newLine.length - line.length);
+      // 들여쓰기: ▪ → ◦ → -
+      if      (line.match(/^▪ /))       newLine = '  ◦ '  + line.slice(2);
+      else if (line.match(/^  ◦ /))     newLine = '    - ' + line.slice(4);
+      else if (!line.match(/^[\s▪◦-]/)) newLine = '▪ '    + line;
     } else {
-      const lineStart = val.lastIndexOf('\n', start - 1) + 1;
-      const lineEnd   = val.indexOf('\n', start);
-      const line      = val.slice(lineStart, lineEnd === -1 ? undefined : lineEnd);
-      let newLine = line;
-      if (line.startsWith('    - '))   newLine = '  ◦ ' + line.slice(6);
-      else if (line.startsWith('  ◦ ')) newLine = '▪ '  + line.slice(4);
-      const newVal = val.slice(0, lineStart) + newLine + (lineEnd === -1 ? '' : val.slice(lineEnd));
-      ta.value = newVal;
-      ta.selectionStart = ta.selectionEnd = Math.max(lineStart, start - (line.length - newLine.length));
+      // 내어쓰기: - → ◦ → ▪
+      if      (line.match(/^    - /))   newLine = '  ◦ '  + line.slice(6);
+      else if (line.match(/^  ◦ /))     newLine = '▪ '    + line.slice(4);
     }
+    var newVal = val.slice(0, lineStart) + newLine + (lineEnd === -1 ? '' : val.slice(lineEnd));
+    ta.value = newVal;
+    var diff = newLine.length - line.length;
+    ta.selectionStart = ta.selectionEnd = Math.max(lineStart, start + diff);
     diaryAutoSave();
     return;
   }
 
   if (e.key === 'Enter') {
     e.preventDefault();
-    const lineStart = val.lastIndexOf('\n', start - 1) + 1;
-    const line      = val.slice(lineStart, start);
-    let bullet = '\n▪ ';
-    if (line.startsWith('    - '))   bullet = '\n    · ';
-    else if (line.startsWith('  ◦ ')) bullet = '\n  ◦ ';
-    ta.value = val.slice(0, start) + bullet + val.slice(end);
-    ta.selectionStart = ta.selectionEnd = start + bullet.length;
+    var lineStart2 = val.lastIndexOf('\n', start - 1) + 1;
+    var line2      = val.slice(lineStart2, start);
+    // 현재 줄의 글머리 레벨 감지
+    var bullet = '\n▪ ';
+    if      (line2.match(/^    - /)) bullet = '\n    - ';
+    else if (line2.match(/^  ◦ /))   bullet = '\n  ◦ ';
+    else if (line2.match(/^▪ /))     bullet = '\n▪ ';
+    // 현재 줄이 글머리만 있고 텍스트 없으면 → 상위 레벨로 올라가기
+    var trimmedLine = line2.trimEnd();
+    if (trimmedLine === '▪' || trimmedLine === '▪ ' || trimmedLine === '  ◦' || trimmedLine === '  ◦ ' || trimmedLine === '    -' || trimmedLine === '    - ') {
+      // 빈 글머리 → 한 레벨 위로
+      var dedent = '\n▪ ';
+      if (line2.match(/^    - /)) dedent = '\n  ◦ ';
+      else if (line2.match(/^  ◦ /)) dedent = '\n▪ ';
+      else dedent = '\n';
+      ta.value = val.slice(0, lineStart2) + dedent + val.slice(end);
+      ta.selectionStart = ta.selectionEnd = lineStart2 + dedent.length;
+    } else {
+      ta.value = val.slice(0, start) + bullet + val.slice(end);
+      ta.selectionStart = ta.selectionEnd = start + bullet.length;
+    }
     diaryAutoSave();
   }
 }
@@ -4788,158 +5065,138 @@ function applyIndentStyle(ta) {
 }
 
 
-function affmRenderDisplay() {
-  const raw  = document.getElementById('diary-affirmation').value.trim();
-  // 저장값에 ▪가 섞여 있을 수 있으므로 제거 후 렌더
-  const text = raw.split('\n').map(l => l.replace(/^▪\s*/, '')).join('\n').trim();
-  const disp = document.getElementById('affm-display');
-  if (text) {
-    disp.innerHTML = text.split('\n').map(line =>
-      line.trim()
-        ? `<div style="display:flex;align-items:baseline;gap:7px;"><span style="color:var(--text-tertiary);flex-shrink:0;">▪</span><span>${line}</span></div>`
-        : '<div style="height:0.5em;"></div>'
-    ).join('');
-  } else {
-    disp.innerHTML = '<span style="color:var(--text-tertiary);font-size:15px;">더블클릭하여 확언을 입력하세요</span>';
-  }
-}
-
-// ── 확언 저장소 ─────────────────────────────────────────────────
-// affirmationStore: [{ id, text }]
-let affirmationStore = [];
-let affirmationIdx   = 0;
-let affNextId = 1;
-
-function affmRenderCurrent() {
-  const disp = document.getElementById('affm-display');
-  const ta   = document.getElementById('diary-affirmation');
-  const label = document.getElementById('affm-index-label');
-  const delBtn = document.getElementById('affm-delete-btn');
-  if (!disp) return;
-  ta.style.display = 'none';
-  disp.style.display = '';
-  if (!affirmationStore.length) {
-    disp.innerHTML = '<span style="color:var(--text-tertiary);font-size:15px;">확언을 추가해보세요</span>';
-    if (label) label.textContent = '0/0';
-    if (delBtn) delBtn.style.display = 'none';
-    ta.value = '';
-    return;
-  }
-  affirmationIdx = Math.max(0, Math.min(affirmationIdx, affirmationStore.length-1));
-  const cur = affirmationStore[affirmationIdx];
-  disp.innerHTML = `<span style="color:var(--text-primary);">${cur.text.replace(/\n/g,'<br>')}</span>`;
-  ta.value = cur.text;
-  if (label) label.textContent = `${affirmationIdx+1}/${affirmationStore.length}`;
-  if (delBtn) delBtn.style.display = '';
-  affmReset();
-}
-
-function affmNext() {
-  if (!affirmationStore.length) return;
-  affirmationIdx = (affirmationIdx + 1) % affirmationStore.length;
-  affmRenderCurrent();
-}
-function affmPrev() {
-  if (!affirmationStore.length) return;
-  affirmationIdx = (affirmationIdx - 1 + affirmationStore.length) % affirmationStore.length;
-  affmRenderCurrent();
-}
-function affmAddNew() {
-  // 새 빈 확언 추가 후 바로 편집 모드 진입
-  affirmationStore.push({ id: affNextId++, text: '' });
-  affirmationIdx = affirmationStore.length - 1;
-  // 편집 모드 직접 진입
-  const disp = document.getElementById('affm-display');
-  const ta   = document.getElementById('diary-affirmation');
-  if (disp) disp.style.display = 'none';
-  if (ta) {
-    ta.value = '';
-    ta.placeholder = '확언을 입력하세요. 예) 나는 오늘도 성장하고 있다.';
-    ta.style.display = '';
-    ta.focus();
-  }
-  const label = document.getElementById('affm-index-label');
-  if (label) label.textContent = `${affirmationIdx+1}/${affirmationStore.length}`;
-  const delBtn = document.getElementById('affm-delete-btn');
-  if (delBtn) delBtn.style.display = '';
-}
-function affmDeleteCurrent() {
-  if (!affirmationStore.length) return;
-  if (!confirm('이 확언을 삭제할까요?')) return;
-  affirmationStore.splice(affirmationIdx, 1);
-  affirmationIdx = Math.min(affirmationIdx, Math.max(0, affirmationStore.length-1));
-  affmRenderCurrent();
+function affmSaveTyping() {
+  var ta = document.getElementById('affm-typing');
+  if (!ta) return;
+  var dk = diaryDateKey(diaryViewDate);
+  var data = diaryGetOrCreate(dk);
+  data.affirmationTyping = ta.value;
   lsAutoSave();
 }
 
-function affmStartEdit() {
-  if (!affirmationStore.length) { affmAddNew(); return; }
-  const ta = document.getElementById('diary-affirmation');
-  document.getElementById('affm-display').style.display = 'none';
-  ta.style.display = '';
-  ta.focus();
-  ta.setSelectionRange(ta.value.length, ta.value.length);
-}
+function affmRenderCurrent() { affmRender(); }
 
-function affmSaveEdit() {
-  const ta = document.getElementById('diary-affirmation');
-  const val = ta.value.trim();
-  ta.style.display = 'none';
-  if (affirmationStore.length) {
-    if (val) {
-      affirmationStore[affirmationIdx].text = val;
-    } else {
-      // 빈 텍스트면 삭제
-      affirmationStore.splice(affirmationIdx, 1);
-      affirmationIdx = Math.min(affirmationIdx, Math.max(0, affirmationStore.length-1));
-    }
-    lsAutoSave();
-  }
-  affmRenderCurrent();
-  affmReset();
-}
+// ── 확언 저장소 ─────────────────────────────────────────────────
+// affirmationStore: [{ id, text }] — 한번 입력하면 매일 반복
+var affirmationStore = [];
+var affNextId = 1;
+var affirmationIdx = 0;
 
-function affmCheckTyping() {
-  const stripBullets = s => s.split('\n').map(l => l.replace(/^▪\s*/, '').trim()).filter(Boolean).join('\n');
-  const cur = affirmationStore[affirmationIdx];
-  const original = cur ? stripBullets(cur.text) : '';
-  const typed    = stripBullets(document.getElementById('affm-typing').value);
-  const feedback = document.getElementById('affm-feedback');
-  const inp      = document.getElementById('affm-typing');
+function affmRender() {
+  var listEl = document.getElementById('affm-list');
+  if (!listEl) return;
+  listEl.innerHTML = '';
 
-  if (!original || !typed) { feedback.innerHTML = ''; inp.style.borderColor = 'var(--border-md)'; return; }
-
-  if (typed.length < original.length) {
-    const correctSoFar = typed === original.slice(0, typed.length);
-    inp.style.borderColor = correctSoFar ? '#4CAF82' : '#E24B4A';
-    feedback.innerHTML = correctSoFar
-      ? `<span style="color:#4CAF82;">✓ 잘 따라쓰고 있어요</span>`
-      : `<span style="color:#E24B4A;">✗ 다시 확인해보세요</span>`;
+  if (!affirmationStore.length) {
+    listEl.innerHTML = '<div style="font-size:14px;color:var(--text-tertiary);padding:6px 0;">확언을 추가해보세요</div>';
+    affmUpdateTypingSource();
     return;
   }
 
-  let match = 0;
-  for (let i = 0; i < original.length; i++) { if (typed[i] === original[i]) match++; }
-  const pct = Math.round(match / original.length * 100);
-  inp.style.borderColor = pct === 100 ? '#4CAF82' : '#F6A623';
-  const emoji = pct === 100 ? '🎉' : pct >= 80 ? '👍' : '💪';
-  feedback.innerHTML = `<span style="font-weight:600;">${emoji} ${pct}% 일치</span>
-    <span style="color:var(--text-tertiary);margin-left:6px;">${pct===100?'완벽해요!':'조금 더 연습해보세요.'}</span>`;
-  // 완벽 일치 시 자동으로 다음 확언으로
-  if (pct === 100 && affirmationStore.length > 1) {
-    setTimeout(() => { affmNext(); document.getElementById('affm-typing').focus(); }, 800);
+  affirmationStore.forEach(function(aff, idx) {
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg-secondary);';
+
+    var dot = document.createElement('div');
+    dot.style.cssText = 'width:6px;height:6px;border-radius:50%;background:#7C83FD;flex-shrink:0;';
+    row.appendChild(dot);
+
+    var txt = document.createElement('span');
+    txt.style.cssText = 'flex:1;font-size:15px;color:var(--text-primary);line-height:1.7;cursor:text;white-space:pre-wrap;';
+    txt.textContent = aff.text;
+    txt.title = '더블클릭하여 편집';
+    txt.ondblclick = function(e) {
+      e.stopPropagation();
+      var inp = document.createElement('textarea');
+      inp.value = aff.text; inp.rows = 2;
+      inp.style.cssText = 'flex:1;font-size:15px;width:100%;border:none;outline:none;background:transparent;color:var(--text-primary);font-family:inherit;line-height:1.7;resize:none;';
+      txt.replaceWith(inp); inp.focus(); inp.select();
+      inp.onblur = function() {
+        var v = inp.value.trim();
+        if (v) { aff.text = v; } else { affirmationStore.splice(idx, 1); }
+        lsAutoSave(); affmRender(); affmUpdateTypingSource();
+      };
+      inp.onkeydown = function(e) {
+        if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); inp.blur(); }
+        if (e.key==='Escape') { inp.value = aff.text; inp.blur(); }
+      };
+    };
+    row.appendChild(txt);
+
+    var del = document.createElement('i');
+    del.className = 'ti ti-x';
+    del.style.cssText = 'font-size:11px;color:var(--text-tertiary);cursor:pointer;opacity:0;transition:opacity 0.1s;flex-shrink:0;';
+    (function(aid) {
+      del.onclick = function(e) {
+        e.stopPropagation();
+        affirmationStore = affirmationStore.filter(function(x){ return x.id !== aid; });
+        lsAutoSave(); affmRender(); affmUpdateTypingSource();
+      };
+    })(aff.id);
+    row.onmouseenter = function() { del.style.opacity='1'; };
+    row.onmouseleave = function() { del.style.opacity='0'; };
+    row.appendChild(del);
+    listEl.appendChild(row);
+  });
+  affmUpdateTypingSource();
+}
+
+function affmAdd() {
+  var inp = document.getElementById('affm-add-input');
+  if (!inp) return;
+  var v = inp.value.trim(); if (!v) return;
+  affirmationStore.push({ id: affNextId++, text: v });
+  inp.value = '';
+  lsAutoSave(); affmRender(); affmUpdateTypingSource();
+}
+
+function affmUpdateTypingSource() {
+  var src = document.getElementById('affm-typing-source');
+  if (!src) return;
+  if (!affirmationStore.length) { src.textContent = ''; return; }
+  affirmationIdx = Math.max(0, Math.min(affirmationIdx, affirmationStore.length-1));
+  src.textContent = affirmationStore[affirmationIdx].text;
+}
+
+function affmCheckTyping() {
+  var stripBullets = function(s) { return s.split('\n').map(function(l){ return l.replace(/^▪\s*/,'').trim(); }).filter(Boolean).join('\n'); };
+  var cur = affirmationStore[affirmationIdx];
+  var original = cur ? stripBullets(cur.text) : '';
+  var typingEl = document.getElementById('affm-typing');
+  var feedback = document.getElementById('affm-feedback');
+  if (!typingEl || !feedback) return;
+  var typed = stripBullets(typingEl.value);
+  if (!original || !typed) { feedback.innerHTML = ''; typingEl.style.borderColor = 'var(--border-md)'; return; }
+  if (typed.length < original.length) {
+    var ok = typed === original.slice(0, typed.length);
+    typingEl.style.borderColor = ok ? '#4CAF82' : '#E24B4A';
+    feedback.innerHTML = ok ? '<span style="color:#4CAF82;">✓ 잘 따라쓰고 있어요</span>' : '<span style="color:#E24B4A;">✗ 다시 확인해보세요</span>';
+    return;
+  }
+  var match = 0;
+  for (var i=0; i<original.length; i++) { if (typed[i]===original[i]) match++; }
+  var pct = Math.round(match / original.length * 100);
+  typingEl.style.borderColor = pct===100 ? '#4CAF82' : '#F6A623';
+  var emoji = pct===100 ? '🎉' : pct>=80 ? '👍' : '💪';
+  feedback.innerHTML = '<span style="font-weight:600;">'+emoji+' '+pct+'% 일치</span><span style="color:var(--text-tertiary);margin-left:6px;">'+(pct===100?'완벽해요!':'조금 더 연습해보세요.')+'</span>';
+  if (pct===100 && affirmationStore.length > 1) {
+    setTimeout(function() {
+      affirmationIdx = (affirmationIdx+1) % affirmationStore.length;
+      affmUpdateTypingSource(); affmReset();
+      var t = document.getElementById('affm-typing'); if(t) t.focus();
+    }, 800);
   }
 }
 
 function affmReset() {
-  const inp = document.getElementById('affm-typing');
-  if (!inp) return;
-  inp.value = '';
-  inp.style.borderColor = 'var(--border-md)';
-  document.getElementById('affm-feedback').innerHTML = '';
+  var inp = document.getElementById('affm-typing');
+  if (inp) { inp.value=''; inp.style.borderColor='var(--border-md)'; }
+  var fb = document.getElementById('affm-feedback');
+  if (fb) fb.innerHTML = '';
 }
 
-function affmRenderDisplay() { affmRenderCurrent(); }
+function affmRenderDisplay() { affmRender(); }
+
 
 
 function diarySetBody(label) {
@@ -4968,22 +5225,12 @@ function diaryAddCustomMood() {
   if (!data.mood.includes(val)) data.mood.push(val);
   inp.value = ''; renderDiaryEditor();
 }
-function diaryAddGratitude() {
-  const inp = document.getElementById('diary-gratitude-input');
-  const val = inp.value.trim(); if (!val) return;
-  diaryGetOrCreate(diaryDateKey(diaryViewDate)).gratitude.push(val);
-  inp.value=''; renderDiaryEditor();
-}
-function diaryRemoveGratitude(i) {
-  diaryGetOrCreate(diaryDateKey(diaryViewDate)).gratitude.splice(i,1);
-  renderDiaryEditor();
-}
 
 function diarySave() {
   const k    = diaryDateKey(diaryViewDate);
   const data = diaryGetOrCreate(k);
   data.title       = document.getElementById('diary-title').value.trim();
-  data.affirmation = document.getElementById('diary-affirmation').value.trim();
+  data.affirmation = '';
   data.content     = document.getElementById('diary-content').value.trim();
   const scoreVal   = parseInt(document.getElementById('diary-score-input').value) || 0;
   data.score       = Math.max(0, Math.min(10, scoreVal));
@@ -5639,8 +5886,8 @@ function renderRetroWeeklyDashboard() {
     }
   }
 
-  if (wfBookEl)    wfBookEl.textContent    = (wfData && wfData.book)    || '';
-  if (wfWritingEl) wfWritingEl.textContent = (wfData && wfData.writing) || '';
+  if (wfBookEl)    wfBookEl.textContent    = (wfData && wfData.books && wfData.books.length) ? wfData.books.join(', ') : (wfData && wfData.book) || '';
+  if (wfWritingEl) wfWritingEl.textContent = (wfData && wfData.writings && wfData.writings.length) ? wfData.writings.join(', ') : (wfData && wfData.writing) || '';
 
   if (wfRewardsEl) {
     const rewards = (wfData && wfData.rewards) || [];
@@ -5936,25 +6183,22 @@ function retroYearlyGetCat(yk, cat) {
 
 function rycGoalCheck(btn, cat, li, val) {
   const yk   = retroYearlyKey();
+  const d    = retroCursor['yearly'];
   const data = retroYearlyGetCat(yk, cat);
   if (!data.goalChecks) data.goalChecks = {};
   data.goalChecks[li] = data.goalChecks[li] === val ? '' : val;
-  const ta = document.querySelector(`[data-ycat="${cat}"] textarea[data-field="goal"]`);
-  const goalText = ta ? ta.value : (data.goal || '');
-  const lines = goalText.split('\n').map(l=>l.replace(/^[▪◦\-\s]+/,'').trim()).filter(Boolean);
-  const checks = lines.map((_,i)=>data.goalChecks[i]||'');
-  const allDone=lines.length>0&&checks.every(v=>v==='done');
-  const anyPartial=checks.some(v=>v==='partial');const anyDone=checks.some(v=>v==='done');const anyFail=checks.some(v=>v==='fail');
-  data.achieved=allDone?'달성':(anyPartial||(anyDone&&anyFail))?'부분달성':anyFail?'미달성':'';
+  const yGoalVal = (function(){ var yc=yearlyGoalsData[d.getFullYear()]; var ycat=yc&&yc.cats&&yc.cats[cat]; if(ycat&&ycat.items&&ycat.items.length) return ycat.items.map(function(x){return x.text;}).join("\n"); return (ycat&&ycat.goal)||""; })()||data.goal || '';
+  const ls  = yGoalVal.split('\n').map(l => l.replace(/^[▪◦\-\s]+/, '').trim()).filter(Boolean);
+  const cks = ls.map((_, i) => data.goalChecks[i] || '');
+  const allDone = ls.length > 0 && cks.every(v => v === 'done');
+  const anyPartial = cks.some(v => v === 'partial');
+  const anyDone = cks.some(v => v === 'done');
+  const anyFail = cks.some(v => v === 'fail');
+  data.achieved = allDone ? '달성' : (anyPartial || (anyDone && anyFail)) ? '부분달성' : anyFail ? '미달성' : '';
   lsAutoSave();
-  // 인라인 체크리스트 업데이트
-  const blkY = document.querySelector(`[data-ycat="${cat}"]`);
-  if (blkY) {
-    const clY = blkY.querySelectorAll(':scope > div > div')[0];
-    if (clY) { const items = clY.querySelectorAll('[style*="display:flex;align-items:center;gap:8px"]'); if(items.length) clY.innerHTML = retroBuildGoalChecklist(goalText, data.goalChecks, 'rycGoalCheck', cat); }
-  }
-
+  retroYearlyRenderForm();
 }
+
 
 function rmySetAchieved(btn) {
   const group = btn.closest('[data-achieved-group]');
@@ -6115,20 +6359,39 @@ function retroYearlyRenderForm() {
   const taStyle = 'width:100%;resize:none;border:0.5px solid var(--border-md);border-radius:var(--radius-md);outline:none;background:var(--bg-secondary);font-size:13px;color:var(--text-primary);font-family:inherit;line-height:1.8;padding:6px 8px;';
 
   form.innerHTML = RETRO_MONTHLY_CATS.map((cat, ci) => {
-    const data     = retroYearlyGetCat(yk, cat);
-    const emoji    = RETRO_MONTHLY_EMOJIS[cat];
-    const prevData   = (retroYearlyData[prevYk] && retroYearlyData[prevYk][cat]);
-    const yGoalVal   = (yearlyGoalsData[d.getFullYear()] && yearlyGoalsData[d.getFullYear()].cats && yearlyGoalsData[d.getFullYear()].cats[cat] && yearlyGoalsData[d.getFullYear()].cats[cat].goal) || '';
-    const goalVal    = data.goal || yGoalVal || (prevData && prevData.next) || '';
+    const data   = retroYearlyGetCat(yk, cat);
+    const emoji  = RETRO_MONTHLY_EMOJIS[cat];
+    const prevData = (retroYearlyData[prevYk] && retroYearlyData[prevYk][cat]);
+    const yGoalVal = (function(){ var yc=yearlyGoalsData[d.getFullYear()]; var ycat=yc&&yc.cats&&yc.cats[cat]; if(ycat&&ycat.items&&ycat.items.length) return ycat.items.map(function(x){return x.text;}).join("\n"); return (ycat&&ycat.goal)||""; })();
+    const goalVal  = yGoalVal || data.goal || (prevData && prevData.next) || '';
+
+    const goalLines = goalVal.split('\n').map(l => l.replace(/^[▪◦\-\s]+/, '').trim()).filter(Boolean);
     if (!data.goalChecks) data.goalChecks = {};
-    const yGoalLines = goalVal.split('\n').map(l=>l.replace(/^[▪◦\-\s]+/,'').trim()).filter(Boolean);
-    const yChecks=Object.values(data.goalChecks||{});
-    const yAllDone=yGoalLines.length>0&&yChecks.filter(v=>v==='done').length===yGoalLines.length;
-    const yAnyDone=yChecks.some(v=>v==='done'||v==='partial');const yAnyFail=yChecks.some(v=>v==='fail');
-    data.achieved=yAllDone?'달성':yAnyDone?'부분달성':yAnyFail?'미달성':data.achieved||'';
+    const checkVals = goalLines.map((_, i) => data.goalChecks[i] || '');
+    const allDone  = goalLines.length > 0 && checkVals.every(v => v === 'done');
+    const anyDone  = checkVals.some(v => v === 'done' || v === 'partial');
+    const anyFail  = checkVals.some(v => v === 'fail');
+    data.achieved  = allDone ? '달성' : anyDone ? '부분달성' : anyFail ? '미달성' : data.achieved || '';
+
+    const goalCards = goalLines.length
+      ? goalLines.map((line, li) => {
+          const state = data.goalChecks[li] || '';
+          const bc = state==='done'?'#43E97B':state==='partial'?'#EF9F27':state==='fail'?'#E24B4A':'var(--border-md)';
+          const bg = state==='done'?'rgba(67,233,123,0.07)':state==='partial'?'rgba(239,159,39,0.07)':state==='fail'?'rgba(226,75,74,0.07)':'var(--bg-secondary)';
+          const td = state==='done'?'text-decoration:line-through;color:var(--text-tertiary);':'';
+          const btns = [{v:'done',e:'✅',t:'달성'},{v:'partial',e:'🔶',t:'부분달성'},{v:'fail',e:'❌',t:'미달성'}]
+            .map(o => '<button onclick="rycGoalCheck(this,\''+cat+'\','+li+',\''+o.v+'\')" title="'+o.t+'" style="width:26px;height:26px;border-radius:50%;border:1.5px solid '+(state===o.v?'transparent':'var(--border-md)')+';background:'+(state===o.v?'var(--text-primary)':'transparent')+';font-size:13px;cursor:pointer;padding:0;flex-shrink:0;">'+o.e+'</button>').join('');
+          return '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--radius-md);background:'+bg+';border-left:3px solid '+bc+';border-top:0.5px solid var(--border);border-right:0.5px solid var(--border);border-bottom:0.5px solid var(--border);"><span style="flex:1;font-size:14px;'+td+'">'+line+'</span><div style="display:flex;gap:4px;">'+btns+'</div></div>';
+        }).join('')
+      : '<div style="font-size:13px;color:var(--text-tertiary);padding:10px;text-align:center;">연간목표 페이지에서 올해의 목표를 입력하면 여기에 표시됩니다</div>';
+
+    const ny = d.getFullYear() + 1;
+    const nextVal = (yearlyGoalsData[ny] && yearlyGoalsData[ny].cats && yearlyGoalsData[ny].cats[cat] && yearlyGoalsData[ny].cats[cat].goal) || data.next || '';
+
     return `
-    <div data-ycat="${cat}" style="padding-bottom:22px;${ci<RETRO_MONTHLY_CATS.length-1?'border-bottom:1.5px solid var(--border);margin-bottom:4px;':''}">
-      <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:12px;display:flex;align-items:center;gap:8px;">${emoji} ${cat}
+    <div data-ycat="${cat}" style="padding-bottom:24px;${ci<RETRO_MONTHLY_CATS.length-1?'border-bottom:1.5px solid var(--border);margin-bottom:4px;':''}">
+      <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+        ${emoji} ${cat}
         ${data.achieved?`<span style="font-size:12px;padding:2px 8px;border-radius:10px;background:${data.achieved==='달성'?'#43E97B22':data.achieved==='부분달성'?'#EF9F2722':'#E24B4A22'};color:${data.achieved==='달성'?'#2d8a55':data.achieved==='부분달성'?'#c47a00':'#c0392b'};font-weight:600;">${data.achieved==='달성'?'✅':data.achieved==='부분달성'?'🔶':'❌'} ${data.achieved}</span>`:''}
         <span style="margin-left:auto;display:flex;align-items:center;gap:6px;">
           <span style="font-size:11px;color:var(--text-tertiary);font-weight:400;">점수</span>
@@ -6138,36 +6401,121 @@ function retroYearlyRenderForm() {
           <span style="font-size:11px;color:var(--text-tertiary);">/ 10</span>
         </span>
       </div>
-      <div style="display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;flex-direction:column;gap:10px;">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;">
           <div style="display:flex;flex-direction:column;gap:6px;">
-            <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;display:flex;align-items:center;gap:5px;">
-              올해의 목표 ${yGoalVal && !data.goal ? `<span style="font-size:10px;padding:1px 5px;border-radius:8px;background:#E6F1FB;color:#185FA5;font-weight:600;">연간목표 연동</span>` : ''}
-            </div>
-            <textarea data-field="goal" rows="5" placeholder="▪ 목표를 입력하세요..." onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroYearlyFieldSave(this,'${cat}','goal')" style="${taStyle}">${goalVal}</textarea>
-            <div style="display:flex;flex-direction:column;gap:3px;margin-top:4px;">${retroBuildGoalChecklist(goalVal, data.goalChecks, 'rycGoalCheck', '${cat}')}</div>
+            <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;">올해의 목표</div>
+            <div style="display:flex;flex-direction:column;gap:5px;">${goalCards}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;display:flex;align-items:center;gap:6px;">내년 목표 <span style="font-size:10px;color:var(--text-tertiary);font-weight:400;">· 연간목표에 반영</span></div>
+            <div id="yc-next-list-${cat}" style="display:flex;flex-direction:column;gap:4px;"></div>
           </div>
         </div>
-
         <div>
           <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">총평</div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
-            <div><div style="font-size:11px;color:var(--text-tertiary);margin-bottom:3px;">잘한 점</div><textarea data-field="good" rows="3" placeholder="▪" onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroYearlyFieldSave(this,'${cat}','good')" style="${taStyle}">${data.good}</textarea></div>
-            <div><div style="font-size:11px;color:var(--text-tertiary);margin-bottom:3px;">아쉬운 점</div><textarea data-field="bad" rows="3" placeholder="▪" onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroYearlyFieldSave(this,'${cat}','bad')" style="${taStyle}">${data.bad}</textarea></div>
-            <div><div style="font-size:11px;color:var(--text-tertiary);margin-bottom:3px;">보완할 점</div><textarea data-field="improve" rows="3" placeholder="▪" onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroYearlyFieldSave(this,'${cat}','improve')" style="${taStyle}">${data.improve}</textarea></div>
+            <div><div style="font-size:11px;color:var(--text-tertiary);margin-bottom:3px;">잘한 점</div><textarea data-field="good" rows="3" placeholder="▪" onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroYearlyFieldSave(this,'${cat}','good')" style="${taStyle}">${data.good||''}</textarea></div>
+            <div><div style="font-size:11px;color:var(--text-tertiary);margin-bottom:3px;">아쉬운 점</div><textarea data-field="bad" rows="3" placeholder="▪" onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroYearlyFieldSave(this,'${cat}','bad')" style="${taStyle}">${data.bad||''}</textarea></div>
+            <div><div style="font-size:11px;color:var(--text-tertiary);margin-bottom:3px;">보완할 점</div><textarea data-field="improve" rows="3" placeholder="▪" onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroYearlyFieldSave(this,'${cat}','improve')" style="${taStyle}">${data.improve||''}</textarea></div>
           </div>
-        </div>
-        <div>
-          <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:6px;">
-            내년 목표
-            <span style="font-size:10px;color:var(--text-tertiary);font-weight:400;">· 편집/삭제 가능 · 연간목표에 반영</span>
-          </div>
-          <textarea data-field="next" rows="3" placeholder="▪ 내년 목표를 입력하세요..." onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroYearlyNextSave(this,'${cat}')" style="${taStyle}">${(()=>{ const yd=retroCursor['yearly'];const ny=yd.getFullYear()+1;return (yearlyGoalsData[ny]&&yearlyGoalsData[ny].cats&&yearlyGoalsData[ny].cats[cat]&&yearlyGoalsData[ny].cats[cat].goal)||data.next||'';})()}</textarea>
         </div>
       </div>
     </div>`;
   }).join('');
+
+  // 내년 목표 항목 카드 렌더
+  var ny2 = d.getFullYear() + 1;
+  retroRenderNextItems('yc', yk, retroYearlyData, retroYearlyGetCat, yearlyGoalsData, ny2, 'items');
+
   renderYearlyScoreCard();
+}
+
+
+// 분기/연간 회고 next 항목 카드 공통 렌더
+function retroRenderNextItems(prefix, periodKey, retroData, getCatFn, goalsData, nextKey, itemsField) {
+  RETRO_MONTHLY_CATS.forEach(function(cat) {
+    var listEl = document.getElementById(prefix + '-next-list-' + cat);
+    if (!listEl) return;
+    var data = getCatFn(periodKey, cat);
+    if (!data.nextItems) {
+      // mGoalsData/qGoalsData/yearlyGoalsData에서 가져오기
+      var srcCat = (goalsData[nextKey] && goalsData[nextKey].cats && goalsData[nextKey].cats[cat]);
+      if (srcCat && srcCat.items && srcCat.items.length) {
+        data.nextItems = srcCat.items.map(function(x){ return { id: ygNextId++, text: x.text }; });
+      } else if (srcCat && srcCat.goal && srcCat.goal.trim()) {
+        data.nextItems = srcCat.goal.split('\n').map(function(l){ return l.replace(/^[▪◦\-\s]+/,'').trim(); }).filter(Boolean).map(function(t){ return { id: ygNextId++, text: t }; });
+      } else if (data.next && data.next.trim()) {
+        data.nextItems = data.next.split('\n').map(function(l){ return l.replace(/^[▪◦\-\s]+/,'').trim(); }).filter(Boolean).map(function(t){ return { id: ygNextId++, text: t }; });
+      } else {
+        data.nextItems = [];
+      }
+    }
+
+    function syncToGoals() {
+      if (!goalsData[nextKey]) goalsData[nextKey] = { cats:{}, reward:'' };
+      if (!goalsData[nextKey].cats) goalsData[nextKey].cats = {};
+      if (!goalsData[nextKey].cats[cat]) goalsData[nextKey].cats[cat] = { goal:'', reward:'', items:[] };
+      goalsData[nextKey].cats[cat].items = data.nextItems.map(function(x){ return { id: x.id, text: x.text }; });
+      goalsData[nextKey].cats[cat].goal  = data.nextItems.map(function(x){ return x.text; }).join('\n');
+    }
+
+    function renderNextItems() {
+      listEl.innerHTML = '';
+      data.nextItems.forEach(function(g) {
+        var row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg-secondary);';
+        var dot = document.createElement('div');
+        dot.style.cssText = 'width:6px;height:6px;border-radius:50%;background:var(--text-tertiary);flex-shrink:0;';
+        row.appendChild(dot);
+        var txt = document.createElement('span');
+        txt.style.cssText = 'flex:1;font-size:14px;color:var(--text-primary);outline:none;';
+        txt.textContent = g.text;
+        txt.ondblclick = function(e) {
+          e.stopPropagation();
+          txt.contentEditable = 'true'; txt.style.background = 'var(--bg-primary)'; txt.style.borderRadius = '3px'; txt.style.padding = '0 3px';
+          txt.focus();
+          var r = document.createRange(); r.selectNodeContents(txt);
+          window.getSelection().removeAllRanges(); window.getSelection().addRange(r);
+        };
+        txt.onblur = function() {
+          var val = txt.textContent.trim();
+          if (val) { g.text = val; } else { data.nextItems = data.nextItems.filter(function(x){ return x.id !== g.id; }); }
+          txt.contentEditable = 'false'; txt.style.background = ''; txt.style.padding = '';
+          syncToGoals(); lsAutoSave(); renderNextItems();
+        };
+        txt.onkeydown = function(e) {
+          if (e.key==='Enter') { e.preventDefault(); txt.blur(); }
+          if (e.key==='Escape') { txt.textContent = g.text; txt.blur(); }
+        };
+        row.appendChild(txt);
+        var del = document.createElement('i');
+        del.className = 'ti ti-x';
+        del.style.cssText = 'font-size:11px;color:var(--text-tertiary);cursor:pointer;opacity:0;transition:opacity 0.1s;flex-shrink:0;';
+        var gid = g.id;
+        del.onclick = function(e) { e.stopPropagation(); data.nextItems = data.nextItems.filter(function(x){ return x.id !== gid; }); syncToGoals(); lsAutoSave(); renderNextItems(); };
+        row.onmouseenter = function() { del.style.opacity='1'; };
+        row.onmouseleave = function() { del.style.opacity='0'; };
+        row.appendChild(del);
+        listEl.appendChild(row);
+      });
+      var addRow = document.createElement('div');
+      addRow.style.cssText = 'display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:var(--radius-md);border:0.5px dashed var(--border-md);';
+      var addInp = document.createElement('input');
+      addInp.type='text'; addInp.placeholder='+ 목표 추가...';
+      addInp.style.cssText = 'flex:1;font-size:13px;border:none;outline:none;background:transparent;color:var(--text-primary);font-family:inherit;';
+      addInp.onkeydown = function(e) {
+        if (e.key==='Enter') {
+          var v = addInp.value.trim(); if (!v) return;
+          data.nextItems.push({ id: ygNextId++, text: v });
+          addInp.value=''; syncToGoals(); lsAutoSave(); renderNextItems();
+        }
+      };
+      addRow.appendChild(addInp);
+      listEl.appendChild(addRow);
+    }
+    renderNextItems();
+  });
 }
 
 function retroMonthlySetReward(val) {
@@ -6204,24 +6552,22 @@ function retroQuarterlyGetCat(qk, cat) {
 
 function rqcGoalCheck(btn, cat, li, val) {
   const qk   = retroQuarterlyKey();
+  const d    = retroCursor['quarterly'];
   const data = retroQuarterlyGetCat(qk, cat);
   if (!data.goalChecks) data.goalChecks = {};
   data.goalChecks[li] = data.goalChecks[li] === val ? '' : val;
-  const ta = document.querySelector(`[data-qcat="${cat}"] textarea[data-field="goal"]`);
-  const goalText = ta ? ta.value : (data.goal || '');
-  const lines = goalText.split('\n').map(l=>l.replace(/^[▪◦\-\s]+/,'').trim()).filter(Boolean);
-  const checks = lines.map((_,i)=>data.goalChecks[i]||'');
-  const allDone=lines.length>0&&checks.every(v=>v==='done');
-  const anyPartial=checks.some(v=>v==='partial');const anyDone=checks.some(v=>v==='done');const anyFail=checks.some(v=>v==='fail');
-  data.achieved=allDone?'달성':(anyPartial||(anyDone&&anyFail))?'부분달성':anyFail?'미달성':'';
+  const qNum     = Math.ceil((d.getMonth()+1)/3);
+  const qGoalKey = d.getFullYear() + '-Q' + qNum;
+  const qGoalVal = (function(){ var _c=qGoalsData[qGoalKey]; var _cat=_c&&_c.cats&&_c.cats[cat]; if(_cat&&_cat.items&&_cat.items.length) return _cat.items.map(function(x){return x.text;}).join('\n'); return (_cat&&_cat.goal)||data.goal||''; })();
+  const lines  = qGoalVal.split('\n').map(l => l.replace(/^[▪◦\-\s]+/, '').trim()).filter(Boolean);
+  const checks = lines.map((_, i) => data.goalChecks[i] || '');
+  const allDone = lines.length > 0 && checks.every(v => v === 'done');
+  const anyPartial = checks.some(v => v === 'partial');
+  const anyDone = checks.some(v => v === 'done');
+  const anyFail = checks.some(v => v === 'fail');
+  data.achieved = allDone ? '달성' : (anyPartial || (anyDone && anyFail)) ? '부분달성' : anyFail ? '미달성' : '';
   lsAutoSave();
-  // 인라인 체크리스트 업데이트
-  const blkQ = document.querySelector(`[data-qcat="${cat}"]`);
-  if (blkQ) {
-    const clQ = blkQ.querySelectorAll(':scope > div > div')[0];
-    if (clQ) { const items = clQ.querySelectorAll('[style*="display:flex;align-items:center;gap:8px"]'); if(items.length) clQ.innerHTML = retroBuildGoalChecklist(goalText, data.goalChecks, 'rqcGoalCheck', cat); }
-  }
-
+  retroQuarterlyRenderForm();
 }
 
 function rmqSetAchieved(btn) {
@@ -6415,63 +6761,83 @@ function retroQuarterlyRenderForm() {
   const taStyle = 'width:100%;resize:none;border:0.5px solid var(--border-md);border-radius:var(--radius-md);outline:none;background:var(--bg-secondary);font-size:13px;color:var(--text-primary);font-family:inherit;line-height:1.8;padding:6px 8px;';
 
   form.innerHTML = RETRO_MONTHLY_CATS.map((cat, ci) => {
-    const data  = retroQuarterlyGetCat(qk, cat);
-    const emoji = RETRO_MONTHLY_EMOJIS[cat];
+    const data   = retroQuarterlyGetCat(qk, cat);
+    const emoji  = RETRO_MONTHLY_EMOJIS[cat];
     const prevData  = (retroQuarterlyData[prevQk] && retroQuarterlyData[prevQk][cat]);
     const qNum      = Math.ceil((d.getMonth()+1)/3);
-    const qGoalKey  = `${d.getFullYear()}-Q${qNum}`;
-    const qGoalVal  = (qGoalsData[qGoalKey] && qGoalsData[qGoalKey].cats && qGoalsData[qGoalKey].cats[cat] && qGoalsData[qGoalKey].cats[cat].goal) || '';
-    const goalVal   = data.goal || qGoalVal || (prevData && prevData.next) || '';
+    const qGoalKey  = d.getFullYear() + '-Q' + qNum;
+    const qGoalVal  = (function(){ var _c=qGoalsData[qGoalKey]; var _cat=_c&&_c.cats&&_c.cats[cat]; if(_cat&&_cat.items&&_cat.items.length) return _cat.items.map(function(x){return x.text;}).join('\n'); return (_cat&&_cat.goal)||''; })();
+    const goalVal   = qGoalVal || data.goal || (prevData && prevData.next) || '';
+
+    const goalLines = goalVal.split('\n').map(l => l.replace(/^[▪◦\-\s]+/, '').trim()).filter(Boolean);
     if (!data.goalChecks) data.goalChecks = {};
-    const qGoalLines = goalVal.split('\n').map(l=>l.replace(/^[▪◦\-\s]+/,'').trim()).filter(Boolean);
-    const qChecks=Object.values(data.goalChecks||{});
-    const qAllDone=qGoalLines.length>0&&qChecks.filter(v=>v==='done').length===qGoalLines.length;
-    const qAnyDone=qChecks.some(v=>v==='done'||v==='partial');const qAnyFail=qChecks.some(v=>v==='fail');
-    data.achieved=qAllDone?'달성':qAnyDone?'부분달성':qAnyFail?'미달성':data.achieved||'';
+    const checkVals = goalLines.map((_, i) => data.goalChecks[i] || '');
+    const allDone  = goalLines.length > 0 && checkVals.every(v => v === 'done');
+    const anyDone  = checkVals.some(v => v === 'done' || v === 'partial');
+    const anyFail  = checkVals.some(v => v === 'fail');
+    data.achieved  = allDone ? '달성' : anyDone ? '부분달성' : anyFail ? '미달성' : data.achieved || '';
+
+    const goalCards = goalLines.length
+      ? goalLines.map((line, li) => {
+          const state = data.goalChecks[li] || '';
+          const bc = state==='done'?'#43E97B':state==='partial'?'#EF9F27':state==='fail'?'#E24B4A':'var(--border-md)';
+          const bg = state==='done'?'rgba(67,233,123,0.07)':state==='partial'?'rgba(239,159,39,0.07)':state==='fail'?'rgba(226,75,74,0.07)':'var(--bg-secondary)';
+          const td = state==='done'?'text-decoration:line-through;color:var(--text-tertiary);':'';
+          const btns = [{v:'done',e:'✅',t:'달성'},{v:'partial',e:'🔶',t:'부분달성'},{v:'fail',e:'❌',t:'미달성'}]
+            .map(o => '<button onclick="rqcGoalCheck(this,\''+cat+'\','+li+',\''+o.v+'\')" title="'+o.t+'" style="width:26px;height:26px;border-radius:50%;border:1.5px solid '+(state===o.v?'transparent':'var(--border-md)')+';background:'+(state===o.v?'var(--text-primary)':'transparent')+';font-size:13px;cursor:pointer;padding:0;flex-shrink:0;">'+o.e+'</button>').join('');
+          return '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--radius-md);background:'+bg+';border-left:3px solid '+bc+';border-top:0.5px solid var(--border);border-right:0.5px solid var(--border);border-bottom:0.5px solid var(--border);"><span style="flex:1;font-size:14px;'+td+'">'+line+'</span><div style="display:flex;gap:4px;">'+btns+'</div></div>';
+        }).join('')
+      : '<div style="font-size:13px;color:var(--text-tertiary);padding:10px;text-align:center;">분기목표 페이지에서 이번 분기 목표를 입력하면 여기에 표시됩니다</div>';
+
+    const nqNum  = qNum >= 4 ? 1 : qNum + 1;
+    const nqYear = qNum >= 4 ? d.getFullYear() + 1 : d.getFullYear();
+    const nqKey  = nqYear + '-Q' + nqNum;
+    const nextVal = (qGoalsData[nqKey] && qGoalsData[nqKey].cats && qGoalsData[nqKey].cats[cat] && qGoalsData[nqKey].cats[cat].goal) || data.next || '';
+
     return `
-    <div data-qcat="${cat}" style="padding-bottom:22px;${ci<RETRO_MONTHLY_CATS.length-1?'border-bottom:1.5px solid var(--border);margin-bottom:4px;':''}">
-      <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:12px;display:flex;align-items:center;gap:8px;">${emoji} ${cat}
+    <div data-qcat="${cat}" style="padding-bottom:24px;${ci<RETRO_MONTHLY_CATS.length-1?'border-bottom:1.5px solid var(--border);margin-bottom:4px;':''}">
+      <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+        ${emoji} ${cat}
         ${data.achieved?`<span style="font-size:12px;padding:2px 8px;border-radius:10px;background:${data.achieved==='달성'?'#43E97B22':data.achieved==='부분달성'?'#EF9F2722':'#E24B4A22'};color:${data.achieved==='달성'?'#2d8a55':data.achieved==='부분달성'?'#c47a00':'#c0392b'};font-weight:600;">${data.achieved==='달성'?'✅':data.achieved==='부분달성'?'🔶':'❌'} ${data.achieved}</span>`:''}
         <span style="margin-left:auto;display:flex;align-items:center;gap:6px;">
           <span style="font-size:11px;color:var(--text-tertiary);font-weight:400;">점수</span>
           <input type="number" min="0" max="10" value="${data.score||''}" placeholder="—"
             oninput="retroQuarterlyScoreSave(this,'${cat}')"
+            style="width:48px;font-size:14px;font-weight:700;border:0.5px solid var(--border-md);border-radius:var(--radius-md);padding:2px 6px;background:var(--bg-secondary);color:var(--text-primary);outline:none;text-align:center;font-family:inherit;">
+          <span style="font-size:11px;color:var(--text-tertiary);">/ 10</span>
         </span>
       </div>
-      <div style="display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;flex-direction:column;gap:10px;">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;">
           <div style="display:flex;flex-direction:column;gap:6px;">
-            <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;display:flex;align-items:center;gap:5px;">
-              이번 분기 목표 ${qGoalVal && !data.goal ? `<span style="font-size:10px;padding:1px 5px;border-radius:8px;background:#E6F1FB;color:#185FA5;font-weight:600;">분기목표 연동</span>` : ''}
-            </div>
-            <textarea data-field="goal" rows="5" placeholder="▪ 목표를 입력하세요..." onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroQuarterlyFieldSave(this,'${cat}','goal')" style="${taStyle}">${goalVal}</textarea>
-            <div style="display:flex;flex-direction:column;gap:3px;margin-top:4px;">${retroBuildGoalChecklist(goalVal, data.goalChecks, 'rqcGoalCheck', '${cat}')}</div>
+            <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;">이번 분기 목표</div>
+            <div style="display:flex;flex-direction:column;gap:5px;">${goalCards}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;display:flex;align-items:center;gap:6px;">다음 분기 목표 <span style="font-size:10px;color:var(--text-tertiary);font-weight:400;">· 분기목표에 반영</span></div>
+            <div id="qc-next-list-${cat}" style="display:flex;flex-direction:column;gap:4px;"></div>
           </div>
         </div>
-
         <div>
           <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">총평</div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
-            <div><div style="font-size:11px;color:var(--text-tertiary);margin-bottom:3px;">잘한 점</div><textarea data-field="good" rows="3" placeholder="▪" onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroQuarterlyFieldSave(this,'${cat}','good')" style="${taStyle}">${data.good}</textarea></div>
-            <div><div style="font-size:11px;color:var(--text-tertiary);margin-bottom:3px;">아쉬운 점</div><textarea data-field="bad" rows="3" placeholder="▪" onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroQuarterlyFieldSave(this,'${cat}','bad')" style="${taStyle}">${data.bad}</textarea></div>
-            <div><div style="font-size:11px;color:var(--text-tertiary);margin-bottom:3px;">보완할 점</div><textarea data-field="improve" rows="3" placeholder="▪" onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroQuarterlyFieldSave(this,'${cat}','improve')" style="${taStyle}">${data.improve}</textarea></div>
+            <div><div style="font-size:11px;color:var(--text-tertiary);margin-bottom:3px;">잘한 점</div><textarea data-field="good" rows="3" placeholder="▪" onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroQuarterlyFieldSave(this,'${cat}','good')" style="${taStyle}">${data.good||''}</textarea></div>
+            <div><div style="font-size:11px;color:var(--text-tertiary);margin-bottom:3px;">아쉬운 점</div><textarea data-field="bad" rows="3" placeholder="▪" onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroQuarterlyFieldSave(this,'${cat}','bad')" style="${taStyle}">${data.bad||''}</textarea></div>
+            <div><div style="font-size:11px;color:var(--text-tertiary);margin-bottom:3px;">보완할 점</div><textarea data-field="improve" rows="3" placeholder="▪" onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroQuarterlyFieldSave(this,'${cat}','improve')" style="${taStyle}">${data.improve||''}</textarea></div>
           </div>
-        </div>
-        <div>
-          <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:6px;">
-            다음 분기 목표
-            <span style="font-size:10px;color:var(--text-tertiary);font-weight:400;">· 편집/삭제 가능 · 분기목표에 반영</span>
-          </div>
-          <textarea data-field="next" rows="3" placeholder="▪ 다음 분기 목표를 입력하세요..." onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroQuarterlyNextSave(this,'${cat}')" style="${taStyle}">${(()=>{ const qd=retroCursor['quarterly'];const nq=Math.ceil((qd.getMonth()+1)/3);const nqNum=nq>=4?1:nq+1;const nqYear=nq>=4?qd.getFullYear()+1:qd.getFullYear();const nqKey=nqYear+'-Q'+nqNum;return (qGoalsData[nqKey]&&qGoalsData[nqKey].cats&&qGoalsData[nqKey].cats[cat]&&qGoalsData[nqKey].cats[cat].goal)||data.next||'';})()}</textarea>
         </div>
       </div>
     </div>`;
   }).join('');
+
+  // 다음 분기 목표 항목 카드 렌더
+  var nqNum2  = qNum >= 4 ? 1 : qNum + 1;
+  var nqYear2 = qNum >= 4 ? d.getFullYear() + 1 : d.getFullYear();
+  var nqKey2  = nqYear2 + '-Q' + nqNum2;
+  retroRenderNextItems('qc', qk, retroQuarterlyData, retroQuarterlyGetCat, qGoalsData, nqKey2, 'items');
+
   renderQuarterlyScoreCard();
-}
-
-
-const RETRO_MONTHLY_CATS   = ['자산','관계','가족','건강','경험','커리어','성장'];
+}const RETRO_MONTHLY_CATS   = ['자산','관계','가족','건강','경험','커리어','성장'];
 const RETRO_MONTHLY_EMOJIS = { '자산':'💰','관계':'🤝','가족':'🏡','건강':'💪','경험':'🌟','커리어':'🚀','성장':'🌱' };
 let retroMonthlyData = {};
 
@@ -6576,26 +6942,25 @@ function rmcSetAchieved(btn) {
 // 목표 줄별 체크
 function rmcGoalCheck(btn, cat, li, val) {
   const mk   = retroMonthlyKey();
+  const d    = retroCursor['monthly'];
   const data = retroMonthlyGetCat(mk, cat);
   if (!data.goalChecks) data.goalChecks = {};
+  // 토글
   data.goalChecks[li] = data.goalChecks[li] === val ? '' : val;
-  // 전체 달성 여부 자동 계산
-  const ta = document.querySelector(`[data-cat="${cat}"] textarea[data-field="goal"]`);
-  const goalText = ta ? ta.value : (data.goal || '');
-  const lines = goalText.split('\n').map(l=>l.replace(/^[▪◦\-\s]+/,'').trim()).filter(Boolean);
-  const checks = lines.map((_,i) => data.goalChecks[i]||'');
-  const allDone    = lines.length > 0 && checks.every(v=>v==='done');
-  const anyPartial = checks.some(v=>v==='partial');
-  const anyDone    = checks.some(v=>v==='done');
-  const anyFail    = checks.some(v=>v==='fail');
-  data.achieved = allDone ? '달성' : (anyPartial || (anyDone && anyFail)) ? '부분달성' : anyFail ? '미달성' : '';
+
+  // mGoalsData에서 goalText 가져오기
+  const mGoalKey  = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+  const mGoalVal  = (function(){ var _c=mGoalsData[mGoalKey]; var _cat=_c&&_c.cats&&_c.cats[cat]; if(_cat&&_cat.items&&_cat.items.length) return _cat.items.map(function(x){return x.text;}).join('\n'); return (_cat&&_cat.goal)||data.goal||''; })();
+  const lines     = mGoalVal.split('\n').map(l => l.replace(/^[▪◦\-\s]+/,'').trim()).filter(Boolean);
+  const checks    = lines.map((_, i) => data.goalChecks[i] || '');
+  const allDone   = lines.length > 0 && checks.every(v => v === 'done');
+  const anyPartial = checks.some(v => v === 'partial');
+  const anyDone   = checks.some(v => v === 'done');
+  const anyFail   = checks.some(v => v === 'fail');
+  data.achieved   = allDone ? '달성' : (anyPartial || (anyDone && anyFail)) ? '부분달성' : anyFail ? '미달성' : '';
   lsAutoSave();
-  // 인라인 체크리스트 업데이트
-  const blk = document.querySelector(`[data-cat="${cat}"]`);
-  if (blk) {
-    const cl = blk.querySelector(`#mc-checklist-${cat}`);
-    if (cl) cl.innerHTML = retroBuildGoalChecklist(goalText, data.goalChecks, 'rmcGoalCheck', cat);
-  }
+  // 폼 전체 재렌더 (달성 뱃지 업데이트 포함)
+  retroMonthlyRenderForm();
 }
 
 // 보상 체크 토글
@@ -6837,37 +7202,63 @@ function retroMonthlyJumpTo(mk) {
 function retroMonthlyRenderForm() {
   const mk   = retroMonthlyKey();
   const d    = retroCursor['monthly'];
-  // 이전 달 키
   const prevD  = new Date(d.getFullYear(), d.getMonth()-1, 1);
   const prevMk = retroKey('monthly', prevD);
   const nextD  = new Date(d.getFullYear(), d.getMonth()+1, 1);
   const form = document.getElementById('retro-monthly-cat-form');
   if (!form) return;
   const taStyle = 'width:100%;resize:none;border:0.5px solid var(--border-md);border-radius:var(--radius-md);outline:none;background:var(--bg-secondary);font-size:13px;color:var(--text-primary);font-family:inherit;line-height:1.8;padding:6px 8px;';
+  const mGoalKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
 
   form.innerHTML = RETRO_MONTHLY_CATS.map((cat, ci) => {
     const data  = retroMonthlyGetCat(mk, cat);
     const emoji = RETRO_MONTHLY_EMOJIS[cat];
 
-    // 이달의 목표: 월간목표 페이지 데이터 우선 → 저장된 값 → 이전달 다음달 목표 자동 채움
-    const prevData   = (retroMonthlyData[prevMk] && retroMonthlyData[prevMk][cat]);
-    const mGoalKey   = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    const mGoalVal   = (mGoalsData[mGoalKey] && mGoalsData[mGoalKey].cats && mGoalsData[mGoalKey].cats[cat] && mGoalsData[mGoalKey].cats[cat].goal) || '';
-    const goalVal    = data.goal || mGoalVal || (prevData && prevData.next) || '';
+    // 월간목표 데이터에서 목표 항목 가져오기
+    const mGoalVal = (function(){ var _c=mGoalsData[mGoalKey]; var _cat=_c&&_c.cats&&_c.cats[cat]; if(_cat&&_cat.items&&_cat.items.length) return _cat.items.map(function(x){return x.text;}).join('\n'); return (_cat&&_cat.goal)||''; })();
+    const prevData = (retroMonthlyData[prevMk] && retroMonthlyData[prevMk][cat]);
+    const goalVal  = mGoalVal || data.goal || (prevData && prevData.next) || '';
 
-    // 목표 전체 달성 여부 자동 계산
+    // 목표 항목 파싱
+    const goalLines = goalVal.split('\n').map(l => l.replace(/^[▪◦\-\s]+/, '').trim()).filter(Boolean);
+
+    // 달성 여부 자동 계산
     if (!data.goalChecks) data.goalChecks = {};
-    const goalLines = goalVal.split('\n').map(l=>l.replace(/^[▪◦\-\s]+/,'').trim()).filter(Boolean);
-    const checkVals = Object.values(data.goalChecks || {});
-    const allDone    = goalLines.length > 0 && checkVals.filter(v=>v==='done').length === goalLines.length;
-    const anyDone    = checkVals.some(v=>v==='done'||v==='partial');
-    const anyFail    = checkVals.some(v=>v==='fail');
-    data.achieved = allDone ? '달성' : anyDone ? '부분달성' : anyFail ? '미달성' : data.achieved || '';
+    const checkVals = goalLines.map((_, i) => data.goalChecks[i] || '');
+    const allDone  = goalLines.length > 0 && checkVals.every(v => v === 'done');
+    const anyDone  = checkVals.some(v => v === 'done' || v === 'partial');
+    const anyFail  = checkVals.some(v => v === 'fail');
+    data.achieved  = allDone ? '달성' : anyDone ? '부분달성' : anyFail ? '미달성' : data.achieved || '';
     const scoreVal = data.score || '';
 
+    // 목표 카드 생성
+    const goalCards = goalLines.length
+      ? goalLines.map((line, li) => {
+          const state = data.goalChecks[li] || '';
+          const borderColor = state === 'done' ? '#43E97B' : state === 'partial' ? '#EF9F27' : state === 'fail' ? '#E24B4A' : 'var(--border-md)';
+          const bg = state === 'done' ? 'rgba(67,233,123,0.07)' : state === 'partial' ? 'rgba(239,159,39,0.07)' : state === 'fail' ? 'rgba(226,75,74,0.07)' : 'var(--bg-secondary)';
+          const textDeco = state === 'done' ? 'text-decoration:line-through;color:var(--text-tertiary);' : '';
+          const btns = [
+            {v:'done', e:'✅', t:'달성'},
+            {v:'partial', e:'🔶', t:'부분달성'},
+            {v:'fail', e:'❌', t:'미달성'}
+          ].map(o => `<button onclick="rmcGoalCheck(this,'${cat}',${li},'${o.v}')" title="${o.t}"
+              style="width:26px;height:26px;border-radius:50%;border:1.5px solid ${state===o.v?'transparent':'var(--border-md)'};background:${state===o.v?'var(--text-primary)':'transparent'};font-size:13px;cursor:pointer;padding:0;flex-shrink:0;">${o.e}</button>`).join('');
+          return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--radius-md);background:${bg};border-left:3px solid ${borderColor};border-top:0.5px solid var(--border);border-right:0.5px solid var(--border);border-bottom:0.5px solid var(--border);">
+            <span style="flex:1;font-size:14px;${textDeco}">${line}</span>
+            <div style="display:flex;gap:4px;">${btns}</div>
+          </div>`;
+        }).join('')
+      : `<div style="font-size:13px;color:var(--text-tertiary);padding:10px;text-align:center;">월간목표 페이지에서 이달의 목표를 입력하면 여기에 표시됩니다</div>`;
+
+    // 다음달 목표 값
+    const nk = nextD.getFullYear() + '-' + String(nextD.getMonth()+1).padStart(2,'0');
+    const nextVal = (mGoalsData[nk] && mGoalsData[nk].cats && mGoalsData[nk].cats[cat] && mGoalsData[nk].cats[cat].goal) || data.next || '';
+
     return `
-    <div data-cat="${cat}" style="padding-bottom:22px;${ci<RETRO_MONTHLY_CATS.length-1?'border-bottom:1.5px solid var(--border);margin-bottom:4px;':''}">
-      <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:12px;display:flex;align-items:center;gap:8px;">${emoji} ${cat}
+    <div data-cat="${cat}" style="padding-bottom:24px;${ci<RETRO_MONTHLY_CATS.length-1?'border-bottom:1.5px solid var(--border);margin-bottom:4px;':''}">
+      <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+        ${emoji} ${cat}
         ${data.achieved ? `<span style="font-size:12px;padding:2px 8px;border-radius:10px;background:${data.achieved==='달성'?'#43E97B22':data.achieved==='부분달성'?'#EF9F2722':'#E24B4A22'};color:${data.achieved==='달성'?'#2d8a55':data.achieved==='부분달성'?'#c47a00':'#c0392b'};font-weight:600;">${data.achieved==='달성'?'✅':data.achieved==='부분달성'?'🔶':'❌'} ${data.achieved}</span>` : ''}
         <span style="margin-left:auto;display:flex;align-items:center;gap:6px;">
           <span style="font-size:11px;color:var(--text-tertiary);font-weight:400;">점수</span>
@@ -6877,34 +7268,118 @@ function retroMonthlyRenderForm() {
           <span style="font-size:11px;color:var(--text-tertiary);">/ 10</span>
         </span>
       </div>
-      <div style="display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;flex-direction:column;gap:10px;">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;">
           <div style="display:flex;flex-direction:column;gap:6px;">
-            <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;display:flex;align-items:center;gap:5px;">
-              이달의 목표 ${mGoalVal && !data.goal ? `<span style="font-size:10px;padding:1px 5px;border-radius:8px;background:#E6F1FB;color:#185FA5;font-weight:600;">월간목표 연동</span>` : ''}
+            <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;">이달의 목표</div>
+            <div id="mc-checklist-${cat}" style="display:flex;flex-direction:column;gap:5px;">${goalCards}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;display:flex;align-items:center;gap:6px;">
+              다음달 목표
+              <span style="font-size:10px;color:var(--text-tertiary);font-weight:400;">· 월간목표에 반영</span>
             </div>
-            <textarea data-field="goal" rows="5" placeholder="▪ 목표를 입력하세요..." onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroMonthlyFieldSave(this,'${cat}','goal')" style="${taStyle}">${goalVal}</textarea>
-            <div id="mc-checklist-${cat}" style="display:flex;flex-direction:column;gap:3px;margin-top:4px;">${retroBuildGoalChecklist(goalVal, data.goalChecks, 'rmcGoalCheck', '${cat}')}</div>
+            <div id="mc-next-list-${cat}" style="display:flex;flex-direction:column;gap:4px;"></div>
           </div>
         </div>
         <div>
           <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">총평</div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
-            <div><div style="font-size:11px;color:var(--text-tertiary);margin-bottom:3px;">잘한 점</div><textarea data-field="good" rows="3" placeholder="▪" onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroMonthlyFieldSave(this,'${cat}','good')" style="${taStyle}">${data.good}</textarea></div>
-            <div><div style="font-size:11px;color:var(--text-tertiary);margin-bottom:3px;">아쉬운 점</div><textarea data-field="bad" rows="3" placeholder="▪" onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroMonthlyFieldSave(this,'${cat}','bad')" style="${taStyle}">${data.bad}</textarea></div>
-            <div><div style="font-size:11px;color:var(--text-tertiary);margin-bottom:3px;">보완할 점</div><textarea data-field="improve" rows="3" placeholder="▪" onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroMonthlyFieldSave(this,'${cat}','improve')" style="${taStyle}">${data.improve}</textarea></div>
+            <div><div style="font-size:11px;color:var(--text-tertiary);margin-bottom:3px;">잘한 점</div><textarea data-field="good" rows="3" placeholder="▪" onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroMonthlyFieldSave(this,'${cat}','good')" style="${taStyle}">${data.good||''}</textarea></div>
+            <div><div style="font-size:11px;color:var(--text-tertiary);margin-bottom:3px;">아쉬운 점</div><textarea data-field="bad" rows="3" placeholder="▪" onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroMonthlyFieldSave(this,'${cat}','bad')" style="${taStyle}">${data.bad||''}</textarea></div>
+            <div><div style="font-size:11px;color:var(--text-tertiary);margin-bottom:3px;">보완할 점</div><textarea data-field="improve" rows="3" placeholder="▪" onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroMonthlyFieldSave(this,'${cat}','improve')" style="${taStyle}">${data.improve||''}</textarea></div>
           </div>
-        </div>
-        <div>
-          <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:6px;">
-            다음달 목표
-            <span style="font-size:10px;color:var(--text-tertiary);font-weight:400;">· 편집/삭제 가능 · 저장 시 월간목표에 반영</span>
-          </div>
-          <textarea data-field="next" rows="3" placeholder="▪ 다음달 목표를 입력하세요..." onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroMonthlyNextSave(this,'${cat}')" style="${taStyle}">${(()=>{ const nk=nextD.getFullYear()+'-'+String(nextD.getMonth()+1).padStart(2,'0');return (mGoalsData[nk]&&mGoalsData[nk].cats&&mGoalsData[nk].cats[cat]&&mGoalsData[nk].cats[cat].goal)||data.next||'';})()}</textarea>
         </div>
       </div>
     </div>`;
   }).join('');
+
+  // 다음달 목표 항목 카드 렌더
+  const nk2 = nextD.getFullYear() + '-' + String(nextD.getMonth()+1).padStart(2,'0');
+  RETRO_MONTHLY_CATS.forEach(function(cat) {
+    var listEl = document.getElementById('mc-next-list-' + cat);
+    if (!listEl) return;
+    var data2 = retroMonthlyGetCat(mk, cat);
+    // nextItems 초기화 (문자열 next → items 마이그레이션)
+    if (!data2.nextItems) {
+      var legacyNext = data2.next || '';
+      // mGoalsData 다음달 값 우선
+      var mNext = (mGoalsData[nk2] && mGoalsData[nk2].cats && mGoalsData[nk2].cats[cat] && mGoalsData[nk2].cats[cat].items);
+      if (mNext && mNext.length) {
+        data2.nextItems = mNext.map(function(x){ return { id: ygNextId++, text: x.text }; });
+      } else if (legacyNext.trim()) {
+        data2.nextItems = legacyNext.split('\n').map(function(l){ return l.replace(/^[▪◦\-\s]+/,'').trim(); }).filter(Boolean).map(function(t){ return { id: ygNextId++, text: t }; });
+      } else {
+        data2.nextItems = [];
+      }
+    }
+
+    function renderNextItems() {
+      listEl.innerHTML = '';
+      data2.nextItems.forEach(function(g) {
+        var row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg-secondary);';
+        var dot = document.createElement('div');
+        dot.style.cssText = 'width:6px;height:6px;border-radius:50%;background:var(--text-tertiary);flex-shrink:0;';
+        row.appendChild(dot);
+        var txt = document.createElement('span');
+        txt.style.cssText = 'flex:1;font-size:14px;color:var(--text-primary);outline:none;';
+        txt.textContent = g.text;
+        txt.ondblclick = function(e) {
+          e.stopPropagation();
+          txt.contentEditable = 'true'; txt.style.background = 'var(--bg-primary)'; txt.style.borderRadius = '3px'; txt.style.padding = '0 3px';
+          txt.focus();
+          var r = document.createRange(); r.selectNodeContents(txt);
+          window.getSelection().removeAllRanges(); window.getSelection().addRange(r);
+        };
+        txt.onblur = function() {
+          var val = txt.textContent.trim();
+          if (val) { g.text = val; } else { data2.nextItems = data2.nextItems.filter(function(x){ return x.id !== g.id; }); }
+          txt.contentEditable = 'false'; txt.style.background = ''; txt.style.padding = '';
+          syncNextToMGoals(); lsAutoSave(); renderNextItems();
+        };
+        txt.onkeydown = function(e) {
+          if (e.key==='Enter') { e.preventDefault(); txt.blur(); }
+          if (e.key==='Escape') { txt.textContent = g.text; txt.blur(); }
+        };
+        row.appendChild(txt);
+        var del = document.createElement('i');
+        del.className = 'ti ti-x';
+        del.style.cssText = 'font-size:11px;color:var(--text-tertiary);cursor:pointer;opacity:0;transition:opacity 0.1s;flex-shrink:0;';
+        var gid = g.id;
+        del.onclick = function(e) { e.stopPropagation(); data2.nextItems = data2.nextItems.filter(function(x){ return x.id !== gid; }); syncNextToMGoals(); lsAutoSave(); renderNextItems(); };
+        row.onmouseenter = function() { del.style.opacity='1'; };
+        row.onmouseleave = function() { del.style.opacity='0'; };
+        row.appendChild(del);
+        listEl.appendChild(row);
+      });
+      var addRow = document.createElement('div');
+      addRow.style.cssText = 'display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:var(--radius-md);border:0.5px dashed var(--border-md);';
+      var addInp = document.createElement('input');
+      addInp.type='text'; addInp.placeholder='+ 목표 추가...';
+      addInp.style.cssText = 'flex:1;font-size:13px;border:none;outline:none;background:transparent;color:var(--text-primary);font-family:inherit;';
+      addInp.onkeydown = function(e) {
+        if (e.key==='Enter') {
+          var v = addInp.value.trim(); if (!v) return;
+          data2.nextItems.push({ id: ygNextId++, text: v });
+          addInp.value=''; syncNextToMGoals(); lsAutoSave(); renderNextItems();
+        }
+      };
+      addRow.appendChild(addInp);
+      listEl.appendChild(addRow);
+    }
+
+    function syncNextToMGoals() {
+      if (!mGoalsData[nk2]) mGoalsData[nk2] = { cats:{}, reward:'' };
+      if (!mGoalsData[nk2].cats) mGoalsData[nk2].cats = {};
+      if (!mGoalsData[nk2].cats[cat]) mGoalsData[nk2].cats[cat] = { goal:'', reward:'', items:[] };
+      mGoalsData[nk2].cats[cat].items = data2.nextItems.map(function(x){ return { id: x.id, text: x.text }; });
+      mGoalsData[nk2].cats[cat].goal  = data2.nextItems.map(function(x){ return x.text; }).join('\n');
+    }
+
+    renderNextItems();
+  });
+
   renderMonthlyScoreCard();
 }
 
@@ -6924,8 +7399,104 @@ function retroWeeklySave(btn) {
 
 // ── 회고 서브 메뉴 ───────────────────────────────────────────────
 // ── 연간 목표 ────────────────────────────────────────────────────
-let yearlyGoalsData = {};  // { '2026': { slogan:'', cats:{ 자산:{goal,strategy}, ... } } }
+let yearlyGoalsData = {};  // { '2026': { slogan:'', cats:{ 자산:{items:[],strategy}, ... } } }
 let yearlyGoalsCurYear = now.getFullYear();
+let ygNextId = 1;
+
+// 목표 항목 카드 공통 렌더 헬퍼
+function renderGoalItemCards(catsEl, dataObj, idPrefix, placeholder) {
+  catsEl.innerHTML = '';
+  RETRO_MONTHLY_CATS.forEach(function(cat, ci) {
+    var d = dataObj.cats[cat];
+    var emoji = RETRO_MONTHLY_EMOJIS[cat];
+
+    // 기존 문자열 → items 마이그레이션
+    if (typeof d.goal === 'string' && d.goal.trim()) {
+      d.items = d.goal.split('\n').map(function(l){ return l.replace(/^[▪◦\-\s]+/,'').trim(); }).filter(Boolean).map(function(text){ return { id: ygNextId++, text: text }; });
+      d.goal = '';
+    }
+    if (!d.items) d.items = [];
+
+    var block = document.createElement('div');
+    block.dataset[idPrefix + 'Cat'] = cat;
+    block.style.cssText = ci < RETRO_MONTHLY_CATS.length-1 ? 'border-bottom:1px solid var(--border);padding-bottom:18px;margin-bottom:18px;' : '';
+
+    var title = document.createElement('div');
+    title.style.cssText = 'font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:8px;';
+    title.textContent = emoji + ' ' + cat;
+    block.appendChild(title);
+
+    var listEl = document.createElement('div');
+    listEl.style.cssText = 'display:flex;flex-direction:column;gap:4px;margin-bottom:6px;';
+
+    function renderItems() {
+      listEl.innerHTML = '';
+      d.items.forEach(function(g) {
+        var row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg-secondary);';
+
+        var dot = document.createElement('div');
+        dot.style.cssText = 'width:6px;height:6px;border-radius:50%;background:var(--text-tertiary);flex-shrink:0;';
+        row.appendChild(dot);
+
+        var txt = document.createElement('span');
+        txt.style.cssText = 'flex:1;font-size:15px;color:var(--text-primary);outline:none;';
+        txt.textContent = g.text;
+        txt.title = '더블클릭하여 편집';
+        txt.ondblclick = function(e) {
+          e.stopPropagation();
+          txt.contentEditable = 'true';
+          txt.style.background = 'var(--bg-primary)';
+          txt.style.borderRadius = '3px';
+          txt.style.padding = '0 3px';
+          txt.focus();
+          var r = document.createRange(); r.selectNodeContents(txt);
+          window.getSelection().removeAllRanges(); window.getSelection().addRange(r);
+        };
+        txt.onblur = function() {
+          var val = txt.textContent.trim();
+          if (val) { g.text = val; } else { d.items = d.items.filter(function(x){ return x.id !== g.id; }); }
+          txt.contentEditable = 'false'; txt.style.background = ''; txt.style.padding = '';
+          lsAutoSave(); renderItems();
+        };
+        txt.onkeydown = function(e) {
+          if (e.key==='Enter') { e.preventDefault(); txt.blur(); }
+          if (e.key==='Escape') { txt.textContent = g.text; txt.blur(); }
+        };
+        row.appendChild(txt);
+
+        var del = document.createElement('i');
+        del.className = 'ti ti-x';
+        del.style.cssText = 'font-size:11px;color:var(--text-tertiary);cursor:pointer;opacity:0;transition:opacity 0.1s;flex-shrink:0;';
+        var gid = g.id;
+        del.onclick = function(e) { e.stopPropagation(); d.items = d.items.filter(function(x){ return x.id !== gid; }); lsAutoSave(); renderItems(); };
+        row.onmouseenter = function() { del.style.opacity='1'; };
+        row.onmouseleave = function() { del.style.opacity='0'; };
+        row.appendChild(del);
+        listEl.appendChild(row);
+      });
+
+      // + 추가 입력
+      var addRow = document.createElement('div');
+      addRow.style.cssText = 'display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:var(--radius-md);border:0.5px dashed var(--border-md);';
+      var addInp = document.createElement('input');
+      addInp.type = 'text'; addInp.placeholder = '+ 목표 추가...';
+      addInp.style.cssText = 'flex:1;font-size:14px;border:none;outline:none;background:transparent;color:var(--text-primary);font-family:inherit;';
+      addInp.onkeydown = function(e) {
+        if (e.key==='Enter') {
+          var v = addInp.value.trim(); if (!v) return;
+          d.items.push({ id: ygNextId++, text: v });
+          addInp.value = ''; lsAutoSave(); renderItems();
+        }
+      };
+      addRow.appendChild(addInp);
+      listEl.appendChild(addRow);
+    }
+    renderItems();
+    block.appendChild(listEl);
+    catsEl.appendChild(block);
+  });
+}
 
 function yearlyGoalsKey() { return String(yearlyGoalsCurYear); }
 
@@ -7036,12 +7607,11 @@ function yearlyGoalsSave() {
     if (!retroYearlyData[yRetroKey]) retroYearlyData[yRetroKey] = {};
     retroYearlyData[yRetroKey]['_reward'] = data.reward;
   }
-  // cats
-  document.querySelectorAll('[data-yg-cat]').forEach(block => {
-    const cat = block.dataset.ygCat;
+  // cats — items는 이미 실시간 lsAutoSave로 저장됨. strategy만 수집
+  document.querySelectorAll('[data-yg-cat]').forEach(function(block) {
+    var cat = block.dataset.ygCat;
     if (!data.cats[cat]) data.cats[cat] = {};
-    const goalTa = block.querySelector('[data-yg-field="goal"]');
-    if (goalTa) data.cats[cat].goal = goalTa.value.trim();
+    // items는 이미 data.cats[cat].items에 직접 저장됨
   });
   if (!data.strategy) data.strategy = {};
   ['daily','weekend','monthly','quarterly'].forEach(k => {
@@ -7135,11 +7705,10 @@ function qGoalsSave(e) {
     if (!retroQuarterlyData[qRetroKey]) retroQuarterlyData[qRetroKey] = {};
     retroQuarterlyData[qRetroKey]['_reward'] = data.reward;
   }
-  document.querySelectorAll('[data-qg-cat]').forEach(block => {
-    const cat = block.dataset.qgCat;
+  // cats items는 실시간 lsAutoSave로 이미 저장됨
+  document.querySelectorAll('[data-qg-cat]').forEach(function(block) {
+    var cat = block.dataset.qgCat;
     if (!data.cats[cat]) data.cats[cat] = {};
-    const goalTa = block.querySelector('[data-qg-field="goal"]');
-    if (goalTa) data.cats[cat].goal = goalTa.value.trim();
   });
   if (!data.strategy) data.strategy = {};
   ['weekly','monthly'].forEach(k => {
@@ -7195,17 +7764,7 @@ function renderQGoals() {
   const stratEl = document.getElementById('qgoals-strategy');
   if (!catsEl || !stratEl) return;
   const taStyle = 'width:100%;resize:none;border:0.5px solid var(--border-md);border-radius:var(--radius-md);outline:none;background:var(--bg-secondary);font-size:15px;color:var(--text-primary);font-family:inherit;line-height:1.8;padding:8px 10px;';
-  catsEl.innerHTML = RETRO_MONTHLY_CATS.map((cat, ci) => {
-    const d = data.cats[cat];
-    const emoji = RETRO_MONTHLY_EMOJIS[cat];
-    const border = ci < RETRO_MONTHLY_CATS.length-1 ? 'border-bottom:1px solid var(--border);padding-bottom:18px;' : '';
-    return `<div data-qg-cat="${cat}" style="${border}">
-      <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:8px;">${emoji} ${cat}</div>
-      <textarea data-qg-field="goal" rows="3" placeholder="▪ 이번 분기 ${cat} 분야의 목표를 입력하세요..."
-        onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this)"
-        style="${taStyle}">${d.goal}</textarea>
-    </div>`;
-  }).join('');
+  renderGoalItemCards(catsEl, data, 'qg', '이번 분기 목표');
   if (!data.strategy) data.strategy = { weekly:'', monthly:'' };
   const subFields = [
     { key:'weekly', label:'주간 루틴' },
@@ -7295,11 +7854,10 @@ function mGoalsSave(e) {
     if (!retroMonthlyData[retroMk]) retroMonthlyData[retroMk] = {};
     retroMonthlyData[retroMk]['_reward'] = data.reward;
   }
-  document.querySelectorAll('[data-mg-cat]').forEach(block => {
-    const cat = block.dataset.mgCat;
+  // cats items는 실시간 lsAutoSave로 이미 저장됨
+  document.querySelectorAll('[data-mg-cat]').forEach(function(block) {
+    var cat = block.dataset.mgCat;
     if (!data.cats[cat]) data.cats[cat] = {};
-    const goalTa = block.querySelector('[data-mg-field="goal"]');
-    if (goalTa) data.cats[cat].goal = goalTa.value.trim();
   });
   if (!data.strategy) data.strategy = {};
   ['daily','weekly'].forEach(k => {
@@ -7386,17 +7944,7 @@ function renderMGoals() {
   const stratEl = document.getElementById('mgoals-strategy');
   if (!catsEl || !stratEl) return;
   const taStyle = 'width:100%;resize:none;border:0.5px solid var(--border-md);border-radius:var(--radius-md);outline:none;background:var(--bg-secondary);font-size:15px;color:var(--text-primary);font-family:inherit;line-height:1.8;padding:8px 10px;';
-  catsEl.innerHTML = RETRO_MONTHLY_CATS.map((cat, ci) => {
-    const d = data.cats[cat];
-    const emoji = RETRO_MONTHLY_EMOJIS[cat];
-    const border = ci < RETRO_MONTHLY_CATS.length-1 ? 'border-bottom:1px solid var(--border);padding-bottom:18px;' : '';
-    return `<div data-mg-cat="${cat}" style="${border}">
-      <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:8px;">${emoji} ${cat}</div>
-      <textarea data-mg-field="goal" rows="3" placeholder="▪ 이번 달 ${cat} 분야의 목표를 입력하세요..."
-        onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this)"
-        style="${taStyle}">${d.goal}</textarea>
-    </div>`;
-  }).join('');
+  renderGoalItemCards(catsEl, data, 'mg', '이번 달 목표');
   if (!data.strategy) data.strategy = { daily:'', weekly:'' };
   const subFields = [
     { key:'daily',  label:'일일 루틴' },
@@ -7437,24 +7985,13 @@ function renderYearlyGoals() {
     rewardEl.value = data.reward || '';
   }
 
-  // 세부 목표
+  // 세부 목표 — 항목 카드 구조
   const catsEl = document.getElementById('yearly-goals-cats');
   const stratEl = document.getElementById('yearly-goals-strategy');
   if (!catsEl || !stratEl) return;
   const taStyle = 'width:100%;resize:none;border:0.5px solid var(--border-md);border-radius:var(--radius-md);outline:none;background:var(--bg-secondary);font-size:15px;color:var(--text-primary);font-family:inherit;line-height:1.8;padding:8px 10px;';
 
-  catsEl.innerHTML = RETRO_MONTHLY_CATS.map((cat, ci) => {
-    const d = data.cats[cat];
-    const emoji = RETRO_MONTHLY_EMOJIS[cat];
-    const border = ci < RETRO_MONTHLY_CATS.length-1 ? 'border-bottom:1px solid var(--border);padding-bottom:18px;' : '';
-    return `
-    <div data-yg-cat="${cat}" style="${border}">
-      <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:8px;">${emoji} ${cat}</div>
-      <textarea data-yg-field="goal" rows="3" placeholder="▪ 올해 ${cat} 분야의 목표를 입력하세요..."
-        onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this)"
-        style="${taStyle}">${d.goal}</textarea>
-    </div>`;
-  }).join('');
+  renderGoalItemCards(catsEl, data, 'yg', '올해의 목표');
 
   // 목표 달성 전략 (카테고리 구분 없이 공통)
   if (!data.strategy) data.strategy = { daily:'', weekend:'', monthly:'', quarterly:'' };
@@ -7914,9 +8451,14 @@ function dataCleanupBefore() {
   });
 
   lsSave();
-  if (window._fbUid) fsSave(window._fbUid).catch(()=>{});
-  alert(`✅ ${cutoffInput} 이하 데이터 ${count}건 삭제 완료!`);
-  location.reload();
+  if (window._fbUid && window._fsSave) {
+    window._fsSave(window._fbUid)
+      .then(() => { alert(`✅ ${cutoffInput} 이하 데이터 ${count}건 삭제 완료!`); location.reload(); })
+      .catch(() => { alert(`✅ ${cutoffInput} 이하 데이터 ${count}건 삭제 완료!`); location.reload(); });
+  } else {
+    alert(`✅ ${cutoffInput} 이하 데이터 ${count}건 삭제 완료!`);
+    location.reload();
+  }
 }
 
 // ── 데이터 백업 / 복원 ──────────────────────────────────────────
@@ -8137,10 +8679,10 @@ retroSwitch('weekly');
 showRetroHome();
 renderRetroWeeklyDashboard();
 updateStats();
+sidebarFetchWeather();
 renderDesire();
 buyCheckCarryover();
 renderBuy();
-todoCarryoverPastDue();
 
 // 로그인/로그아웃 버튼 바인딩 (즉시)
 document.getElementById('btn-google-login').addEventListener('click', function() {
@@ -8302,8 +8844,7 @@ document.getElementById('logout-btn').addEventListener('click', function() {
         renderDesire();
         buyCheckCarryover();
         renderBuy();
-        todoCarryoverPastDue();
-      }
+              }
 
       window.lsAutoSave = function() {
         clearTimeout(window._lsTimer);
