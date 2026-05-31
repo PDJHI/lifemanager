@@ -335,6 +335,9 @@
       <button onclick="dataImport()" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--radius-md);border:0.5px solid var(--border-md);background:transparent;color:var(--text-secondary);font-size:13px;cursor:pointer;font-family:inherit;width:100%;text-align:left;">
         <i class="ti ti-upload" style="font-size:16px;"></i> 데이터 복원
       </button>
+      <button onclick="dataCleanupBefore()" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--radius-md);border:0.5px solid var(--border-md);background:transparent;color:var(--text-secondary);font-size:13px;cursor:pointer;font-family:inherit;width:100%;text-align:left;">
+        <i class="ti ti-calendar-minus" style="font-size:16px;"></i> 날짜 이전 삭제
+      </button>
       <button id="logout-btn" onclick="doLogout()" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--radius-md);border:0.5px solid var(--border-md);background:transparent;color:var(--text-tertiary);font-size:13px;cursor:pointer;font-family:inherit;width:100%;text-align:left;">
         <i class="ti ti-logout" style="font-size:16px;"></i> 로그아웃
       </button>
@@ -1931,34 +1934,12 @@ function formatDate(d) { return `${d.getMonth()+1}/${d.getDate()}`; }
 function addDays(d, n) { const dt = new Date(d); dt.setDate(dt.getDate()+n); return dt; }
 
 // ── Routine data ────────────────────────────────────────────────
-let routines = [
-  { id:1, name:'아침 독서 30분',  time:'07:00', cat:'성장', timeSlot:'아침', days:[0,1,2,3,4,5,6] },
-  { id:2, name:'명상 10분',        time:'07:30', cat:'건강', timeSlot:'아침', days:[0,1,2,3,4,5,6] },
-  { id:3, name:'운동 1시간',       time:'09:00', cat:'건강', timeSlot:'오전', days:[0,1,2,3,4] },
-  { id:4, name:'영어 공부 30분',   time:'12:00', cat:'성장', timeSlot:'오전', days:[0,1,2,3,4] },
-  { id:5, name:'하루 일기 작성',   time:'22:00', cat:'성장', timeSlot:'저녁', days:[0,1,2,3,4,5,6] },
-  { id:6, name:'내일 계획 세우기', time:'22:30', cat:'성장', timeSlot:'저녁', days:[0,1,2,3,4,5,6] },
-  { id:7, name:'주말 산책',        time:'10:00', cat:'건강', timeSlot:'오전', days:[5,6] },
-];
-let nextRoutineId = 8;
+let routines = [];
+let nextRoutineId = 1;
 
 // ── Todo data: { [weekKey]: [ {id, dayIdx(0=월), text, priority, done} ] } ──
 let todoStore = {};
-let nextTodoId = 100;
-
-// Seed this week with sample data
-const thisMonday = getMonday(now);
-const thisKey = weekKey(thisMonday);
-const todayDowIdx = now.getDay() === 0 ? 6 : now.getDay() - 1; // 0=월
-todoStore[thisKey] = [
-  { id:1, dayIdx:0, text:'프로젝트 기획서 초안 작성', priority:'high', done:true },
-  { id:2, dayIdx:0, text:'팀 슬랙 공지 정리',         priority:'mid',  done:true },
-  { id:3, dayIdx:1, text:'독서 50페이지',              priority:'mid',  done:false },
-  { id:4, dayIdx:1, text:'영어 단어 복습',             priority:'low',  done:false },
-  { id:5, dayIdx:2, text:'팀 미팅 준비',               priority:'high', done:false },
-  { id:6, dayIdx:3, text:'주간 회고 작성',             priority:'mid',  done:false },
-  { id:7, dayIdx:4, text:'월간 지출 정리',             priority:'low',  done:false },
-];
+let nextTodoId = 1;
 
 // ── Current week being viewed ───────────────────────────────────
 let viewMonday = getMonday(now);
@@ -2814,8 +2795,28 @@ function desireOpenAdd() {
 
 // ── BUY 데이터 ─────────────────────────────────────────────────
 // { need: [{id,text,done,addedDate,purchasedDate}], want: [{id,text,done,addedDate,purchasedDate}] }
-let buyStore = { need: [], want: [] };
+let buyStore = { need: [], want: [], _weekKey: '' };
 let buyNextId = 1;
+
+// 주간 Buy 이월 처리 — 새 주가 시작되면 미구매 항목 자동 이월
+function buyCheckCarryover() {
+  const thisMonday = weekKey(getMonday(now));
+  if (!buyStore._weekKey) {
+    buyStore._weekKey = thisMonday;
+    return;
+  }
+  if (buyStore._weekKey === thisMonday) return;
+  // 새 주 시작 — 구매하지 않은 항목만 유지, 구매 완료는 제거
+  buyStore.need = (buyStore.need || []).filter(x => !x.done);
+  buyStore.want = (buyStore.want || []).filter(x => !x.done);
+  // 이월된 항목에 이월 표시
+  [...buyStore.need, ...buyStore.want].forEach(x => {
+    x.carriedOver = true;
+  });
+  buyStore._weekKey = thisMonday;
+  lsAutoSave();
+  console.log('주간 Buy 이월 완료:', thisMonday);
+}
 
 function buyFmtDate(dateStr) {
   if (!dateStr) return '';
@@ -2852,6 +2853,14 @@ function renderBuy() {
       txt.style.cssText = `font-size:15px;display:block;`;
       txt.textContent = item.text;
       txt.title = '더블클릭 편집';
+
+      // 이월 뱃지
+      if (item.carriedOver && !item.done) {
+        const badge = document.createElement('span');
+        badge.style.cssText = 'font-size:10px;color:#7C83FD;font-weight:600;margin-left:6px;vertical-align:middle;';
+        badge.textContent = '↩ 이월';
+        txt.appendChild(badge);
+      }
       txt.ondblclick = e => {
         e.stopPropagation();
         txt.contentEditable = 'true';
@@ -3573,18 +3582,6 @@ function tlBuildCatOptions(selEl, selectedId) {
   });
 }
 
-// Seed today
-(function() {
-  const k = tlDateKey(now);
-  tlLogs[k] = [
-    {id:1,catId:'c1',label:'이메일 정리',       start:'08:00',end:'08:30',dur:30},
-    {id:2,catId:'c3',label:'아침 운동',          start:'09:00',end:'10:00',dur:60},
-    {id:3,catId:'c6',label:'점심 식사',          start:'12:00',end:'12:45',dur:45},
-    {id:4,catId:'c1',label:'프로젝트 기획 회의', start:'13:00',end:'14:30',dur:90},
-    {id:5,catId:'c2',label:'독서',               start:'16:00',end:'16:30',dur:30},
-    {id:6,catId:'c4',label:'낮잠',               start:'15:00',end:'15:20',dur:20},
-  ];
-})();
 
 function renderTimelog() {
   const k = tlDateKey(tlViewDate);
@@ -4412,18 +4409,6 @@ function diaryGetOrCreate(k) {
   if (!diaryStore[k]) diaryStore[k] = {title:'',score:0,body:'',mood:[],affirmation:'',gratitude:[],content:'',weather:null};
   return diaryStore[k];
 }
-
-// Seed samples
-(function() {
-  const seed = (offset, title, score, body, moods, affirm, gratitude, content) => {
-    const d = addDays(now, offset);
-    diaryStore[diaryDateKey(d)] = {title, score, body, mood:moods, affirmation:affirm, gratitude, content};
-  };
-  seed(0,  '새로운 시작', 8, '좋음', ['기쁨','설렘'], '나는 오늘도 성장하고 있다.', ['맛있는 커피 한 잔','좋은 날씨','건강한 몸'], '오늘은 라이프 매니저를 개발하는 뜻깊은 날이었다.\n하루하루 조금씩 나아가고 있다는 게 느껴진다.');
-  seed(-1, '집중력이 좋았던 하루', 7, '좋음', ['평온'], '나는 매일 더 나은 사람이 된다.', ['맑은 정신','좋은 친구'], '집중이 잘 됐다. 오전에 두 시간 동안 딥워크를 했다.');
-  seed(-2, '조금 피곤한 하루', 5, '피곤', ['고민'], '나는 충분히 쉴 자격이 있다.', ['따뜻한 이불'], '어제 늦게 자서 종일 피곤했다. 그래도 할 일은 다 했다.');
-  seed(-4, '활기찬 월요일', 9, '최상', ['기쁨','신남'], '나는 이번 주를 멋지게 시작한다.', ['햇살','아침 운동','좋은 음악'], '운동을 마치고 상쾌하게 시작한 월요일이었다. 기분이 정말 좋다!');
-})();
 
 // ── View switching ────────────────────────────────────────────────
 function diaryShowList() {
@@ -7354,6 +7339,92 @@ function renderRetroHome() {
   }
 }
 
+// ── 데이터 초기화 ──────────────────────────────────────────────────
+async function dataReset() {
+  if (!confirm('⚠️ 모든 데이터를 초기화할까요?\n\n루틴, 투두, 일기, 시간가계부, 회고, 목표 등 모든 데이터가 삭제됩니다.\n\n삭제 전 백업을 권장합니다.')) return;
+  if (!confirm('정말로 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) return;
+
+  // 모든 변수 초기화
+  routines.length = 0;
+  Object.keys(todoStore).forEach(k => delete todoStore[k]);
+  Object.keys(streakData).forEach(k => delete streakData[k]);
+  Object.keys(routineCheckData).forEach(k => delete routineCheckData[k]);
+  Object.keys(wfStore).forEach(k => delete wfStore[k]);
+  Object.keys(tlLogs).forEach(k => delete tlLogs[k]);
+  Object.keys(diaryStore).forEach(k => delete diaryStore[k]);
+  Object.keys(retroWeeklyContent).forEach(k => delete retroWeeklyContent[k]);
+  Object.keys(retroMonthlyData).forEach(k => delete retroMonthlyData[k]);
+  Object.keys(retroQuarterlyData).forEach(k => delete retroQuarterlyData[k]);
+  Object.keys(retroYearlyData).forEach(k => delete retroYearlyData[k]);
+  Object.keys(retroStore).forEach(k => delete retroStore[k]);
+  Object.keys(yearlyGoalsData).forEach(k => delete yearlyGoalsData[k]);
+  Object.keys(qGoalsData).forEach(k => delete qGoalsData[k]);
+  Object.keys(mGoalsData).forEach(k => delete mGoalsData[k]);
+  Object.keys(desireStore).forEach(k => delete desireStore[k]);
+  buyStore.need = []; buyStore.want = []; buyStore._weekKey = '';
+  affirmationStore.length = 0;
+
+  // localStorage 삭제
+  localStorage.removeItem('mlm_data_v1');
+
+  // Firestore 삭제
+  if (window._fbUid && window._db) {
+    try {
+      const { doc, deleteDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+      await deleteDoc(doc(window._db, 'users', window._fbUid));
+    } catch(e) {
+      // fsSave로 빈 데이터 덮어쓰기
+      if (window._fbUid && window._fsSave) await fsSave(window._fbUid);
+    }
+  }
+  // 빈 데이터로 Firestore 저장
+  lsSave();
+  if (window._fbUid) fsSave(window._fbUid).catch(()=>{});
+
+  // 화면 새로고침
+  alert('✅ 데이터가 초기화되었습니다.');
+  location.reload();
+}
+// ── 특정 날짜 이전 데이터 삭제 ──────────────────────────────────
+function dataCleanupBefore() {
+  const cutoffInput = prompt('삭제할 기준 날짜를 입력하세요 (이 날짜 이전 데이터 삭제)\n예: 2026-05-24', '2026-05-24');
+  if (!cutoffInput) return;
+  const cutoff = new Date(cutoffInput);
+  if (isNaN(cutoff.getTime())) { alert('날짜 형식이 올바르지 않아요. YYYY-MM-DD 형식으로 입력해주세요.'); return; }
+  if (!confirm(`${cutoffInput} 이전의 데이터를 삭제할까요?\n(일기, 투두, 시간가계부 로그, 루틴체크, streak 포함)`)) return;
+
+  let count = 0;
+
+  // 일기
+  Object.keys(diaryStore).forEach(k => {
+    if (new Date(k) < cutoff) { delete diaryStore[k]; count++; }
+  });
+  // 투두
+  Object.keys(todoStore).forEach(k => {
+    if (new Date(k) < cutoff) { delete todoStore[k]; count++; }
+  });
+  // 시간가계부 로그
+  Object.keys(tlLogs).forEach(k => {
+    if (new Date(k) < cutoff) { delete tlLogs[k]; count++; }
+  });
+  // 루틴 체크
+  Object.keys(routineCheckData).forEach(k => {
+    if (new Date(k) < cutoff) { delete routineCheckData[k]; count++; }
+  });
+  // streak (키 형식: YYYY-M-D)
+  Object.keys(streakData).forEach(k => {
+    const p = k.split('-');
+    if (p.length === 3) {
+      if (new Date(+p[0], +p[1], +p[2]) < cutoff) { delete streakData[k]; count++; }
+    }
+  });
+
+  lsSave();
+  if (window._fbUid) fsSave(window._fbUid).catch(()=>{});
+  alert(`✅ ${cutoffInput} 이전 데이터 ${count}건 삭제 완료!`);
+  location.reload();
+}
+
 // ── 데이터 백업 / 복원 ──────────────────────────────────────────
 function dataExport() {
   const payload = {
@@ -7522,7 +7593,7 @@ function lsLoad() {
     if (p.retroStore)         Object.assign(retroStore, p.retroStore);
     if (p.yearlyGoalsData)    Object.assign(yearlyGoalsData, p.yearlyGoalsData);
     if (p.desireStore)        Object.assign(desireStore, p.desireStore);
-    if (p.buyStore)           { if(p.buyStore.need) buyStore.need = p.buyStore.need; if(p.buyStore.want) buyStore.want = p.buyStore.want; }
+    if (p.buyStore) { if(p.buyStore.need) buyStore.need = p.buyStore.need; if(p.buyStore.want) buyStore.want = p.buyStore.want; if(p.buyStore._weekKey) buyStore._weekKey = p.buyStore._weekKey; }
     if (p.qGoalsData)         Object.assign(qGoalsData, p.qGoalsData);
     if (p.mGoalsData)         Object.assign(mGoalsData, p.mGoalsData);
     if (p.affirmationStore && Array.isArray(p.affirmationStore)) {
@@ -7551,6 +7622,7 @@ showRetroHome();
 renderRetroWeeklyDashboard();
 updateStats();
 renderDesire();
+buyCheckCarryover();
 renderBuy();
 
 // 로그인/로그아웃 버튼 바인딩 (즉시)
@@ -7657,7 +7729,7 @@ document.getElementById('logout-btn').addEventListener('click', function() {
         if (p.retroStore)         Object.assign(retroStore, p.retroStore);
         if (p.yearlyGoalsData)    Object.assign(yearlyGoalsData, p.yearlyGoalsData);
         if (p.desireStore)        Object.assign(desireStore, p.desireStore);
-        if (p.buyStore)           { if(p.buyStore.need) buyStore.need = p.buyStore.need; if(p.buyStore.want) buyStore.want = p.buyStore.want; }
+        if (p.buyStore) { if(p.buyStore.need) buyStore.need = p.buyStore.need; if(p.buyStore.want) buyStore.want = p.buyStore.want; if(p.buyStore._weekKey) buyStore._weekKey = p.buyStore._weekKey; }
         if (p.qGoalsData)         Object.assign(qGoalsData, p.qGoalsData);
         if (p.mGoalsData)         Object.assign(mGoalsData, p.mGoalsData);
         if (p.affirmationStore && Array.isArray(p.affirmationStore)) { affirmationStore = p.affirmationStore; affirmationIdx = 0; }
@@ -7711,6 +7783,7 @@ document.getElementById('logout-btn').addEventListener('click', function() {
         renderRetroWeeklyDashboard();
         updateStats();
         renderDesire();
+        buyCheckCarryover();
         renderBuy();
       }
 
