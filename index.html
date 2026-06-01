@@ -3456,7 +3456,7 @@ function renderNextWeekTodo() {
       var chk = document.createElement('div');
       chk.style.cssText = 'width:13px;height:13px;border-radius:50%;border:1.5px solid ' + (t.done ? 'var(--text-primary)' : 'var(--border-md)') + ';flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-top:2px;background:' + (t.done ? 'var(--text-primary)' : 'transparent') + ';';
       if (t.done) chk.innerHTML = '<i class="ti ti-check" style="font-size:8px;color:var(--bg-primary)"></i>';
-      (function(todo){ chk.onclick = function(){ todo.done = !todo.done; lsSave(); if(window._fbUid && window._fsSave) window._fsSave(window._fbUid); renderNextWeekTodo(); }; })(t);
+      (function(todo){ chk.onclick = function(e){ e.stopPropagation(); todo.done = !todo.done; renderNextWeekTodo(); lsAutoSave(); }; })(t);
 
       var txt = document.createElement('div');
       txt.style.cssText = 'flex:1;font-size:13px;line-height:1.5;' + (t.done ? 'color:var(--text-tertiary);text-decoration:line-through;' : 'color:var(--text-primary);');
@@ -3465,7 +3465,7 @@ function renderNextWeekTodo() {
       var del = document.createElement('i');
       del.className = 'ti ti-x';
       del.style.cssText = 'font-size:11px;color:var(--text-tertiary);cursor:pointer;margin-top:3px;opacity:0;';
-      (function(todo, key){ del.onclick = function(){ todoStore[key] = todoStore[key] = todoStore[key].filter(function(x){return x.id !== todo.id;}); lsSave(); if(window._fbUid && window._fsSave) window._fsSave(window._fbUid); renderNextWeekTodo(); }; })(t, nwKey);
+      (function(todo, key){ del.onclick = function(e){ e.stopPropagation(); deleteTodo(key, todo.id); renderNextWeekTodo(); }; })(t, nwKey);
       item.onmouseenter = function(){ del.style.opacity='1'; };
       item.onmouseleave = function(){ del.style.opacity='0'; };
 
@@ -3480,16 +3480,11 @@ function renderNextWeekTodo() {
     addInp.setAttribute('data-no-autosave', '1');
     addInp.style.cssText = 'width:100%;font-size:12px;padding:4px 6px;border:0.5px dashed var(--border-md);border-radius:var(--radius-md);background:transparent;color:var(--text-primary);outline:none;font-family:inherit;box-sizing:border-box;';
     (function(dayIdx, key){
+      addInp.onfocus = function() { addInp.style.borderStyle='solid'; };
+      addInp.onblur  = function() { addInp.style.borderStyle='dashed'; };
       addInp.onkeydown = function(e){
-        if (e.key === 'Enter') {
-          var v = addInp.value.trim(); if (!v) return;
-          if (!todoStore[key]) todoStore[key] = [];
-          todoStore[key].push({ id: nextTodoId++, dayIdx: dayIdx, text: v, priority: 'mid', done: false });
-          addInp.value = '';
-          lsSave();
-          if (window._fbUid && window._fsSave) window._fsSave(window._fbUid);
-          renderNextWeekTodo();
-        }
+        if (e.key === 'Enter') { e.preventDefault(); commitAdd(key, dayIdx, addInp); renderNextWeekTodo(); }
+        if (e.key === 'Escape') { addInp.value=''; addInp.blur(); }
       };
     })(di, nwKey);
     addRow.appendChild(addInp);
