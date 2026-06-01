@@ -3349,67 +3349,71 @@ function switchNwRoutineDay(idx) {
   });
 }
 function renderNextWeek() {
-  const mon = nwMonday();
-  const sun = addDays(mon, 6);
-  const k   = wfKey(mon);
-  const d   = wfGetOrCreate(mon);
-  // 필드 안전 초기화
-  if (!Array.isArray(d.goals))   d.goals   = [];
-  if (!Array.isArray(d.rewards)) d.rewards = [];
+  try {
+    const mon = nwMonday();
+    const sun = addDays(mon, 6);
+    const d   = wfGetOrCreate(mon);
+    if (!Array.isArray(d.goals))   d.goals   = [];
+    if (!Array.isArray(d.rewards)) d.rewards = [];
 
-  const nextweekWfLabel = document.getElementById('nextweek-wf-label');
-  if (nextweekWfLabel) nextweekWfLabel.textContent = `${formatDate(mon)} ~ ${formatDate(sun)}`;
-  const nwStreakLabel = document.getElementById('nw-streak-label');
-  if (nwStreakLabel) nwStreakLabel.textContent = `${formatDate(mon)} ~ ${formatDate(sun)}`;
-  const KR = ['월','화','수','목','금','토','일'];
-  // 목표
-  const gl = document.getElementById('nw-goals-list');
-  if (gl) {
-  gl.innerHTML = '';
-  if (!d.goals.length) {
-    gl.innerHTML = '<div style="font-size:13px;color:var(--text-tertiary);">목표를 추가해보세요</div>';
-  } else {
-    d.goals.forEach(g => {
-      const row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg-secondary);margin-bottom:4px;' + (g.done?'opacity:0.55;':'');
-      const chk = document.createElement('div');
-      chk.style.cssText = `width:14px;height:14px;border-radius:50%;flex-shrink:0;border:1.5px solid var(--border-md);background:${g.done?'var(--text-primary)':'transparent'};display:flex;align-items:center;justify-content:center;cursor:pointer;`;
-      chk.innerHTML = g.done ? '<i class="ti ti-check" style="font-size:9px;color:var(--bg-primary)"></i>' : '';
-      chk.onclick = () => { g.done=!g.done; lsAutoSave(); renderNextWeek(); };
-      const txt = document.createElement('span');
-      txt.style.cssText = `flex:1;font-size:13px;${g.done?'text-decoration:line-through;color:var(--text-tertiary);':''}`;
-      txt.textContent = g.text;
-      const del = document.createElement('i');
-      del.className='ti ti-x'; del.style.cssText='font-size:11px;color:var(--text-tertiary);cursor:pointer;';
-      del.onclick = e => { e.stopPropagation(); d.goals=d.goals.filter(x=>x.id!==g.id); lsSave(); if(window._fbUid) fsSave(window._fbUid).catch(()=>{}); renderNextWeek(); };
-      row.appendChild(chk); row.appendChild(txt); row.appendChild(del); gl.appendChild(row);
-    });
+    const nextweekWfLabel = document.getElementById('nextweek-wf-label');
+    if (nextweekWfLabel) nextweekWfLabel.textContent = formatDate(mon) + ' ~ ' + formatDate(sun);
+    const nwStreakLabel = document.getElementById('nw-streak-label');
+    if (nwStreakLabel) nwStreakLabel.textContent = formatDate(mon) + ' ~ ' + formatDate(sun);
+
+    // 목표
+    const gl = document.getElementById('nw-goals-list');
+    if (gl) {
+      gl.innerHTML = '';
+      if (!d.goals.length) {
+        gl.innerHTML = '<div style="font-size:13px;color:var(--text-tertiary);">목표를 추가해보세요</div>';
+      } else {
+        d.goals.forEach(function(g) {
+          var row = document.createElement('div');
+          row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg-secondary);margin-bottom:4px;';
+          var chk = document.createElement('div');
+          chk.style.cssText = 'width:14px;height:14px;border-radius:50%;flex-shrink:0;border:1.5px solid var(--border-md);background:' + (g.done ? 'var(--text-primary)' : 'transparent') + ';display:flex;align-items:center;justify-content:center;cursor:pointer;';
+          if (g.done) chk.innerHTML = '<i class="ti ti-check" style="font-size:9px;color:var(--bg-primary)"></i>';
+          chk.onclick = function() { g.done = !g.done; lsAutoSave(); renderNextWeek(); };
+          var txt = document.createElement('span');
+          txt.style.cssText = 'flex:1;font-size:13px;' + (g.done ? 'text-decoration:line-through;color:var(--text-tertiary);' : '');
+          txt.textContent = g.text;
+          var del = document.createElement('i');
+          del.className = 'ti ti-x'; del.style.cssText = 'font-size:11px;color:var(--text-tertiary);cursor:pointer;';
+          del.onclick = function(e) { e.stopPropagation(); d.goals = d.goals.filter(function(x){return x.id!==g.id;}); lsAutoSave(); renderNextWeek(); };
+          row.appendChild(chk); row.appendChild(txt); row.appendChild(del); gl.appendChild(row);
+        });
+      }
+    }
+
+    // 보상
+    var rl = document.getElementById('nw-rewards-list');
+    if (rl) {
+      rl.innerHTML = '';
+      d.rewards.forEach(function(r) {
+        var row = document.createElement('div');
+        row.style.cssText = 'display:inline-flex;align-items:center;gap:8px;padding:5px 10px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg-secondary);cursor:pointer;margin-right:6px;margin-bottom:6px;' + (r.claimed ? 'opacity:0.55;' : '');
+        var icon = document.createElement('span'); icon.textContent = r.claimed ? '🎁' : '🎀';
+        var txt  = document.createElement('span'); txt.style.cssText = 'font-size:13px;' + (r.claimed ? 'text-decoration:line-through;color:var(--text-tertiary);' : ''); txt.textContent = r.text;
+        var del  = document.createElement('i'); del.className = 'ti ti-x'; del.style.cssText = 'font-size:11px;color:var(--text-tertiary);cursor:pointer;';
+        del.onclick = function(e) { e.stopPropagation(); d.rewards = d.rewards.filter(function(x){return x.id!==r.id;}); lsAutoSave(); renderNextWeek(); };
+        row.onclick = function() { r.claimed = !r.claimed; lsAutoSave(); renderNextWeek(); };
+        row.appendChild(icon); row.appendChild(txt); row.appendChild(del); rl.appendChild(row);
+      });
+    }
+
+    // 책/필사
+    var bookEl = document.getElementById('nw-book-input');
+    var writingEl = document.getElementById('nw-writing-input');
+    if (bookEl) bookEl.value = (d.books && d.books.length) ? d.books[0].text || d.books[0] : (d.book || '');
+    if (writingEl) writingEl.value = (d.writings && d.writings.length) ? d.writings[0].text || d.writings[0] : (d.writing || '');
+
+  } catch(e) {
+    console.error('renderNextWeek error:', e);
   }
-  } // end gl
-  // 보상
-  const rl = document.getElementById('nw-rewards-list');
-  if (rl) {
-  rl.innerHTML = '';
-  d.rewards.forEach(r => {
-    const row = document.createElement('div');
-    row.style.cssText = 'display:inline-flex;align-items:center;gap:8px;padding:5px 10px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg-secondary);cursor:pointer;margin-right:6px;margin-bottom:6px;' + (r.claimed?'opacity:0.55;':'');
-    const icon = document.createElement('span'); icon.textContent = r.claimed?'🎁':'🎀';
-    const txt  = document.createElement('span'); txt.style.cssText=`font-size:13px;${r.claimed?'text-decoration:line-through;color:var(--text-tertiary);':''}`; txt.textContent=r.text;
-    const del  = document.createElement('i'); del.className='ti ti-x'; del.style.cssText='font-size:11px;color:var(--text-tertiary);cursor:pointer;';
-    del.onclick = e => { e.stopPropagation(); d.rewards=d.rewards.filter(x=>x.id!==r.id); lsSave(); if(window._fbUid) fsSave(window._fbUid).catch(()=>{}); renderNextWeek(); };
-    row.onclick = () => { r.claimed=!r.claimed; lsAutoSave(); renderNextWeek(); };
-    row.appendChild(icon); row.appendChild(txt); row.appendChild(del); rl.appendChild(row);
-  });
-  } // end rl
-  // 책/필사
-  const bookEl = document.getElementById('nw-book-input');
-  const writingEl = document.getElementById('nw-writing-input');
-  // nw book/writing: legacy single value
-  if (bookEl) bookEl.value = (d.books && d.books.length) ? d.books[0] : (d.book || '');
-  if (writingEl) writingEl.value = (d.writings && d.writings.length) ? d.writings[0] : (d.writing || '');
-  // Buy 렌더
-  renderNwBuy();
-  // 다음주 투두 렌더
+
+  // 항상 실행
+  try { renderNwBuy(); } catch(e) { console.error('renderNwBuy error:', e); }
   renderNextWeekTodo();
 }
 
@@ -3452,7 +3456,7 @@ function renderNextWeekTodo() {
       var chk = document.createElement('div');
       chk.style.cssText = 'width:13px;height:13px;border-radius:50%;border:1.5px solid ' + (t.done ? 'var(--text-primary)' : 'var(--border-md)') + ';flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-top:2px;background:' + (t.done ? 'var(--text-primary)' : 'transparent') + ';';
       if (t.done) chk.innerHTML = '<i class="ti ti-check" style="font-size:8px;color:var(--bg-primary)"></i>';
-      (function(todo){ chk.onclick = function(){ todo.done = !todo.done; lsAutoSave(); renderNextWeekTodo(); }; })(t);
+      (function(todo){ chk.onclick = function(){ todo.done = !todo.done; lsSave(); if(window._fbUid) fsSave(window._fbUid).catch(function(){}); renderNextWeekTodo(); }; })(t);
 
       var txt = document.createElement('div');
       txt.style.cssText = 'flex:1;font-size:13px;line-height:1.5;' + (t.done ? 'color:var(--text-tertiary);text-decoration:line-through;' : 'color:var(--text-primary);');
@@ -3461,7 +3465,7 @@ function renderNextWeekTodo() {
       var del = document.createElement('i');
       del.className = 'ti ti-x';
       del.style.cssText = 'font-size:11px;color:var(--text-tertiary);cursor:pointer;margin-top:3px;opacity:0;';
-      (function(todo, key){ del.onclick = function(){ todoStore[key] = todoStore[key].filter(function(x){return x.id !== todo.id;}); lsAutoSave(); renderNextWeekTodo(); }; })(t, nwKey);
+      (function(todo, key){ del.onclick = function(){ todoStore[key] = todoStore[key].filter(function(x){return x.id !== todo.id;}); lsSave(); if(window._fbUid) fsSave(window._fbUid).catch(function(){}); renderNextWeekTodo(); }; })(t, nwKey);
       item.onmouseenter = function(){ del.style.opacity='1'; };
       item.onmouseleave = function(){ del.style.opacity='0'; };
 
@@ -3473,6 +3477,7 @@ function renderNextWeekTodo() {
     addRow.style.cssText = 'margin-top:2px;';
     var addInp = document.createElement('input');
     addInp.type = 'text'; addInp.placeholder = '+ 추가';
+    addInp.setAttribute('data-no-autosave', '1');
     addInp.style.cssText = 'width:100%;font-size:12px;padding:4px 6px;border:0.5px dashed var(--border-md);border-radius:var(--radius-md);background:transparent;color:var(--text-primary);outline:none;font-family:inherit;box-sizing:border-box;';
     (function(dayIdx, key){
       addInp.onkeydown = function(e){
@@ -3480,7 +3485,10 @@ function renderNextWeekTodo() {
           var v = addInp.value.trim(); if (!v) return;
           if (!todoStore[key]) todoStore[key] = [];
           todoStore[key].push({ id: nextTodoId++, dayIdx: dayIdx, text: v, priority: 'mid', done: false });
-          addInp.value = ''; lsAutoSave(); renderNextWeekTodo();
+          addInp.value = '';
+          lsSave();
+          if (window._fbUid) fsSave(window._fbUid).catch(function(){});
+          renderNextWeekTodo();
         }
       };
     })(di, nwKey);
