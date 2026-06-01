@@ -1357,28 +1357,17 @@
               <div class="card-title"><i class="ti ti-quote"></i>오늘의 확언</div>
               <span style="font-size:11px;color:var(--text-tertiary);">매일 반복 · 더블클릭 편집</span>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1px 1fr;gap:0 20px;align-items:start;">
-              <!-- 왼쪽: 확언 목록 -->
-              <div style="display:flex;flex-direction:column;gap:4px;">
-                <div id="affm-list" style="display:flex;flex-direction:column;gap:4px;"></div>
-                <input type="text" id="affm-add-input" placeholder="+ 확언 추가..."
-                  style="margin-top:4px;font-size:14px;padding:5px 10px;border:0.5px dashed var(--border-md);border-radius:var(--radius-md);background:transparent;color:var(--text-primary);font-family:inherit;outline:none;width:100%;box-sizing:border-box;"
-                  onkeydown="if(event.key==='Enter') affmAdd()">
-              </div>
-              <!-- 구분선 -->
-              <div style="background:var(--border);width:1px;align-self:stretch;"></div>
-              <!-- 오른쪽: 따라쓰기 입력칸만 -->
-              <div style="display:flex;flex-direction:column;gap:6px;">
-                <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.06em;text-transform:uppercase;">따라쓰기</div>
-                <textarea id="affm-typing" rows="4" placeholder="확언을 따라 타이핑해보세요..."
-                  oninput="affmCheckTyping();affmSaveTyping()"
-                  style="width:100%;resize:none;border:0.5px solid var(--border-md);border-radius:var(--radius-md);outline:none;background:var(--bg-secondary);font-size:14px;color:var(--text-primary);font-family:inherit;line-height:1.8;padding:8px 10px;transition:border-color 0.2s;"></textarea>
-                <div style="display:flex;align-items:center;justify-content:space-between;">
-                  <div id="affm-feedback" style="font-size:12px;"></div>
-                  <button onclick="affmReset()" style="font-size:12px;padding:3px 8px;border-radius:6px;border:0.5px solid var(--border-md);background:transparent;color:var(--text-tertiary);cursor:pointer;font-family:inherit;">다시하기</button>
-                </div>
-              </div>
+            <!-- 헤더 -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;margin-bottom:6px;">
+              <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.06em;text-transform:uppercase;">확언</div>
+              <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.06em;text-transform:uppercase;">따라쓰기</div>
             </div>
+            <!-- 항목 목록 (affmRender가 채움) -->
+            <div id="affm-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+            <!-- 추가 입력 -->
+            <input type="text" id="affm-add-input" placeholder="+ 확언 추가..."
+              style="margin-top:8px;font-size:14px;padding:5px 10px;border:0.5px dashed var(--border-md);border-radius:var(--radius-md);background:transparent;color:var(--text-primary);font-family:inherit;outline:none;width:100%;box-sizing:border-box;"
+              onkeydown="if(event.key==='Enter') affmAdd()">
           </div>
 
           <!-- 4행: 오늘의 감사 -->
@@ -2346,6 +2335,7 @@ function switchTab(t) {
   if (t==='lastweek') renderLastWeek();
   if (t==='all')      renderAllCal();
   if (t==='nextweek') renderNextWeek();
+  if (t==='thisweek') { renderWf(); renderWeeklyTodo(); }
 }
 
 // ── 전체 달력 ────────────────────────────────────────────────────
@@ -4845,12 +4835,8 @@ function renderDiaryEditor() {
   document.getElementById('diary-weather-error').style.display   = 'none';
   document.getElementById('diary-weather-loading').style.display = '';
   diaryFetchWeather();
-  // 확언 렌더 (매일 동일한 목록)
+  // 확언 렌더 (매일 동일한 목록, 따라쓰기는 날짜별)
   affmRender();
-  // 저장된 타이핑 복원
-  var affTypingEl = document.getElementById('affm-typing');
-  if (affTypingEl) { affTypingEl.value = data.affirmationTyping || ''; }
-  affmUpdateTypingSource();
   affmReset();
   // 저장된 내용 줄마다 ▪ 붙이기 (이미 있으면 스킵)
   const rawContent = data.content || '';
@@ -4932,6 +4918,8 @@ function renderDiaryEditor() {
       gratEl.appendChild(row);
     });
   }
+} // end renderDiaryEditor
+
 function diarySetScore(val) {
   const score = Math.max(1, Math.min(10, parseInt(val) || 0));
   diaryGetOrCreate(diaryDateKey(diaryViewDate)).score = score || 0;
@@ -5005,11 +4993,6 @@ function desireInlineAdd() {
   desireGetToday().push({ id: desireNextId++, text: v, done: false });
   inp.value = '';
   renderDesire(); lsAutoSave();
-}
-  const score = Math.max(1, Math.min(10, parseInt(val) || 0));
-  diaryGetOrCreate(diaryDateKey(diaryViewDate)).score = score || 0;
-  document.getElementById('diary-score-label').textContent =
-    score ? DIARY_SCORE_LABELS[score] : '1~10 입력';
 }
 
 // ── Affirmation ────────────────────────────────────────────────
@@ -5108,40 +5091,49 @@ function affmRender() {
   listEl.innerHTML = '';
 
   if (!affirmationStore.length) {
-    listEl.innerHTML = '<div style="font-size:14px;color:var(--text-tertiary);padding:6px 0;">확언을 추가해보세요</div>';
-    affmUpdateTypingSource();
+    listEl.innerHTML = '<div style="font-size:14px;color:var(--text-tertiary);padding:6px 0;grid-column:1/-1;">확언을 추가해보세요</div>';
     return;
   }
 
+  var dk = diaryDateKey(diaryViewDate);
+  var diaryData = diaryGetOrCreate(dk);
+  if (!diaryData.affirmationTypings) diaryData.affirmationTypings = {};
+
   affirmationStore.forEach(function(aff, idx) {
     var row = document.createElement('div');
-    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg-secondary);';
+    row.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:0 16px;align-items:start;';
+
+    // 왼쪽: 확언 카드
+    var card = document.createElement('div');
+    card.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg-secondary);';
 
     var dot = document.createElement('div');
-    dot.style.cssText = 'width:6px;height:6px;border-radius:50%;background:#7C83FD;flex-shrink:0;';
-    row.appendChild(dot);
+    dot.style.cssText = 'width:6px;height:6px;border-radius:50%;background:#7C83FD;flex-shrink:0;margin-top:2px;';
+    card.appendChild(dot);
 
     var txt = document.createElement('span');
-    txt.style.cssText = 'flex:1;font-size:15px;color:var(--text-primary);line-height:1.7;cursor:text;white-space:pre-wrap;';
+    txt.style.cssText = 'flex:1;font-size:14px;color:var(--text-primary);line-height:1.6;cursor:text;';
     txt.textContent = aff.text;
     txt.title = '더블클릭하여 편집';
     txt.ondblclick = function(e) {
       e.stopPropagation();
-      var inp = document.createElement('textarea');
-      inp.value = aff.text; inp.rows = 2;
-      inp.style.cssText = 'flex:1;font-size:15px;width:100%;border:none;outline:none;background:transparent;color:var(--text-primary);font-family:inherit;line-height:1.7;resize:none;';
-      txt.replaceWith(inp); inp.focus(); inp.select();
-      inp.onblur = function() {
-        var v = inp.value.trim();
-        if (v) { aff.text = v; } else { affirmationStore.splice(idx, 1); }
-        lsAutoSave(); affmRender(); affmUpdateTypingSource();
-      };
-      inp.onkeydown = function(e) {
-        if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); inp.blur(); }
-        if (e.key==='Escape') { inp.value = aff.text; inp.blur(); }
-      };
+      txt.contentEditable = 'true';
+      txt.style.background = 'var(--bg-primary)'; txt.style.borderRadius = '3px'; txt.style.padding = '0 3px';
+      txt.focus();
+      var r = document.createRange(); r.selectNodeContents(txt);
+      window.getSelection().removeAllRanges(); window.getSelection().addRange(r);
     };
-    row.appendChild(txt);
+    txt.onblur = function() {
+      var v = txt.textContent.trim();
+      if (v) { aff.text = v; } else { affirmationStore.splice(idx, 1); }
+      txt.contentEditable = 'false'; txt.style.background = ''; txt.style.padding = '';
+      lsAutoSave(); affmRender();
+    };
+    txt.onkeydown = function(e) {
+      if (e.key==='Enter') { e.preventDefault(); txt.blur(); }
+      if (e.key==='Escape') { txt.textContent = aff.text; txt.blur(); }
+    };
+    card.appendChild(txt);
 
     var del = document.createElement('i');
     del.className = 'ti ti-x';
@@ -5150,15 +5142,55 @@ function affmRender() {
       del.onclick = function(e) {
         e.stopPropagation();
         affirmationStore = affirmationStore.filter(function(x){ return x.id !== aid; });
-        lsAutoSave(); affmRender(); affmUpdateTypingSource();
+        lsAutoSave(); affmRender();
       };
     })(aff.id);
-    row.onmouseenter = function() { del.style.opacity='1'; };
-    row.onmouseleave = function() { del.style.opacity='0'; };
-    row.appendChild(del);
+    card.onmouseenter = function() { del.style.opacity='1'; };
+    card.onmouseleave = function() { del.style.opacity='0'; };
+    card.appendChild(del);
+    row.appendChild(card);
+
+    // 오른쪽: 따라쓰기 입력칸
+    var right = document.createElement('div');
+    right.style.cssText = 'display:flex;flex-direction:column;gap:3px;';
+
+    var ta = document.createElement('textarea');
+    ta.rows = 1;
+    ta.placeholder = '따라 타이핑...';
+    ta.value = diaryData.affirmationTypings[idx] || '';
+    ta.style.cssText = 'width:100%;resize:none;border:0.5px solid var(--border-md);border-radius:var(--radius-md);outline:none;background:var(--bg-secondary);font-size:14px;color:var(--text-primary);font-family:inherit;line-height:1.6;padding:6px 10px;transition:border-color 0.2s;box-sizing:border-box;';
+
+    var fb = document.createElement('div');
+    fb.style.cssText = 'font-size:11px;min-height:14px;';
+
+    (function(affText, i, feedbackEl, textarea) {
+      var adjustH = function() { textarea.style.height='auto'; textarea.style.height=textarea.scrollHeight+'px'; };
+      setTimeout(adjustH, 0);
+      textarea.oninput = function() {
+        adjustH();
+        diaryData.affirmationTypings[i] = textarea.value;
+        lsAutoSave();
+        var original = affText.trim();
+        var typed = textarea.value.trim();
+        if (!typed) { feedbackEl.textContent=''; textarea.style.borderColor='var(--border-md)'; return; }
+        if (typed.length < original.length) {
+          var ok = typed === original.slice(0, typed.length);
+          textarea.style.borderColor = ok ? '#4CAF82' : '#E24B4A';
+          feedbackEl.innerHTML = ok ? '<span style="color:#4CAF82;">✓</span>' : '<span style="color:#E24B4A;">✗</span>';
+          return;
+        }
+        var match=0; for(var j=0;j<original.length;j++){if(typed[j]===original[j])match++;}
+        var pct=Math.round(match/original.length*100);
+        textarea.style.borderColor = pct===100 ? '#4CAF82' : '#F6A623';
+        feedbackEl.innerHTML = pct===100 ? '<span style="color:#4CAF82;">🎉 완벽!</span>' : '<span style="color:#F6A623;">'+pct+'%</span>';
+      };
+    })(aff.text, idx, fb, ta);
+
+    right.appendChild(ta);
+    right.appendChild(fb);
+    row.appendChild(right);
     listEl.appendChild(row);
   });
-  affmUpdateTypingSource();
 }
 
 function affmAdd() {
@@ -5167,55 +5199,21 @@ function affmAdd() {
   var v = inp.value.trim(); if (!v) return;
   affirmationStore.push({ id: affNextId++, text: v });
   inp.value = '';
-  lsAutoSave(); affmRender(); affmUpdateTypingSource();
-}
-
-function affmUpdateTypingSource() {
-  var src = document.getElementById('affm-typing-source');
-  if (!src) return;
-  if (!affirmationStore.length) { src.textContent = ''; return; }
-  affirmationIdx = Math.max(0, Math.min(affirmationIdx, affirmationStore.length-1));
-  src.textContent = affirmationStore[affirmationIdx].text;
-}
-
-function affmCheckTyping() {
-  var stripBullets = function(s) { return s.split('\n').map(function(l){ return l.replace(/^▪\s*/,'').trim(); }).filter(Boolean).join('\n'); };
-  var cur = affirmationStore[affirmationIdx];
-  var original = cur ? stripBullets(cur.text) : '';
-  var typingEl = document.getElementById('affm-typing');
-  var feedback = document.getElementById('affm-feedback');
-  if (!typingEl || !feedback) return;
-  var typed = stripBullets(typingEl.value);
-  if (!original || !typed) { feedback.innerHTML = ''; typingEl.style.borderColor = 'var(--border-md)'; return; }
-  if (typed.length < original.length) {
-    var ok = typed === original.slice(0, typed.length);
-    typingEl.style.borderColor = ok ? '#4CAF82' : '#E24B4A';
-    feedback.innerHTML = ok ? '<span style="color:#4CAF82;">✓ 잘 따라쓰고 있어요</span>' : '<span style="color:#E24B4A;">✗ 다시 확인해보세요</span>';
-    return;
-  }
-  var match = 0;
-  for (var i=0; i<original.length; i++) { if (typed[i]===original[i]) match++; }
-  var pct = Math.round(match / original.length * 100);
-  typingEl.style.borderColor = pct===100 ? '#4CAF82' : '#F6A623';
-  var emoji = pct===100 ? '🎉' : pct>=80 ? '👍' : '💪';
-  feedback.innerHTML = '<span style="font-weight:600;">'+emoji+' '+pct+'% 일치</span><span style="color:var(--text-tertiary);margin-left:6px;">'+(pct===100?'완벽해요!':'조금 더 연습해보세요.')+'</span>';
-  if (pct===100 && affirmationStore.length > 1) {
-    setTimeout(function() {
-      affirmationIdx = (affirmationIdx+1) % affirmationStore.length;
-      affmUpdateTypingSource(); affmReset();
-      var t = document.getElementById('affm-typing'); if(t) t.focus();
-    }, 800);
-  }
+  lsAutoSave(); affmRender();
 }
 
 function affmReset() {
-  var inp = document.getElementById('affm-typing');
-  if (inp) { inp.value=''; inp.style.borderColor='var(--border-md)'; }
-  var fb = document.getElementById('affm-feedback');
-  if (fb) fb.innerHTML = '';
+  var dk = diaryDateKey(diaryViewDate);
+  var d = diaryGetOrCreate(dk);
+  d.affirmationTypings = {};
+  lsAutoSave(); affmRender();
 }
 
+function affmSaveTyping() {}
+function affmCheckTyping() {}
+function affmUpdateTypingSource() {}
 function affmRenderDisplay() { affmRender(); }
+function affmRenderCurrent() { affmRender(); }
 
 
 
