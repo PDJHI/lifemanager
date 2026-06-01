@@ -2181,6 +2181,7 @@ function commitAdd(key, di, inp) {
   if (!todoStore[key]) todoStore[key] = [];
   todoStore[key].push({ id: nextTodoId++, dayIdx: di, text: val, priority: 'mid', done: false });
   inp.value = '';
+  console.log('[commitAdd] key:', key, 'dayIdx:', di, 'val:', val, 'store count:', todoStore[key].length);
   updateStats(); lsAutoSave();
 }
 
@@ -3428,6 +3429,7 @@ function renderNextWeekTodo() {
   var nwKey = weekKey(mon);
   if (!todoStore[nwKey]) todoStore[nwKey] = [];
   var todos = todoStore[nwKey];
+  console.log('[renderNextWeekTodo] nwKey:', nwKey, 'todos count:', todos.length);
 
   var wLabel = document.getElementById('nw-week-label');
   if (wLabel) wLabel.textContent = formatDate(mon) + ' ~ ' + formatDate(addDays(mon, 6));
