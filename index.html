@@ -3413,131 +3413,86 @@ function renderNextWeek() {
 }
 
 function renderNextWeekTodo() {
-  const mon = nwMonday();
-  const nwKey = weekKey(mon);
-  if (!todoStore[nwKey]) todoStore[nwKey] = [];
-  const todos = todoStore[nwKey];
-
-  const sun = addDays(mon, 6);
-  const wLabel = document.getElementById('nw-week-label');
-  if (wLabel) wLabel.textContent = formatDate(mon) + ' ~ ' + formatDate(sun);
-
-  const total = todos.length;
-  const done  = todos.filter(function(t){return t.done;}).length;
-  const pct   = total ? Math.round(done/total*100) : 0;
-  const progEl      = document.getElementById('nw-todo-prog');
-  const progLabelEl = document.getElementById('nw-todo-prog-label');
-  if (progEl)      progEl.style.width      = pct+'%';
-  if (progLabelEl) progLabelEl.textContent = pct+'%';
-
-  const row1 = document.getElementById('nw-todo-days-row1');
-  const row2 = document.getElementById('nw-todo-days-row2');
-  if (!row1 || !row2) return;
+  var row1 = document.getElementById('nw-todo-days-row1');
+  var row2 = document.getElementById('nw-todo-days-row2');
+  if (!row1 || !row2) { console.error('nw-todo rows not found'); return; }
   row1.innerHTML = '';
   row2.innerHTML = '';
 
-  KR_DAYS_MON.forEach(function(dayName, di) {
-    const dt       = addDays(mon, di);
-    const dayTodos = todos.filter(function(t){ return t.dayIdx === di; });
+  var mon = nwMonday();
+  var nwKey = weekKey(mon);
+  if (!todoStore[nwKey]) todoStore[nwKey] = [];
+  var todos = todoStore[nwKey];
 
-    const col = document.createElement('div');
+  var wLabel = document.getElementById('nw-week-label');
+  if (wLabel) wLabel.textContent = formatDate(mon) + ' ~ ' + formatDate(addDays(mon, 6));
+
+  var pct = todos.length ? Math.round(todos.filter(function(t){return t.done;}).length / todos.length * 100) : 0;
+  var pe = document.getElementById('nw-todo-prog'); if (pe) pe.style.width = pct + '%';
+  var pl = document.getElementById('nw-todo-prog-label'); if (pl) pl.textContent = pct + '%';
+
+  var days = ['월','화','수','목','금','토','일'];
+  for (var di = 0; di < 7; di++) {
+    var dt = addDays(mon, di);
+    var col = document.createElement('div');
     col.style.cssText = 'display:flex;flex-direction:column;min-width:0;border-right:0.5px solid var(--border);padding:0 10px 0 0;';
 
-    const hdr = document.createElement('div');
+    var hdr = document.createElement('div');
     hdr.style.cssText = 'padding:4px 8px;border-radius:var(--radius-md);margin-bottom:4px;background:var(--bg-secondary);display:flex;align-items:center;gap:5px;';
-    hdr.innerHTML = '<span style="font-size:12px;font-weight:700;color:var(--text-primary)">'+dayName+'</span>'
-                  + '<span style="font-size:11px;color:var(--text-tertiary)">'+formatDate(dt)+'</span>';
+    hdr.innerHTML = '<span style="font-size:12px;font-weight:700;color:var(--text-primary)">' + days[di] + '</span><span style="font-size:11px;color:var(--text-tertiary)">' + formatDate(dt) + '</span>';
     col.appendChild(hdr);
 
-    dayTodos.forEach(function(t) {
-      const item = document.createElement('div');
+    var dayTodos = todos.filter(function(t){ return t.dayIdx === di; });
+    for (var ti = 0; ti < dayTodos.length; ti++) {
+      var t = dayTodos[ti];
+      var item = document.createElement('div');
       item.style.cssText = 'display:flex;align-items:flex-start;gap:6px;padding:5px 2px;border-bottom:0.5px solid var(--border);';
 
-      const dot = document.createElement('div');
-      dot.title = PRIO_LABEL[t.priority] || '';
-      dot.style.cssText = 'width:6px;height:6px;border-radius:50%;background:'+(PRIO_COLOR[t.priority]||'#999')+';flex-shrink:0;margin-top:5px;cursor:pointer;';
-      dot.onclick = function(e) {
-        e.stopPropagation();
-        const cycle = {high:'mid', mid:'low', low:'high'};
-        t.priority = cycle[t.priority] || 'mid';
-        lsAutoSave(); renderNextWeekTodo();
-      };
+      var chk = document.createElement('div');
+      chk.style.cssText = 'width:13px;height:13px;border-radius:50%;border:1.5px solid ' + (t.done ? 'var(--text-primary)' : 'var(--border-md)') + ';flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-top:2px;background:' + (t.done ? 'var(--text-primary)' : 'transparent') + ';';
+      if (t.done) chk.innerHTML = '<i class="ti ti-check" style="font-size:8px;color:var(--bg-primary)"></i>';
+      (function(todo){ chk.onclick = function(){ todo.done = !todo.done; lsAutoSave(); renderNextWeekTodo(); }; })(t);
 
-      const chk = document.createElement('div');
-      chk.style.cssText = 'width:13px;height:13px;border-radius:50%;border:1.5px solid '+(t.done?'var(--text-primary)':'var(--border-md)')+';flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-top:2px;background:'+(t.done?'var(--text-primary)':'transparent')+';transition:all 0.15s;';
-      chk.innerHTML = t.done ? '<i class="ti ti-check" style="font-size:8px;color:var(--bg-primary)"></i>' : '';
-      chk.onclick = function(e) { e.stopPropagation(); t.done=!t.done; lsAutoSave(); renderNextWeekTodo(); };
-
-      const txt = document.createElement('div');
-      txt.contentEditable = 'false';
-      txt.style.cssText = 'flex:1;font-size:13px;line-height:1.5;color:'+(t.done?'var(--text-tertiary)':'var(--text-primary)')+';'+(t.done?'text-decoration:line-through;':'')+'word-break:break-word;outline:none;';
+      var txt = document.createElement('div');
+      txt.style.cssText = 'flex:1;font-size:13px;line-height:1.5;' + (t.done ? 'color:var(--text-tertiary);text-decoration:line-through;' : 'color:var(--text-primary);');
       txt.textContent = t.text;
-      txt.title = '더블클릭하여 편집';
-      txt.ondblclick = function(e) {
-        e.stopPropagation();
-        txt.contentEditable = 'true';
-        txt.style.outline = '1px solid var(--border-md)';
-        txt.style.borderRadius = '3px';
-        txt.style.padding = '0 2px';
-        txt.focus();
-        const range = document.createRange(); range.selectNodeContents(txt);
-        window.getSelection().removeAllRanges(); window.getSelection().addRange(range);
-      };
-      txt.onblur = function() {
-        const val = txt.textContent.trim();
-        if (val) t.text = val; else txt.textContent = t.text;
-        txt.contentEditable = 'false';
-        txt.style.outline = ''; txt.style.padding = '';
-        lsAutoSave(); renderNextWeekTodo();
-      };
-      txt.onkeydown = function(e) {
-        if (e.key==='Enter') { e.preventDefault(); txt.blur(); }
-        if (e.key==='Escape') { txt.textContent = t.text; txt.blur(); }
-      };
 
-      const del = document.createElement('i');
+      var del = document.createElement('i');
       del.className = 'ti ti-x';
-      del.style.cssText = 'font-size:11px;color:var(--text-tertiary);flex-shrink:0;cursor:pointer;margin-top:3px;opacity:0;transition:opacity 0.1s;';
-      del.onclick = function(e) {
-        e.stopPropagation();
-        todoStore[nwKey] = todoStore[nwKey].filter(function(x){return x.id!==t.id;});
-        lsAutoSave(); renderNextWeekTodo();
-      };
-      item.onmouseenter = function() { del.style.opacity='1'; };
-      item.onmouseleave = function() { del.style.opacity='0'; };
+      del.style.cssText = 'font-size:11px;color:var(--text-tertiary);cursor:pointer;margin-top:3px;opacity:0;';
+      (function(todo){ del.onclick = function(){ todoStore[nwKey] = todoStore[nwKey].filter(function(x){return x.id !== todo.id;}); lsAutoSave(); renderNextWeekTodo(); }; })(t);
+      item.onmouseenter = function(){ del.style.opacity='1'; };
+      item.onmouseleave = function(){ del.style.opacity='0'; };
 
-      item.appendChild(dot); item.appendChild(chk); item.appendChild(txt); item.appendChild(del);
+      item.appendChild(chk); item.appendChild(txt); item.appendChild(del);
       col.appendChild(item);
-    });
+    }
 
-    // + 추가 입력
-    const addRow = document.createElement('div');
-    addRow.style.cssText = 'display:flex;align-items:center;gap:4px;margin-top:2px;';
-    const addInp = document.createElement('input');
-    addInp.type = 'text';
-    addInp.placeholder = '+ 추가';
-    addInp.style.cssText = 'flex:1;font-size:12px;padding:4px 6px;border:0.5px dashed var(--border-md);border-radius:var(--radius-md);background:transparent;color:var(--text-primary);outline:none;font-family:inherit;min-width:0;';
-    addInp.onfocus = function() { addInp.style.borderStyle='solid'; };
-    addInp.onblur  = function() { addInp.style.borderStyle='dashed'; };
-    addInp.onkeydown = function(e) {
-      if (e.key==='Enter') {
-        e.preventDefault();
-        const val = addInp.value.trim(); if (!val) return;
-        todoStore[nwKey].push({ id: nextTodoId++, dayIdx: di, text: val, priority:'mid', done: false });
-        addInp.value = ''; lsAutoSave(); renderNextWeekTodo();
-      }
-      if (e.key==='Escape') { addInp.value=''; addInp.blur(); }
-    };
+    var addRow = document.createElement('div');
+    addRow.style.cssText = 'margin-top:2px;';
+    var addInp = document.createElement('input');
+    addInp.type = 'text'; addInp.placeholder = '+ 추가';
+    addInp.style.cssText = 'width:100%;font-size:12px;padding:4px 6px;border:0.5px dashed var(--border-md);border-radius:var(--radius-md);background:transparent;color:var(--text-primary);outline:none;font-family:inherit;box-sizing:border-box;';
+    (function(dayIdx){
+      addInp.onkeydown = function(e){
+        if (e.key === 'Enter') {
+          var v = addInp.value.trim(); if (!v) return;
+          todoStore[nwKey].push({ id: nextTodoId++, dayIdx: dayIdx, text: v, priority: 'mid', done: false });
+          addInp.value = ''; lsAutoSave(); renderNextWeekTodo();
+        }
+      };
+    })(di);
     addRow.appendChild(addInp);
     col.appendChild(addRow);
 
-    (di < 4 ? row1 : row2).appendChild(col);
-  });
+    if (di < 4) row1.appendChild(col); else row2.appendChild(col);
+  }
   if (row1.lastChild) row1.lastChild.style.borderRight = 'none';
   if (row2.lastChild) row2.lastChild.style.borderRight = 'none';
 }
 
 function renderNwBuy() {
+  if (!window.nwBuyStore) window.nwBuyStore = { need:[], want:[] };
   ['need','want'].forEach(type => {
     const items = (window.nwBuyStore[type] || []);
     const list  = document.getElementById(`nw-buy-${type}-list`);
