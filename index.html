@@ -2129,6 +2129,7 @@ function renderWeeklyTodo() {
         txt.contentEditable = 'false';
         txt.style.outline = '';
         txt.style.padding = '';
+        lsAutoSave();
         renderWeeklyTodo();
       };
       txt.onkeydown = e => {
@@ -2335,7 +2336,7 @@ function switchTab(t) {
   if (t==='lastweek') renderLastWeek();
   if (t==='all')      renderAllCal();
   if (t==='nextweek') renderNextWeek();
-  if (t==='thisweek') { renderWf(); renderWeeklyTodo(); }
+  if (t==='today')    { renderWf(); renderWeeklyTodo(); }
 }
 
 // ── 전체 달력 ────────────────────────────────────────────────────
@@ -3460,7 +3461,7 @@ function renderNextWeekTodo() {
       var del = document.createElement('i');
       del.className = 'ti ti-x';
       del.style.cssText = 'font-size:11px;color:var(--text-tertiary);cursor:pointer;margin-top:3px;opacity:0;';
-      (function(todo){ del.onclick = function(){ todoStore[nwKey] = todoStore[nwKey].filter(function(x){return x.id !== todo.id;}); lsAutoSave(); renderNextWeekTodo(); }; })(t);
+      (function(todo, key){ del.onclick = function(){ todoStore[key] = todoStore[key].filter(function(x){return x.id !== todo.id;}); lsAutoSave(); renderNextWeekTodo(); }; })(t, nwKey);
       item.onmouseenter = function(){ del.style.opacity='1'; };
       item.onmouseleave = function(){ del.style.opacity='0'; };
 
@@ -3473,15 +3474,16 @@ function renderNextWeekTodo() {
     var addInp = document.createElement('input');
     addInp.type = 'text'; addInp.placeholder = '+ 추가';
     addInp.style.cssText = 'width:100%;font-size:12px;padding:4px 6px;border:0.5px dashed var(--border-md);border-radius:var(--radius-md);background:transparent;color:var(--text-primary);outline:none;font-family:inherit;box-sizing:border-box;';
-    (function(dayIdx){
+    (function(dayIdx, key){
       addInp.onkeydown = function(e){
         if (e.key === 'Enter') {
           var v = addInp.value.trim(); if (!v) return;
-          todoStore[nwKey].push({ id: nextTodoId++, dayIdx: dayIdx, text: v, priority: 'mid', done: false });
+          if (!todoStore[key]) todoStore[key] = [];
+          todoStore[key].push({ id: nextTodoId++, dayIdx: dayIdx, text: v, priority: 'mid', done: false });
           addInp.value = ''; lsAutoSave(); renderNextWeekTodo();
         }
       };
-    })(di);
+    })(di, nwKey);
     addRow.appendChild(addInp);
     col.appendChild(addRow);
 
@@ -5902,7 +5904,7 @@ function retroGoToWf() {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelector('[data-page="routine"]').classList.add('active');
   document.getElementById('page-routine').classList.add('active');
-  switchTab('thisweek');
+  switchTab('today');
   renderWf();
 }
 
