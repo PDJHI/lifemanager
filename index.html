@@ -2181,7 +2181,6 @@ function commitAdd(key, di, inp) {
   if (!todoStore[key]) todoStore[key] = [];
   todoStore[key].push({ id: nextTodoId++, dayIdx: di, text: val, priority: 'mid', done: false });
   inp.value = '';
-  console.log('[commitAdd] key:', key, 'dayIdx:', di, 'val:', val, 'store count:', todoStore[key].length);
   updateStats(); lsAutoSave();
 }
 
@@ -3429,7 +3428,6 @@ function renderNextWeekTodo() {
   var nwKey = weekKey(mon);
   if (!todoStore[nwKey]) todoStore[nwKey] = [];
   var todos = todoStore[nwKey];
-  console.log('[renderNextWeekTodo] nwKey:', nwKey, 'todos count:', todos.length);
 
   var wLabel = document.getElementById('nw-week-label');
   if (wLabel) wLabel.textContent = formatDate(mon) + ' ~ ' + formatDate(addDays(mon, 6));
@@ -3492,7 +3490,6 @@ function renderNextWeekTodo() {
           if (!todoStore[key]) todoStore[key] = [];
           todoStore[key].push({ id: nextTodoId++, dayIdx: dayIdx, text: v, priority: 'mid', done: false });
           inp.value = '';
-          console.log('[nw add] key:', key, 'dayIdx:', dayIdx, 'val:', v, 'count:', todoStore[key].length);
           lsAutoSave();
           renderNextWeekTodo();
         }
@@ -3505,6 +3502,115 @@ function renderNextWeekTodo() {
   }
   if (row1.lastChild) row1.lastChild.style.borderRight = 'none';
   if (row2.lastChild) row2.lastChild.style.borderRight = 'none';
+
+  // 지난주 미완료 투두 섹션
+  var prevSection = document.getElementById('nw-prev-undone');
+  if (!prevSection) return;
+
+  var prevMon   = addDays(mon, -7);
+  var prevKey   = weekKey(prevMon);
+  var prevTodos = todoStore[prevKey] || [];
+  var hasUndone = false;
+  var undoneByDay = KR_DAYS_MON.map(function(dayName, di) {
+    var items = prevTodos.filter(function(t){ return t.dayIdx === di; });
+    if (items.length) hasUndone = true;
+    return { dayName: dayName, dt: addDays(prevMon, di), items: items };
+  });
+
+  if (!hasUndone) { prevSection.innerHTML = ''; return; }
+
+  prevSection.innerHTML = '';
+
+  var hdr = document.createElement('div');
+  hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;';
+  hdr.innerHTML = '<span style="font-size:12px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.06em;text-transform:uppercase;">지난주 투두</span>';
+
+  var copyAllBtn = document.createElement('button');
+  copyAllBtn.textContent = '전체 복사';
+  copyAllBtn.style.cssText = 'font-size:11px;padding:3px 10px;border-radius:6px;border:0.5px solid var(--border-md);background:transparent;color:var(--text-secondary);cursor:pointer;font-family:inherit;';
+  (function(key) {
+    copyAllBtn.addEventListener('click', function() {
+      if (!todoStore[key]) todoStore[key] = [];
+      var added = 0;
+      undoneByDay.forEach(function(day, di) {
+        day.items.forEach(function(t) {
+          var exists = todoStore[key].some(function(x){ return x.text === t.text && x.dayIdx === di; });
+          if (!exists) {
+            todoStore[key].push({ id: nextTodoId++, dayIdx: di, text: t.text, priority: t.priority || 'mid', done: false });
+            added++;
+          }
+        });
+      });
+      if (added > 0) { lsAutoSave(); renderNextWeekTodo(); }
+    });
+  })(nwKey);
+  hdr.appendChild(copyAllBtn);
+  prevSection.appendChild(hdr);
+
+  var grid1 = document.createElement('div');
+  grid1.style.cssText = 'display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:6px;';
+  var grid2 = document.createElement('div');
+  grid2.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:10px;';
+
+  undoneByDay.forEach(function(day, di) {
+    if (!day.items.length) return;
+    var col = document.createElement('div');
+    col.style.cssText = 'display:flex;flex-direction:column;gap:4px;';
+
+    var dayHdr = document.createElement('div');
+    dayHdr.style.cssText = 'font-size:11px;font-weight:700;color:var(--text-tertiary);padding:2px 0;border-bottom:0.5px solid var(--border);margin-bottom:2px;display:flex;align-items:center;justify-content:space-between;';
+    dayHdr.innerHTML = '<span>' + day.dayName + ' <span style="font-weight:400;">' + formatDate(day.dt) + '</span></span>';
+
+    var dayBtn = document.createElement('button');
+    dayBtn.textContent = '복사';
+    dayBtn.style.cssText = 'font-size:10px;padding:1px 6px;border-radius:4px;border:0.5px solid var(--border-md);background:transparent;color:var(--text-tertiary);cursor:pointer;font-family:inherit;';
+    (function(dayItems, dayIdx, key) {
+      dayBtn.addEventListener('click', function() {
+        if (!todoStore[key]) todoStore[key] = [];
+        var added = 0;
+        dayItems.forEach(function(t) {
+          var exists = todoStore[key].some(function(x){ return x.text === t.text && x.dayIdx === dayIdx; });
+          if (!exists) {
+            todoStore[key].push({ id: nextTodoId++, dayIdx: dayIdx, text: t.text, priority: t.priority || 'mid', done: false });
+            added++;
+          }
+        });
+        if (added > 0) { lsAutoSave(); renderNextWeekTodo(); }
+      });
+    })(day.items, di, nwKey);
+    dayHdr.appendChild(dayBtn);
+    col.appendChild(dayHdr);
+
+    day.items.forEach(function(t) {
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:6px;padding:3px 0;';
+      var dot = document.createElement('div');
+      dot.style.cssText = 'width:5px;height:5px;border-radius:50%;background:var(--text-tertiary);flex-shrink:0;';
+      var span = document.createElement('span');
+      span.style.cssText = 'font-size:12px;color:var(--text-secondary);flex:1;';
+      span.textContent = t.text;
+      var itemBtn = document.createElement('button');
+      itemBtn.textContent = '+';
+      itemBtn.title = '다음주로 복사';
+      itemBtn.style.cssText = 'font-size:11px;width:18px;height:18px;border-radius:4px;border:0.5px solid var(--border-md);background:transparent;color:var(--text-tertiary);cursor:pointer;font-family:inherit;flex-shrink:0;line-height:1;padding:0;';
+      (function(todo, dayIdx, key) {
+        itemBtn.addEventListener('click', function() {
+          if (!todoStore[key]) todoStore[key] = [];
+          var exists = todoStore[key].some(function(x){ return x.text === todo.text && x.dayIdx === dayIdx; });
+          if (!exists) {
+            todoStore[key].push({ id: nextTodoId++, dayIdx: dayIdx, text: todo.text, priority: todo.priority || 'mid', done: false });
+            lsAutoSave(); renderNextWeekTodo();
+          }
+        });
+      })(t, di, nwKey);
+      row.appendChild(dot); row.appendChild(span); row.appendChild(itemBtn);
+      col.appendChild(row);
+    });
+    (di < 4 ? grid1 : grid2).appendChild(col);
+  });
+
+  prevSection.appendChild(grid1);
+  prevSection.appendChild(grid2);
 }
 
 function renderNwBuy() {
@@ -4045,7 +4151,7 @@ function renderTimelog() {
 const TL_START_H = 0;   // 슬라이더 표시 시작: 00:00
 const TL_END_H   = 24;  // 슬라이더 표시 끝:   24:00
 const TL_TOTAL   = (TL_END_H - TL_START_H) * 60; // 분 단위 총 범위
-const TL_STEP    = 30;  // 스냅 단위 (분)
+const TL_STEP    = 10;  // 스냅 단위 (분)
 
 let tlSliderStart = 9 * 60;   // 기본값 09:00 (분)
 let tlSliderEnd   = 10 * 60;  // 기본값 10:00 (분)
@@ -4199,7 +4305,7 @@ function tlAddManual() {
   const start = tlMinToFmt(tlSliderStart);
   const end   = tlMinToFmt(tlSliderEnd);
   const dur   = tlSliderEnd - tlSliderStart;
-  if (dur < TL_STEP) { alert('최소 30분 이상 선택해주세요.'); return; }
+  if (dur < TL_STEP) { alert('최소 10분 이상 선택해주세요.'); return; }
   const k = tlDateKey(tlViewDate);
   if (!tlLogs[k]) tlLogs[k] = [];
   tlLogs[k].push({id: tlNextLogId++, catId, label, start, end, dur});
