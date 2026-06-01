@@ -2162,7 +2162,7 @@ function renderWeeklyTodo() {
     addInp.onfocus = () => addInp.style.borderStyle = 'solid';
     addInp.onblur  = () => addInp.style.borderStyle = 'dashed';
     addInp.onkeydown = e => {
-      if (e.key === 'Enter') { e.preventDefault(); commitAdd(key, di, addInp); }
+      if (e.key === 'Enter') { e.preventDefault(); commitAdd(key, di, addInp); renderWeeklyTodo(); }
       if (e.key === 'Escape') { addInp.value = ''; addInp.blur(); }
     };
     addRow.appendChild(addInp);
@@ -2181,7 +2181,7 @@ function commitAdd(key, di, inp) {
   if (!todoStore[key]) todoStore[key] = [];
   todoStore[key].push({ id: nextTodoId++, dayIdx: di, text: val, priority: 'mid', done: false });
   inp.value = '';
-  renderWeeklyTodo(); updateStats(); lsAutoSave();
+  updateStats(); lsAutoSave();
 }
 
 function deleteTodo(key, id) {
