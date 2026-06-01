@@ -291,18 +291,9 @@
       </div>
       <i id="toggle-sidebar" class="ti ti-layout-sidebar-left-collapse" onclick="toggleSidebar()" title="사이드바 접기"></i>
     </div>
-    <div class="date-block" style="margin:8px 16px 4px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-        <div style="text-align:left;">
-          <div class="date-day" id="s-date"></div>
-          <div class="date-info" id="s-day"></div>
-        </div>
-        <div id="s-weather" style="display:none;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;">
-          <span id="s-weather-icon" style="font-size:22px;line-height:1;"></span>
-          <span id="s-weather-temp" style="font-size:13px;font-weight:600;color:var(--text-primary);"></span>
-        </div>
-        <div id="s-weather-loading" style="font-size:10px;color:var(--text-tertiary);flex-shrink:0;">🌤</div>
-      </div>
+    <div class="date-block" style="margin:8px 16px 4px;text-align:center;">
+      <div class="date-day" id="s-date"></div>
+      <div class="date-info" id="s-day"></div>
     </div>
     <div class="nav-section">
       <div class="nav-label">메인</div>
@@ -1956,7 +1947,6 @@ function clearAllNavActive() {
 navItems.forEach(item => {
   item.addEventListener('click', () => {
     clearAllNavActive();
-    // 서브메뉴 닫기
     document.getElementById('nav-goals-sub').classList.remove('open');
     document.getElementById('nav-goals-parent').classList.remove('open');
     document.getElementById('nav-retro-sub').classList.remove('open');
@@ -1964,6 +1954,7 @@ navItems.forEach(item => {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     item.classList.add('active');
     document.getElementById('page-' + item.dataset.page).classList.add('active');
+    if (item.dataset.page === 'routine') { switchTab('today'); }
   });
 });
 document.querySelector('[data-page="dashboard"]').click();
@@ -8300,15 +8291,29 @@ function renderRetro(type) {
 }
 
 function retroWeeklyLoad(k) {
-  const parts = k.split(' ');
-  if (parts.length >= 1) {
-    const dateStr = parts[0];
-    const d = new Date(dateStr);
-    if (!isNaN(d)) retroCursor['weekly'] = d;
+  // weekKey 형식: "YYYY-WMM-DD" → 날짜 파싱
+  var m = k.match(/^(\d{4})-W(\d{2})-(\d{2})$/);
+  if (m) {
+    var d = new Date(parseInt(m[1]), parseInt(m[2])-1, parseInt(m[3]));
+    if (!isNaN(d)) {
+      retroWeekMonday = getMonday(d);
+      retroCursor['weekly'] = new Date(retroWeekMonday);
+      wfViewMonday = new Date(retroWeekMonday);
+    }
+  } else {
+    // fallback: 일반 날짜 문자열
+    var parts = k.split(' ');
+    var d2 = new Date(parts[0]);
+    if (!isNaN(d2)) {
+      retroWeekMonday = getMonday(d2);
+      retroCursor['weekly'] = new Date(retroWeekMonday);
+      wfViewMonday = new Date(retroWeekMonday);
+    }
   }
+  retroSwitch('weekly');
   retroShowDetail('weekly');
-  const content = retroWeeklyContent[k] || '';
-  const ta = document.getElementById('retro-weekly-content');
+  var content = retroWeeklyContent[k] || '';
+  var ta = document.getElementById('retro-weekly-content');
   if (ta) ta.value = content;
 }
 
