@@ -794,7 +794,7 @@
                 <i class="ti ti-alert-circle" style="font-size:15px;color:#EF9F27;"></i>사야할 것
               </div>
             </div>
-            <span id="buy-filter-need" data-hide="0" style="display:none;"></span>
+            <span id="buy-filter-need" data-hide="1" style="display:none;"></span>
             <div id="buy-need-list" style="display:flex;flex-direction:column;gap:2px;"></div>
             <div id="buy-need-empty" style="display:none;font-size:13px;color:var(--text-tertiary);padding:6px 0 2px;">아직 없어요</div>
             <!-- 인라인 입력 -->
@@ -815,7 +815,7 @@
                 <i class="ti ti-heart" style="font-size:15px;color:#E24B4A;"></i>사고싶은 것
               </div>
             </div>
-            <span id="buy-filter-want" data-hide="0" style="display:none;"></span>
+            <span id="buy-filter-want" data-hide="1" style="display:none;"></span>
             <div id="buy-want-list" style="display:flex;flex-direction:column;gap:2px;"></div>
             <div id="buy-want-empty" style="display:none;font-size:13px;color:var(--text-tertiary);padding:6px 0 2px;">아직 없어요</div>
             <!-- 인라인 입력 -->
@@ -1359,21 +1359,18 @@
             </div>
             <div style="display:grid;grid-template-columns:1fr 1px 1fr;gap:0 20px;align-items:start;">
               <!-- 왼쪽: 확언 목록 -->
-              <div style="display:flex;flex-direction:column;gap:6px;">
+              <div style="display:flex;flex-direction:column;gap:4px;">
                 <div id="affm-list" style="display:flex;flex-direction:column;gap:4px;"></div>
-                <div style="display:flex;gap:6px;margin-top:4px;">
-                  <input type="text" id="affm-add-input" placeholder="+ 확언 추가..."
-                    style="flex:1;font-size:14px;padding:5px 10px;border:0.5px dashed var(--border-md);border-radius:var(--radius-md);background:transparent;color:var(--text-primary);font-family:inherit;outline:none;"
-                    onkeydown="if(event.key==='Enter') affmAdd()">
-                </div>
+                <input type="text" id="affm-add-input" placeholder="+ 확언 추가..."
+                  style="margin-top:4px;font-size:14px;padding:5px 10px;border:0.5px dashed var(--border-md);border-radius:var(--radius-md);background:transparent;color:var(--text-primary);font-family:inherit;outline:none;width:100%;box-sizing:border-box;"
+                  onkeydown="if(event.key==='Enter') affmAdd()">
               </div>
               <!-- 구분선 -->
               <div style="background:var(--border);width:1px;align-self:stretch;"></div>
-              <!-- 오른쪽: 따라 쓰기 -->
+              <!-- 오른쪽: 따라쓰기 입력칸만 -->
               <div style="display:flex;flex-direction:column;gap:6px;">
-                <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:2px;">오늘의 따라쓰기</div>
-                <div id="affm-typing-source" style="font-size:14px;color:var(--text-secondary);line-height:1.8;white-space:pre-wrap;min-height:32px;"></div>
-                <textarea id="affm-typing" rows="3" placeholder="왼쪽 확언을 따라 타이핑해보세요..."
+                <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.06em;text-transform:uppercase;">따라쓰기</div>
+                <textarea id="affm-typing" rows="4" placeholder="확언을 따라 타이핑해보세요..."
                   oninput="affmCheckTyping();affmSaveTyping()"
                   style="width:100%;resize:none;border:0.5px solid var(--border-md);border-radius:var(--radius-md);outline:none;background:var(--bg-secondary);font-size:14px;color:var(--text-primary);font-family:inherit;line-height:1.8;padding:8px 10px;transition:border-color 0.2s;"></textarea>
                 <div style="display:flex;align-items:center;justify-content:space-between;">
@@ -3189,17 +3186,33 @@ function wfRenderItems(listId, inputId, items, onUpdate) {
   var listEl = document.getElementById(listId);
   if (!listEl) return;
   listEl.innerHTML = '';
-  items.forEach(function(item, idx) {
-    var row = document.createElement('div');
-    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg-secondary);transition:opacity 0.15s;';
 
-    var dot = document.createElement('div');
-    dot.style.cssText = 'width:6px;height:6px;border-radius:50%;background:var(--text-tertiary);flex-shrink:0;';
-    row.appendChild(dot);
+  // 문자열 배열 → 객체 배열 마이그레이션
+  items.forEach(function(item, idx) {
+    if (typeof item === 'string') items[idx] = { text: item, done: false };
+  });
+
+  items.forEach(function(item, idx) {
+    var done = !!item.done;
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg-secondary);transition:opacity 0.15s;' + (done ? 'opacity:0.55;' : '');
+
+    // 체크박스
+    var chk = document.createElement('div');
+    chk.style.cssText = 'width:15px;height:15px;border-radius:50%;border:1.5px solid var(--border-md);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;background:' + (done ? 'var(--text-primary)' : 'transparent') + ';transition:all 0.15s;';
+    chk.innerHTML = done ? '<i class="ti ti-check" style="font-size:10px;color:var(--bg-primary)"></i>' : '';
+    (function(i) {
+      chk.onclick = function(e) {
+        e.stopPropagation();
+        items[i].done = !items[i].done;
+        onUpdate(items); lsAutoSave(); wfRenderItems(listId, inputId, items, onUpdate);
+      };
+    })(idx);
+    row.appendChild(chk);
 
     var txt = document.createElement('span');
-    txt.style.cssText = 'flex:1;font-size:13px;color:var(--text-primary);outline:none;cursor:text;';
-    txt.textContent = item;
+    txt.style.cssText = 'flex:1;font-size:13px;color:var(--text-primary);outline:none;cursor:text;' + (done ? 'text-decoration:line-through;color:var(--text-tertiary);' : '');
+    txt.textContent = item.text;
     txt.title = '더블클릭하여 편집';
     txt.ondblclick = function(e) {
       e.stopPropagation();
@@ -3211,13 +3224,13 @@ function wfRenderItems(listId, inputId, items, onUpdate) {
     };
     txt.onblur = function() {
       var v = txt.textContent.trim();
-      if (v) { items[idx] = v; } else { items.splice(idx, 1); }
+      if (v) { items[idx].text = v; } else { items.splice(idx, 1); }
       txt.contentEditable = 'false'; txt.style.background = ''; txt.style.padding = '';
       onUpdate(items); lsAutoSave(); wfRenderItems(listId, inputId, items, onUpdate);
     };
     txt.onkeydown = function(e) {
       if (e.key==='Enter') { e.preventDefault(); txt.blur(); }
-      if (e.key==='Escape') { txt.textContent = item; txt.blur(); }
+      if (e.key==='Escape') { txt.textContent = item.text; txt.blur(); }
     };
     row.appendChild(txt);
 
@@ -3239,7 +3252,7 @@ function addWfBook() {
   var v = inp ? inp.value.trim() : ''; if (!v) return;
   var d = wfGetOrCreate(wfViewMonday);
   if (!d.books) d.books = [];
-  d.books.push(v);
+  d.books.push({ text: v, done: false });
   inp.value = ''; lsAutoSave();
   wfRenderItems('wf-book-list', 'wf-book-input', d.books, function(items){ d.books = items; });
 }
@@ -3249,7 +3262,7 @@ function addWfWriting() {
   var v = inp ? inp.value.trim() : ''; if (!v) return;
   var d = wfGetOrCreate(wfViewMonday);
   if (!d.writings) d.writings = [];
-  d.writings.push(v);
+  d.writings.push({ text: v, done: false });
   inp.value = ''; lsAutoSave();
   wfRenderItems('wf-writing-list', 'wf-writing-input', d.writings, function(items){ d.writings = items; });
 }
@@ -3406,13 +3419,13 @@ function renderNextWeekTodo() {
   const wLabel = document.getElementById('nw-week-label');
   if (wLabel) wLabel.textContent = `${formatDate(mon)} ~ ${formatDate(sun)}`;
 
-  const nwDayKeys = Array.from({length:7}, function(_,i) {
-    const dt = addDays(mon, i);
-    return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
-  });
-  const allTodos = nwDayKeys.reduce(function(acc,k){ return acc.concat(todoStore[k]||[]); }, []);
-  const doneTodo = allTodos.filter(function(t){return t.done;}).length;
-  const pct = allTodos.length ? Math.round(doneTodo/allTodos.length*100) : 0;
+  // 이번주 투두와 동일한 weekKey 구조 사용
+  const nwKey = weekKey(mon);
+  if (!todoStore[nwKey]) todoStore[nwKey] = [];
+  const todos = todoStore[nwKey];
+
+  const done = todos.filter(function(t){return t.done;}).length;
+  const pct = todos.length ? Math.round(done/todos.length*100) : 0;
   const progEl = document.getElementById('nw-todo-prog');
   const progLabelEl = document.getElementById('nw-todo-prog-label');
   if (progEl) progEl.style.width = pct+'%';
@@ -3425,9 +3438,7 @@ function renderNextWeekTodo() {
 
   KR_DAYS_MON.forEach(function(dayName, di) {
     const dt = addDays(mon, di);
-    const dk = dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
-    if (!todoStore[dk]) todoStore[dk] = [];
-    const dayTodos = todoStore[dk];
+    const dayTodos = todos.filter(function(t){ return t.dayIdx === di; });
 
     const col = document.createElement('div');
     col.style.cssText = 'display:flex;flex-direction:column;min-width:0;border-right:0.5px solid var(--border);padding:0 10px 0 0;';
@@ -3458,7 +3469,6 @@ function renderNextWeekTodo() {
       const txt = document.createElement('span');
       txt.style.cssText = 'flex:1;font-size:13px;line-height:1.5;cursor:text;'+(t.done?'text-decoration:line-through;color:var(--text-tertiary);':'');
       txt.textContent = t.text;
-
       txt.ondblclick = function() {
         const inp = document.createElement('input');
         inp.type='text'; inp.value=t.text;
@@ -3472,7 +3482,10 @@ function renderNextWeekTodo() {
       const del = document.createElement('i');
       del.className='ti ti-x';
       del.style.cssText='font-size:10px;color:var(--text-tertiary);cursor:pointer;flex-shrink:0;margin-top:3px;opacity:0;transition:opacity 0.1s;';
-      del.onclick = function() { todoStore[dk]=todoStore[dk].filter(function(x){return x.id!==t.id;}); lsAutoSave(); renderNextWeekTodo(); };
+      del.onclick = function() {
+        todoStore[nwKey]=todoStore[nwKey].filter(function(x){return x.id!==t.id;});
+        lsAutoSave(); renderNextWeekTodo();
+      };
       item.onmouseenter = function() { del.style.opacity='1'; };
       item.onmouseleave = function() { del.style.opacity='0'; };
 
@@ -3489,7 +3502,7 @@ function renderNextWeekTodo() {
     inp.onkeydown = function(e) {
       if (e.key==='Enter') {
         var val = inp.value.trim(); if (!val) return;
-        todoStore[dk].push({ id: nextTodoId++, dayIdx: di, text: val, priority:'mid', done: false });
+        todoStore[nwKey].push({ id: nextTodoId++, dayIdx: di, text: val, priority:'mid', done: false });
         inp.value=''; lsAutoSave(); renderNextWeekTodo();
       }
     };
@@ -3500,13 +3513,14 @@ function renderNextWeekTodo() {
   [row1, row2].forEach(function(r) { if(r.lastElementChild) r.lastElementChild.style.borderRight='none'; });
 
   // ── 지난주 미완료 투두 ──────────────────────────────────────────
-  var prevMon = addDays(mon, -7);
-  var undoneByDay = [];
-  var hasUndone = false;
+  const prevMon = addDays(mon, -7);
+  const prevKey = weekKey(prevMon);
+  const prevTodos = todoStore[prevKey] || [];
+  const undoneByDay = [];
+  let hasUndone = false;
   for (var i=0; i<7; i++) {
-    var dt = addDays(prevMon, i);
-    var dk = dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
-    var undone = (todoStore[dk]||[]).filter(function(t){return !t.done;});
+    const dt = addDays(prevMon, i);
+    const undone = prevTodos.filter(function(t){ return t.dayIdx===i && !t.done; });
     undoneByDay.push({ dayName: KR_DAYS_MON[i], dt: dt, items: undone });
     if (undone.length) hasUndone = true;
   }
@@ -3535,12 +3549,6 @@ function renderNextWeekTodo() {
     if (target) target.appendChild(col);
   });
 }
-
-
-
-
-
-let nwBuyNextId = 100;
 
 function renderNwBuy() {
   ['need','want'].forEach(type => {
@@ -4583,8 +4591,17 @@ function diaryFmt(d) {
   return `${d.getFullYear()}. ${d.getMonth()+1}. ${d.getDate()}. (${days[d.getDay()]})`;
 }
 function diaryGetOrCreate(k) {
-  if (!diaryStore[k]) diaryStore[k] = {title:'',score:0,body:'',mood:[],affirmation:'',gratitude:[],content:'',weather:null};
-  return diaryStore[k];
+  if (!diaryStore[k]) diaryStore[k] = {};
+  var d = diaryStore[k];
+  if (d.title     === undefined) d.title     = '';
+  if (d.score     === undefined) d.score     = 0;
+  if (d.body      === undefined) d.body      = '';
+  if (!Array.isArray(d.mood))    d.mood      = [];
+  if (d.affirmation === undefined) d.affirmation = '';
+  if (!Array.isArray(d.gratitude)) d.gratitude = [];
+  if (d.content   === undefined) d.content   = '';
+  if (d.weather   === undefined) d.weather   = null;
+  return d;
 }
 
 // ── View switching ────────────────────────────────────────────────
@@ -4820,7 +4837,8 @@ function renderDiaryEditor() {
   const data = diaryGetOrCreate(k);
 
   document.getElementById('diary-editor-date-label').textContent = diaryFmt(diaryViewDate);
-  document.getElementById('diary-title').value       = data.title;
+  const titleEl = document.getElementById('diary-title');
+  if (titleEl) titleEl.value = data.title || '';
 
   // 날씨 초기화 후 fetch
   document.getElementById('diary-weather-display').style.display = 'none';
@@ -4842,9 +4860,9 @@ function renderDiaryEditor() {
 
   // Score number input
   const scoreInp = document.getElementById('diary-score-input');
-  scoreInp.value = data.score || '';
-  document.getElementById('diary-score-label').textContent =
-    data.score ? `${DIARY_SCORE_LABELS[data.score]}` : '1~10 입력';
+  if (scoreInp) scoreInp.value = data.score || '';
+  const scoreLabelEl = document.getElementById('diary-score-label');
+  if (scoreLabelEl) scoreLabelEl.textContent = data.score ? `${DIARY_SCORE_LABELS[data.score]}` : '1~10 입력';
 
   // Body — preset buttons + custom value if set
   const isCustomBody = data.body && !DIARY_BODY_OPTIONS.find(o=>o.label===data.body);
@@ -4857,10 +4875,12 @@ function renderDiaryEditor() {
 
   // Mood — preset buttons + custom values
   const presetMoodLabels = DIARY_MOOD_OPTIONS.map(o=>o.label);
-  const customMoods = data.mood.filter(m=>!presetMoodLabels.includes(m));
-  document.getElementById('diary-mood-btns').innerHTML =
+  const moodArr = Array.isArray(data.mood) ? data.mood : [];
+  const customMoods = moodArr.filter(m=>!presetMoodLabels.includes(m));
+  const moodBtnsEl = document.getElementById('diary-mood-btns');
+  if (moodBtnsEl) moodBtnsEl.innerHTML =
     DIARY_MOOD_OPTIONS.map(o => {
-      const sel = data.mood.includes(o.label);
+      const sel = moodArr.includes(o.label);
       return `<button onclick="diaryToggleMood('${o.label}')" style="display:flex;align-items:center;gap:4px;padding:4px 9px;border-radius:20px;border:0.5px solid ${sel?'var(--text-primary)':'var(--border-md)'};background:${sel?'var(--text-primary)':'transparent'};color:${sel?'var(--bg-primary)':'var(--text-secondary)'};font-size:13px;cursor:pointer;font-family:inherit;">${o.emoji} ${o.label}</button>`;
     }).join('') +
     customMoods.map(m =>
@@ -5214,9 +5234,10 @@ function diaryAddCustomBody() {
 function diaryToggleMood(label) {
   const k = diaryDateKey(diaryViewDate);
   const data = diaryGetOrCreate(k);
+  if (!Array.isArray(data.mood)) data.mood = [];
   const idx = data.mood.indexOf(label);
   if (idx>=0) data.mood.splice(idx,1); else data.mood.push(label);
-  renderDiaryEditor();
+  lsAutoSave(); renderDiaryEditor();
 }
 function diaryAddCustomMood() {
   const inp = document.getElementById('diary-mood-custom');
@@ -5931,7 +5952,7 @@ function retroGoToWf() {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelector('[data-page="routine"]').classList.add('active');
   document.getElementById('page-routine').classList.add('active');
-  switchTab('today');
+  switchTab('thisweek');
   renderWf();
 }
 
