@@ -2000,15 +2000,8 @@ for (let i=0;i<7;i++){
 // ── Weekly streak ────────────────────────────────────────────────
 let streakViewMonday = getMonday(now);
 
-// 샘플 달성 데이터 (실제로는 루틴 체크 저장 시 기록)
+// streakData: 실제 루틴 체크 시 기록됨
 const streakData = {};
-(function seedStreak() {
-  for (let i = 0; i < 28; i++) {
-    const d = addDays(now, -i);
-    const k = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-    streakData[k] = Math.random() > 0.25; // 75% 달성
-  }
-})();
 
 function streakDayKey(d) {
   return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
@@ -2684,38 +2677,65 @@ function renderWeekFromMonday(mon) {
   const streakGrid = document.getElementById('lw-streak-grid');
   streakGrid.innerHTML = Array.from({length:7}, (_,i) => {
     const d  = addDays(mon, i);
+    const dk2 = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     const sk = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-    const done = streakData[sk];
+    const checks = routineCheckData[dk2] || {};
+    const dayRoutines = routines.filter(r => r.days.includes(i));
+    const doneCnt = dayRoutines.filter(r => checks[r.id]).length;
+    const done = dayRoutines.length > 0 && doneCnt === dayRoutines.length;
+    const partial = !done && doneCnt > 0;
+    // streakData도 업데이트
+    streakData[sk] = done;
+    const bg = done ? 'var(--text-primary)' : partial ? 'var(--border-md)' : 'var(--bg-secondary)';
+    const icon = done
+      ? '<i class="ti ti-check" style="font-size:14px;color:var(--bg-primary)"></i>'
+      : partial
+        ? `<span style="font-size:10px;font-weight:600;color:var(--text-primary);">${doneCnt}/${dayRoutines.length}</span>`
+        : '<span style="font-size:12px;color:var(--text-tertiary);">—</span>';
     return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
       <div style="font-size:11px;color:var(--text-tertiary);">${KR[i]}</div>
       <div style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-        background:${done?'var(--text-primary)':'var(--bg-secondary)'};border:0.5px solid var(--border);">
-        ${done?'<i class="ti ti-check" style="font-size:14px;color:var(--bg-primary)"></i>':'<span style="font-size:12px;color:var(--text-tertiary);">✕</span>'}
+        background:${bg};border:0.5px solid var(--border);">
+        ${icon}
       </div>
       <div style="font-size:10px;color:var(--text-tertiary);">${d.getMonth()+1}/${d.getDate()}</div>
     </div>`;
   }).join('');
 
-  // ── 일자별 루틴 달성 내역 ──────────────────────────────────────
+  // ── 일자별 루틴 달성 내역 (심플) ──────────────────────────────
   const dailyEl = document.getElementById('lw-routine-daily');
   if (dailyEl) {
-    dailyEl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;">` +
-      Array.from({length:7}, (_,i) => {
+    // 루틴별 이번주 달성 횟수
+    const routineStats = routines.map(function(r) {
+      var achieved = 0;
+      var total = 0;
+      for (var i = 0; i < 7; i++) {
+        if (!r.days.includes(i)) continue;
+        total++;
         const d  = addDays(mon, i);
-        const sk = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-        const done = streakData[sk];
-        const dayRoutines = routines.filter(r => r.days.includes(i));
-        return `<div style="display:flex;flex-direction:column;gap:4px;">
-          <div style="display:flex;align-items:center;gap:4px;margin-bottom:2px;">
-            <span style="font-size:11px;font-weight:700;color:var(--text-primary);">${KR[i]}</span>
-            <span style="font-size:10px;color:var(--text-tertiary);">${d.getMonth()+1}/${d.getDate()}</span>
-          </div>
-          <div style="width:100%;height:3px;border-radius:2px;background:${done?'#43E97B':'var(--border-md)'};margin-bottom:4px;"></div>
-          ${dayRoutines.length
-            ? dayRoutines.map(r => `<div style="font-size:10px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:2px 0;border-bottom:0.5px solid var(--border);">${r.name}</div>`).join('')
-            : '<div style="font-size:10px;color:var(--text-tertiary);">-</div>'}
-        </div>`;
-      }).join('') + `</div>`;
+        const dk = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+        const ck = d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate();
+        if (routineCheckData[dk] && routineCheckData[dk][r.id]) achieved++;
+      }
+      return { name: r.name, cat: r.cat, achieved: achieved, total: total };
+    }).filter(function(s){ return s.total > 0; });
+
+    if (!routineStats.length) {
+      dailyEl.innerHTML = '<div style="font-size:13px;color:var(--text-tertiary);padding:8px 0;">등록된 루틴이 없어요</div>';
+    } else {
+      dailyEl.innerHTML = '<div style="display:flex;flex-direction:column;gap:6px;">'
+        + routineStats.map(function(s) {
+          var pct2 = Math.round(s.achieved / s.total * 100);
+          return '<div style="display:flex;align-items:center;gap:10px;">'
+            + '<span style="font-size:13px;color:var(--text-primary);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+s.name+'</span>'
+            + '<span style="font-size:12px;color:var(--text-tertiary);flex-shrink:0;">'+s.achieved+'/'+s.total+'</span>'
+            + '<div style="width:60px;height:4px;border-radius:2px;background:var(--border);flex-shrink:0;">'
+            +   '<div style="height:100%;border-radius:2px;background:'+(pct2===100?'#43E97B':'var(--text-primary)')+';width:'+pct2+'%;"></div>'
+            + '</div>'
+            + '</div>';
+        }).join('')
+        + '</div>';
+    }
   }
 
   // ── 지난주 목표 & 보상 (wfStore) ──────────────────────────────
@@ -8463,6 +8483,27 @@ function retroNav(type, dir) {
 }
 
 function renderRetro(type) {
+  // weekKey → "6월 2주차 (6/2~6/8)" 변환
+  function fmtWeekKey(k) {
+    var m = k.match(/^(\d{4})-W(\d{2})-(\d{2})$/);
+    if (!m) return k;
+    var mon = new Date(parseInt(m[1]), parseInt(m[2])-1, parseInt(m[3]));
+    var sun = new Date(mon); sun.setDate(sun.getDate()+6);
+    var weekNum = Math.ceil(mon.getDate() / 7);
+    return (mon.getMonth()+1) + '월 ' + weekNum + '주차 (' + (mon.getMonth()+1) + '/' + mon.getDate() + '~' + (sun.getMonth()+1) + '/' + sun.getDate() + ')';
+  }
+  // "2026-05" → "2026년 5월" 변환
+  function fmtMonthKey(k) {
+    var p = k.split('-');
+    if (p.length === 2) return p[0] + '년 ' + parseInt(p[1]) + '월';
+    return k;
+  }
+  // "2026-Q2" → "2026년 2분기" 변환
+  function fmtQKey(k) {
+    var m = k.match(/^(\d{4})-Q(\d)$/);
+    if (m) return m[1] + '년 ' + m[2] + '분기';
+    return k;
+  }
   const listRenderers = {
     weekly: () => {
       const listEl = document.getElementById('retro-weekly-list');
@@ -8472,8 +8513,10 @@ function renderRetro(type) {
       if (!entries.length) { listEl.innerHTML = '<div style="padding:16px 0;text-align:center;font-size:15px;color:var(--text-tertiary);">아직 작성된 회고가 없어요</div>'; return; }
       listEl.innerHTML = entries.map(([k, v]) => `
         <div onclick="retroWeeklyLoad('${k}')" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border);cursor:pointer;">
-          <div style="flex:1;min-width:0;"><div style="font-size:15px;font-weight:600;color:var(--text-primary);">${k}</div>
-          <div style="font-size:13px;color:var(--text-tertiary);margin-top:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${v.replace(/▪\s*/g,'').slice(0,60)}</div></div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:15px;font-weight:600;color:var(--text-primary);">${fmtWeekKey(k)}</div>
+            <div style="font-size:12px;color:var(--text-tertiary);margin-top:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${v.replace(/▪\s*/g,'').slice(0,60)}</div>
+          </div>
           <i class="ti ti-chevron-right" style="color:var(--text-tertiary);font-size:16px;"></i>
         </div>`).join('');
       if (listEl.lastElementChild) listEl.lastElementChild.style.borderBottom = 'none';
@@ -8488,11 +8531,20 @@ function renderRetro(type) {
       listEl.innerHTML = entries.map(([mk, cats]) => {
         const badges = RETRO_MONTHLY_CATS.map(cat => {
           const a = (cats[cat] && cats[cat].achieved); if (!a) return '';
-          return `<span style="font-size:12px;">${RETRO_MONTHLY_EMOJIS[cat]}${a==='달성'?'✅':a==='부분달성'?'🔶':'❌'}</span>`;
+          return `<span style="font-size:13px;">${RETRO_MONTHLY_EMOJIS[cat]}${a==='달성'?'✅':a==='부분달성'?'🔶':'❌'}</span>`;
         }).filter(Boolean).join(' ');
+        const avgScore = (() => {
+          const scores = RETRO_MONTHLY_CATS.map(c => cats[c] && parseFloat(cats[c].score)).filter(Boolean);
+          return scores.length ? (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1) : null;
+        })();
         return `<div onclick="retroMonthlyJumpTo('${mk}')" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border);cursor:pointer;">
-          <div style="flex:1;min-width:0;"><div style="font-size:15px;font-weight:600;color:var(--text-primary);">${mk}</div>
-          <div style="font-size:13px;color:var(--text-tertiary);margin-top:3px;">${badges||'기록됨'}</div></div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:15px;font-weight:600;color:var(--text-primary);">${fmtMonthKey(mk)}</span>
+              ${avgScore ? `<span style="font-size:12px;color:var(--text-tertiary);">avg ${avgScore}</span>` : ''}
+            </div>
+            <div style="font-size:13px;color:var(--text-tertiary);margin-top:3px;">${badges||'기록됨'}</div>
+          </div>
           <i class="ti ti-chevron-right" style="color:var(--text-tertiary);font-size:16px;"></i></div>`;
       }).join('');
       if (listEl.lastElementChild) listEl.lastElementChild.style.borderBottom = 'none';
@@ -8510,7 +8562,7 @@ function renderRetro(type) {
           return `<span style="font-size:12px;">${RETRO_MONTHLY_EMOJIS[cat]}${a==='달성'?'✅':a==='부분달성'?'🔶':'❌'}</span>`;
         }).filter(Boolean).join(' ');
         return `<div onclick="retroQuarterlyJumpTo('${qk}')" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border);cursor:pointer;">
-          <div style="flex:1;min-width:0;"><div style="font-size:15px;font-weight:600;color:var(--text-primary);">${qk}</div>
+          <div style="flex:1;min-width:0;"><div style="font-size:15px;font-weight:600;color:var(--text-primary);">${fmtQKey(qk)}</div>
           <div style="font-size:13px;color:var(--text-tertiary);margin-top:3px;">${badges||'기록됨'}</div></div>
           <i class="ti ti-chevron-right" style="color:var(--text-tertiary);font-size:16px;"></i></div>`;
       }).join('');
