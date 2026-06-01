@@ -3535,41 +3535,6 @@ function renderNextWeekTodo() {
   });
   if (row1.lastChild) row1.lastChild.style.borderRight = 'none';
   if (row2.lastChild) row2.lastChild.style.borderRight = 'none';
-
-  // 지난주 미완료
-  const prevMon   = addDays(mon, -7);
-  const prevKey   = weekKey(prevMon);
-  const prevTodos = todoStore[prevKey] || [];
-  let hasUndone   = false;
-  const undoneByDay = KR_DAYS_MON.map(function(dayName, di) {
-    const items = prevTodos.filter(function(t){ return t.dayIdx===di && !t.done; });
-    if (items.length) hasUndone = true;
-    return { dayName: dayName, dt: addDays(prevMon, di), items: items };
-  });
-
-  const prevSection = document.getElementById('nw-prev-undone');
-  if (!prevSection) return;
-  if (!hasUndone) { prevSection.innerHTML = ''; return; }
-
-  prevSection.innerHTML = '<div style="font-size:12px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.06em;margin-bottom:8px;">지난주 미완료</div>'
-    + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:6px;" id="nw-prev-row1"></div>'
-    + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;" id="nw-prev-row2"></div>';
-
-  undoneByDay.forEach(function(day, di) {
-    if (!day.items.length) return;
-    const col = document.createElement('div');
-    col.style.cssText = 'display:flex;flex-direction:column;gap:3px;';
-    col.innerHTML = '<div style="font-size:11px;font-weight:700;color:var(--text-tertiary);padding:2px 0;border-bottom:0.5px solid var(--border);margin-bottom:2px;">'
-      + day.dayName+' <span style="font-weight:400;">'+formatDate(day.dt)+'</span></div>';
-    day.items.forEach(function(t) {
-      const r = document.createElement('div');
-      r.style.cssText = 'font-size:12px;color:var(--text-secondary);padding:2px 0;';
-      r.textContent = t.text;
-      col.appendChild(r);
-    });
-    const target = document.getElementById(di<4?'nw-prev-row1':'nw-prev-row2');
-    if (target) target.appendChild(col);
-  });
 }
 
 function renderNwBuy() {
