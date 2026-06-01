@@ -3352,12 +3352,18 @@ function renderNextWeek() {
   const sun = addDays(mon, 6);
   const k   = wfKey(mon);
   const d   = wfGetOrCreate(mon);
-  document.getElementById('nextweek-wf-label').textContent = `${formatDate(mon)} ~ ${formatDate(sun)}`;
+  // 필드 안전 초기화
+  if (!Array.isArray(d.goals))   d.goals   = [];
+  if (!Array.isArray(d.rewards)) d.rewards = [];
+
+  const nextweekWfLabel = document.getElementById('nextweek-wf-label');
+  if (nextweekWfLabel) nextweekWfLabel.textContent = `${formatDate(mon)} ~ ${formatDate(sun)}`;
   const nwStreakLabel = document.getElementById('nw-streak-label');
   if (nwStreakLabel) nwStreakLabel.textContent = `${formatDate(mon)} ~ ${formatDate(sun)}`;
   const KR = ['월','화','수','목','금','토','일'];
   // 목표
   const gl = document.getElementById('nw-goals-list');
+  if (gl) {
   gl.innerHTML = '';
   if (!d.goals.length) {
     gl.innerHTML = '<div style="font-size:13px;color:var(--text-tertiary);">목표를 추가해보세요</div>';
@@ -3378,8 +3384,10 @@ function renderNextWeek() {
       row.appendChild(chk); row.appendChild(txt); row.appendChild(del); gl.appendChild(row);
     });
   }
+  } // end gl
   // 보상
   const rl = document.getElementById('nw-rewards-list');
+  if (rl) {
   rl.innerHTML = '';
   d.rewards.forEach(r => {
     const row = document.createElement('div');
@@ -3391,6 +3399,7 @@ function renderNextWeek() {
     row.onclick = () => { r.claimed=!r.claimed; lsAutoSave(); renderNextWeek(); };
     row.appendChild(icon); row.appendChild(txt); row.appendChild(del); rl.appendChild(row);
   });
+  } // end rl
   // 책/필사
   const bookEl = document.getElementById('nw-book-input');
   const writingEl = document.getElementById('nw-writing-input');
