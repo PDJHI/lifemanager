@@ -352,66 +352,92 @@
         <div class="page-title">안녕하세요 <span style="color:var(--text-tertiary);font-weight:400;">👋</span></div>
         <div class="page-sub" id="header-date"></div>
       </div>
+
+      <!-- ① 상단 스탯 4칸 -->
       <div class="grid-4">
-        <div class="card">
-          <div class="card-title" style="margin-bottom:10px"><i class="ti ti-target"></i>연간 목표</div>
-          <div class="metric-val">3</div>
-          <div class="metric-sub">진행중 / 5개</div>
-          <div class="prog-bar" style="margin-top:10px"><div class="prog-fill" style="width:60%"></div></div>
+        <div class="card" style="cursor:pointer;" onclick="document.querySelector('[data-page=\'routine\']').click()">
+          <div class="card-title" style="margin-bottom:10px;"><i class="ti ti-run"></i>오늘 루틴</div>
+          <div class="metric-val" id="dash-routine-val">—</div>
+          <div class="metric-sub" id="dash-routine-sub">완료</div>
+          <div class="prog-bar" style="margin-top:10px;"><div class="prog-fill" id="dash-routine-prog" style="width:0%"></div></div>
         </div>
-        <div class="card">
-          <div class="card-title" style="margin-bottom:10px"><i class="ti ti-checkbox"></i>오늘 투두</div>
-          <div class="metric-val" id="dash-todo">2/5</div>
-          <div class="metric-sub">완료됨</div>
-          <div class="prog-bar" style="margin-top:10px"><div class="prog-fill" id="dash-todo-prog" style="width:40%"></div></div>
+        <div class="card" style="cursor:pointer;" onclick="document.querySelector('[data-page=\'routine\']').click()">
+          <div class="card-title" style="margin-bottom:10px;"><i class="ti ti-checkbox"></i>이번 주 투두</div>
+          <div class="metric-val" id="stat-todo">—</div>
+          <div class="metric-sub">완료</div>
+          <div class="prog-bar" style="margin-top:10px;"><div class="prog-fill" id="todo-prog-dash" style="width:0%"></div></div>
         </div>
-        <div class="card">
-          <div class="card-title" style="margin-bottom:10px"><i class="ti ti-notebook"></i>이번 주 일기</div>
-          <div class="metric-val">4</div>
-          <div class="metric-sub">7일 중</div>
-          <div class="prog-bar" style="margin-top:10px"><div class="prog-fill" style="width:57%"></div></div>
+        <div class="card" style="cursor:pointer;" onclick="document.querySelector('[data-page=\'diary\']').click()">
+          <div class="card-title" style="margin-bottom:10px;"><i class="ti ti-notebook"></i>이번 주 일기</div>
+          <div class="metric-val" id="dash-diary-val">—</div>
+          <div class="metric-sub">7일 중 작성</div>
+          <div class="prog-bar" style="margin-top:10px;"><div class="prog-fill" id="dash-diary-prog" style="width:0%"></div></div>
         </div>
-        <div class="card">
-          <div class="card-title" style="margin-bottom:10px"><i class="ti ti-flame"></i>루틴 스트릭</div>
-          <div class="metric-val">12일</div>
-          <div class="metric-sub">연속 달성 중 🔥</div>
+        <div class="card" style="cursor:pointer;" onclick="document.querySelector('[data-page=\'routine\']').click()">
+          <div class="card-title" style="margin-bottom:10px;"><i class="ti ti-flame"></i>루틴 스트릭</div>
+          <div class="metric-val" id="dash-streak-val">—</div>
+          <div class="metric-sub" id="dash-streak-sub">연속 달성</div>
         </div>
       </div>
+
+      <!-- ② 이번 주 투두 + 이번 주 목표 -->
       <div class="grid-2">
         <div class="card">
-          <div class="card-header"><div class="card-title"><i class="ti ti-checkbox"></i>오늘 할 일</div></div>
-          <div id="dash-todo-list">
-            <div class="routine-item done" onclick="this.classList.toggle('done')"><div class="check-box"><i class="ti ti-check"></i></div><span class="routine-name">아침 독서 30분</span><div class="tag tag-green">루틴</div></div>
-            <div class="routine-item done" onclick="this.classList.toggle('done')"><div class="check-box"><i class="ti ti-check"></i></div><span class="routine-name">운동 1시간</span><div class="tag tag-green">루틴</div></div>
-            <div class="routine-item" onclick="this.classList.toggle('done')"><div class="check-box"><i class="ti ti-check"></i></div><span class="routine-name">프로젝트 기획서 초안</span><div class="tag tag-blue">업무</div></div>
-            <div class="routine-item" onclick="this.classList.toggle('done')"><div class="check-box"><i class="ti ti-check"></i></div><span class="routine-name">주간 회고 작성</span><div class="tag tag-amber">회고</div></div>
-            <div class="routine-item" onclick="this.classList.toggle('done')"><div class="check-box"><i class="ti ti-check"></i></div><span class="routine-name">일기 쓰기</span><div class="tag tag-amber">기록</div></div>
+          <div class="card-header">
+            <div class="card-title"><i class="ti ti-checkbox"></i>오늘 투두</div>
+            <a onclick="document.querySelector('[data-page=\'routine\']').click()" style="font-size:12px;color:var(--text-tertiary);cursor:pointer;">전체보기</a>
           </div>
+          <div id="dash-today-todo-list" style="display:flex;flex-direction:column;gap:4px;"></div>
         </div>
         <div class="card">
-          <div class="card-header"><div class="card-title"><i class="ti ti-target"></i>연간 목표 진행률</div></div>
-          <div class="goal-row"><div class="goal-name">영어 실력 향상</div><div class="goal-mini-bar"><div class="goal-mini-fill" style="width:68%"></div></div><div class="goal-pct">68%</div></div>
-          <div class="goal-row"><div class="goal-name">건강 & 체력관리</div><div class="goal-mini-bar"><div class="goal-mini-fill" style="width:45%"></div></div><div class="goal-pct">45%</div></div>
-          <div class="goal-row"><div class="goal-name">독서 24권</div><div class="goal-mini-bar"><div class="goal-mini-fill" style="width:33%"></div></div><div class="goal-pct">33%</div></div>
-          <div class="goal-row"><div class="goal-name">사이드 프로젝트 론칭</div><div class="goal-mini-bar"><div class="goal-mini-fill" style="width:20%"></div></div><div class="goal-pct">20%</div></div>
-          <div class="goal-row"><div class="goal-name">재테크 공부</div><div class="goal-mini-bar"><div class="goal-mini-fill" style="width:55%"></div></div><div class="goal-pct">55%</div></div>
+          <div class="card-header">
+            <div class="card-title"><i class="ti ti-flag"></i>이번 주 목표</div>
+            <a onclick="document.querySelector('[data-page=\'routine\']').click()" style="font-size:12px;color:var(--text-tertiary);cursor:pointer;">전체보기</a>
+          </div>
+          <div id="dash-wf-goals" style="display:flex;flex-direction:column;gap:4px;"></div>
         </div>
       </div>
+
+      <!-- ③ 이번 달 목표 (6카테고리) + 시간가계부 -->
       <div class="grid-2">
         <div class="card">
-          <div class="card-header"><div class="card-title"><i class="ti ti-calendar"></i>이번 주 일기</div></div>
-          <div class="week-grid" style="margin-bottom:4px">
-            <div class="week-day-label">월</div><div class="week-day-label">화</div><div class="week-day-label">수</div><div class="week-day-label">목</div><div class="week-day-label">금</div><div class="week-day-label">토</div><div class="week-day-label">일</div>
+          <div class="card-header">
+            <div class="card-title"><i class="ti ti-target"></i>이번 달 목표</div>
+            <a onclick="selectGoalsPage('monthly')" style="font-size:12px;color:var(--text-tertiary);cursor:pointer;">전체보기</a>
+          </div>
+          <div id="dash-mgoals" style="display:flex;flex-direction:column;gap:6px;"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="ti ti-clock"></i>오늘 시간가계부</div>
+            <a onclick="document.querySelector('[data-page=\'timelog\']').click()" style="font-size:12px;color:var(--text-tertiary);cursor:pointer;">전체보기</a>
+          </div>
+          <div id="dash-timelog" style="display:flex;flex-direction:column;gap:4px;"></div>
+        </div>
+      </div>
+
+      <!-- ④ 일기 주간 + 최근 회고 -->
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="ti ti-calendar"></i>이번 주 일기</div>
+          </div>
+          <div class="week-grid" style="margin-bottom:4px;">
+            <div class="week-day-label">월</div><div class="week-day-label">화</div><div class="week-day-label">수</div>
+            <div class="week-day-label">목</div><div class="week-day-label">금</div><div class="week-day-label">토</div><div class="week-day-label">일</div>
           </div>
           <div class="week-grid" id="week-cells"></div>
+          <div id="dash-diary-today" style="margin-top:10px;padding-top:10px;border-top:0.5px solid var(--border);"></div>
         </div>
         <div class="card">
-          <div class="card-header"><div class="card-title"><i class="ti ti-refresh"></i>최근 회고</div></div>
-          <div class="retro-item"><div class="retro-type">주간 회고</div><div class="retro-title">5월 3주차 — 집중력 회복의 한 주</div></div>
-          <div class="retro-item"><div class="retro-type">월간 회고</div><div class="retro-title">4월 — 루틴 정착, 목표 재정렬</div></div>
-          <div class="retro-item"><div class="retro-type">분기 회고</div><div class="retro-title">2026 Q1 — 방향은 맞다, 속도를 높이자</div></div>
+          <div class="card-header">
+            <div class="card-title"><i class="ti ti-refresh"></i>최근 회고</div>
+            <a onclick="document.querySelector('[data-page=\'retro\']') && document.querySelector('[data-page=\'retro\']').click()" style="font-size:12px;color:var(--text-tertiary);cursor:pointer;">전체보기</a>
+          </div>
+          <div id="dash-recent-retro" style="display:flex;flex-direction:column;gap:0;"></div>
         </div>
       </div>
+
     </div>
 
     <!-- ===== GOALS ===== -->
@@ -2308,7 +2334,230 @@ function updateStats() {
   document.getElementById('stat-routine').textContent = `${rDone}/${rItems.length}`;
   document.getElementById('routine-prog').style.width = rPct+'%';
   document.getElementById('routine-prog-label').textContent = rPct+'%';
-  // todo stats updated inside renderWeeklyTodo
+  renderDashboard();
+}
+
+function renderDashboard() {
+  const mon = getMonday(now);
+  const wKey = weekKey(mon);
+
+  // ① 루틴 스탯
+  const rItems = document.querySelectorAll('#routine-list .routine-item');
+  const rDone  = document.querySelectorAll('#routine-list .routine-item.done').length;
+  const rPct = rItems.length ? Math.round(rDone/rItems.length*100) : 0;
+  const dRv = document.getElementById('dash-routine-val');
+  const dRp = document.getElementById('dash-routine-prog');
+  const dRs = document.getElementById('dash-routine-sub');
+  if (dRv) dRv.textContent = rDone + '/' + rItems.length;
+  if (dRp) dRp.style.width = rPct + '%';
+  if (dRs) dRs.textContent = rPct === 100 ? '모두 완료 🎉' : '완료';
+
+  // ② 투두 스탯 (이번주 전체)
+  const todos = todoStore[wKey] || [];
+  const tDone = todos.filter(function(t){return t.done;}).length;
+  const tPct  = todos.length ? Math.round(tDone/todos.length*100) : 0;
+  const stEl  = document.getElementById('stat-todo');
+  const tpEl  = document.getElementById('todo-prog-dash');
+  if (stEl) stEl.textContent = tDone + '/' + todos.length;
+  if (tpEl) tpEl.style.width = tPct + '%';
+
+  // ③ 일기 스탯 (이번주)
+  var diaryCount = 0;
+  for (var i=0; i<7; i++) {
+    var dt = addDays(mon, i);
+    var dk = dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+    if (diaryStore[dk] && (diaryStore[dk].content || diaryStore[dk].title)) diaryCount++;
+  }
+  var dvEl = document.getElementById('dash-diary-val');
+  var dpEl = document.getElementById('dash-diary-prog');
+  if (dvEl) dvEl.textContent = diaryCount;
+  if (dpEl) dpEl.style.width = Math.round(diaryCount/7*100) + '%';
+
+  // ④ 스트릭
+  var streak = 0;
+  var checkDate = new Date(now);
+  while (true) {
+    var sk = checkDate.getFullYear()+'-'+checkDate.getMonth()+'-'+checkDate.getDate();
+    if (!streakData[sk]) break;
+    streak++;
+    checkDate.setDate(checkDate.getDate()-1);
+  }
+  var svEl = document.getElementById('dash-streak-val');
+  var ssEl = document.getElementById('dash-streak-sub');
+  if (svEl) svEl.textContent = streak + '일';
+  if (ssEl) ssEl.textContent = streak > 0 ? '연속 달성 중 🔥' : '오늘 루틴을 완료하세요';
+
+  // ⑤ 오늘 투두 목록
+  var todayDi = (now.getDay() + 6) % 7; // 0=월
+  var todayTodos = todos.filter(function(t){ return t.dayIdx === todayDi; });
+  var ttEl = document.getElementById('dash-today-todo-list');
+  if (ttEl) {
+    if (!todayTodos.length) {
+      ttEl.innerHTML = '<div style="font-size:13px;color:var(--text-tertiary);padding:8px 0;">오늘 등록된 투두가 없어요</div>';
+    } else {
+      ttEl.innerHTML = '';
+      todayTodos.slice(0,6).forEach(function(t) {
+        var row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:0.5px solid var(--border);';
+        var dot = document.createElement('div');
+        dot.style.cssText = 'width:6px;height:6px;border-radius:50%;background:'+(PRIO_COLOR[t.priority]||'#999')+';flex-shrink:0;';
+        var chk = document.createElement('div');
+        chk.style.cssText = 'width:14px;height:14px;border-radius:50%;border:1.5px solid '+(t.done?'var(--text-primary)':'var(--border-md)')+';flex-shrink:0;display:flex;align-items:center;justify-content:center;background:'+(t.done?'var(--text-primary)':'transparent')+';cursor:pointer;';
+        if (t.done) chk.innerHTML = '<i class="ti ti-check" style="font-size:9px;color:var(--bg-primary)"></i>';
+        chk.onclick = function(){ t.done=!t.done; lsAutoSave(); renderDashboard(); };
+        var txt = document.createElement('span');
+        txt.style.cssText = 'flex:1;font-size:13px;'+(t.done?'text-decoration:line-through;color:var(--text-tertiary);':'color:var(--text-primary);');
+        txt.textContent = t.text;
+        row.appendChild(dot); row.appendChild(chk); row.appendChild(txt);
+        ttEl.appendChild(row);
+      });
+      if (todayTodos.length > 6) {
+        var more = document.createElement('div');
+        more.style.cssText = 'font-size:12px;color:var(--text-tertiary);padding:5px 0;text-align:center;';
+        more.textContent = '+ ' + (todayTodos.length-6) + '개 더 있음';
+        ttEl.appendChild(more);
+      }
+      if (ttEl.lastElementChild) ttEl.lastElementChild.style.borderBottom = 'none';
+    }
+  }
+
+  // ⑥ 이번 주 목표
+  var wfData = wfGetOrCreate(mon);
+  var goals = wfData.goals || [];
+  var wgEl = document.getElementById('dash-wf-goals');
+  if (wgEl) {
+    if (!goals.length) {
+      wgEl.innerHTML = '<div style="font-size:13px;color:var(--text-tertiary);padding:8px 0;">이번 주 목표를 추가해보세요</div>';
+    } else {
+      wgEl.innerHTML = '';
+      goals.forEach(function(g) {
+        var row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:0.5px solid var(--border);';
+        var chk = document.createElement('div');
+        chk.style.cssText = 'width:14px;height:14px;border-radius:50%;border:1.5px solid '+(g.done?'var(--text-primary)':'var(--border-md)')+';flex-shrink:0;display:flex;align-items:center;justify-content:center;background:'+(g.done?'var(--text-primary)':'transparent')+';cursor:pointer;';
+        if (g.done) chk.innerHTML = '<i class="ti ti-check" style="font-size:9px;color:var(--bg-primary)"></i>';
+        chk.onclick = function(){ g.done=!g.done; lsAutoSave(); renderDashboard(); };
+        var txt = document.createElement('span');
+        txt.style.cssText = 'flex:1;font-size:13px;'+(g.done?'text-decoration:line-through;color:var(--text-tertiary);':'color:var(--text-primary);');
+        txt.textContent = g.text;
+        row.appendChild(chk); row.appendChild(txt);
+        wgEl.appendChild(row);
+      });
+      if (wgEl.lastElementChild) wgEl.lastElementChild.style.borderBottom = 'none';
+    }
+  }
+
+  // ⑦ 이번 달 목표 (카테고리별)
+  var mKey = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  var mData = mGoalsData[mKey];
+  var mgEl = document.getElementById('dash-mgoals');
+  if (mgEl) {
+    mgEl.innerHTML = '';
+    var EMOJIS = RETRO_MONTHLY_EMOJIS || {};
+    RETRO_MONTHLY_CATS.forEach(function(cat) {
+      var items = mData && mData.cats && mData.cats[cat] && mData.cats[cat].items || [];
+      if (!items.length) return;
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:flex-start;gap:8px;padding:4px 0;border-bottom:0.5px solid var(--border);';
+      var label = document.createElement('span');
+      label.style.cssText = 'font-size:12px;font-weight:600;color:var(--text-tertiary);min-width:44px;flex-shrink:0;padding-top:1px;';
+      label.textContent = (EMOJIS[cat]||'') + ' ' + cat;
+      var list = document.createElement('div');
+      list.style.cssText = 'flex:1;display:flex;flex-direction:column;gap:2px;';
+      items.slice(0,3).forEach(function(item) {
+        var s = document.createElement('span');
+        s.style.cssText = 'font-size:13px;color:var(--text-primary);line-height:1.5;';
+        s.textContent = '▪ ' + (item.text || item);
+        list.appendChild(s);
+      });
+      if (items.length > 3) {
+        var m = document.createElement('span');
+        m.style.cssText = 'font-size:11px;color:var(--text-tertiary);';
+        m.textContent = '+ ' + (items.length-3) + '개 더';
+        list.appendChild(m);
+      }
+      row.appendChild(label); row.appendChild(list);
+      mgEl.appendChild(row);
+    });
+    if (!mgEl.children.length) {
+      mgEl.innerHTML = '<div style="font-size:13px;color:var(--text-tertiary);padding:8px 0;">이번 달 목표를 입력해보세요</div>';
+    } else if (mgEl.lastElementChild) {
+      mgEl.lastElementChild.style.borderBottom = 'none';
+    }
+  }
+
+  // ⑧ 오늘 시간가계부
+  var todayKey2 = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+  var tlToday = (tlLogs[todayKey2] || []);
+  var tlEl = document.getElementById('dash-timelog');
+  if (tlEl) {
+    if (!tlToday.length) {
+      tlEl.innerHTML = '<div style="font-size:13px;color:var(--text-tertiary);padding:8px 0;">오늘 기록된 시간이 없어요</div>';
+    } else {
+      tlEl.innerHTML = '';
+      // 카테고리별 합산
+      var catMin = {};
+      tlToday.forEach(function(block) {
+        var cat = tlGetCat(block.catId);
+        var label = cat ? cat.name : (block.label || '기타');
+        catMin[label] = (catMin[label] || 0) + (block.dur || 0);
+      });
+      var total = tlToday.reduce(function(s,b){return s+(b.dur||0);}, 0);
+      Object.keys(catMin).forEach(function(cat) {
+        var min = catMin[cat];
+        var pct = total ? Math.round(min/total*100) : 0;
+        var row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:3px 0;';
+        var lbl = document.createElement('span');
+        lbl.style.cssText = 'font-size:13px;color:var(--text-primary);flex:1;';
+        lbl.textContent = cat;
+        var time = document.createElement('span');
+        time.style.cssText = 'font-size:12px;color:var(--text-tertiary);flex-shrink:0;';
+        time.textContent = Math.floor(min/60) + 'h ' + (min%60) + 'm';
+        var bar = document.createElement('div');
+        bar.style.cssText = 'width:60px;height:4px;border-radius:2px;background:var(--border);flex-shrink:0;';
+        var fill = document.createElement('div');
+        fill.style.cssText = 'height:100%;border-radius:2px;background:var(--text-primary);width:'+pct+'%;';
+        bar.appendChild(fill);
+        row.appendChild(lbl); row.appendChild(time); row.appendChild(bar);
+        tlEl.appendChild(row);
+      });
+    }
+  }
+
+  // ⑨ 최근 회고
+  var rrEl = document.getElementById('dash-recent-retro');
+  if (rrEl) {
+    rrEl.innerHTML = '';
+    var retroItems = [];
+    // 주간
+    var wEntries = Object.entries(retroWeeklyContent).filter(function(e){return e[1];}).sort(function(a,b){return b[0].localeCompare(a[0]);});
+    if (wEntries.length) retroItems.push({ type:'주간', key: wEntries[0][0], preview: wEntries[0][1] });
+    // 월간
+    var mEntries = Object.entries(retroMonthlyData).filter(function(e){return e[1]._saved;}).sort(function(a,b){return b[0].localeCompare(a[0]);});
+    if (mEntries.length) retroItems.push({ type:'월간', key: mEntries[0][0], preview: '' });
+    // 분기
+    var qEntries = Object.entries(retroQuarterlyData||{}).filter(function(e){return e[1]._saved;}).sort(function(a,b){return b[0].localeCompare(a[0]);});
+    if (qEntries.length) retroItems.push({ type:'분기', key: qEntries[0][0], preview: '' });
+    // 연간
+    var yEntries = Object.entries(retroYearlyData||{}).filter(function(e){return e[1]._saved;}).sort(function(a,b){return b[0].localeCompare(a[0]);});
+    if (yEntries.length) retroItems.push({ type:'연간', key: yEntries[0][0], preview: '' });
+
+    if (!retroItems.length) {
+      rrEl.innerHTML = '<div style="font-size:13px;color:var(--text-tertiary);padding:8px 0;">아직 작성된 회고가 없어요</div>';
+    } else {
+      retroItems.forEach(function(item) {
+        var row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid var(--border);cursor:pointer;';
+        row.innerHTML = '<span style="font-size:11px;padding:2px 7px;border-radius:10px;background:var(--bg-secondary);border:0.5px solid var(--border);color:var(--text-tertiary);flex-shrink:0;">'+item.type+'</span>'
+          + '<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;color:var(--text-primary);">'+item.key+'</div>'
+          + (item.preview ? '<div style="font-size:11px;color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;">'+item.preview.replace(/▪\s*/g,'').slice(0,50)+'</div>' : '')
+          + '</div><i class="ti ti-chevron-right" style="color:var(--text-tertiary);font-size:13px;flex-shrink:0;"></i>';
+        rrEl.appendChild(row);
+      });
+      if (rrEl.lastElementChild) rrEl.lastElementChild.style.borderBottom = 'none';
+    }
+  }
 }
 
 // ── Tab switch ───────────────────────────────────────────────────
@@ -5970,8 +6219,8 @@ function renderRetroWeeklyDashboard() {
     }
   }
 
-  if (wfBookEl)    wfBookEl.textContent    = (wfData && wfData.books && wfData.books.length) ? wfData.books.join(', ') : (wfData && wfData.book) || '';
-  if (wfWritingEl) wfWritingEl.textContent = (wfData && wfData.writings && wfData.writings.length) ? wfData.writings.join(', ') : (wfData && wfData.writing) || '';
+  if (wfBookEl)    wfBookEl.textContent    = (wfData && wfData.books && wfData.books.length) ? wfData.books.map(function(x){ return typeof x === 'object' ? x.text : x; }).join(', ') : (wfData && wfData.book) || '';
+  if (wfWritingEl) wfWritingEl.textContent = (wfData && wfData.writings && wfData.writings.length) ? wfData.writings.map(function(x){ return typeof x === 'object' ? x.text : x; }).join(', ') : (wfData && wfData.writing) || '';
 
   if (wfRewardsEl) {
     const rewards = (wfData && wfData.rewards) || [];
@@ -8777,6 +9026,7 @@ retroSwitch('weekly');
 showRetroHome();
 renderRetroWeeklyDashboard();
 updateStats();
+renderDashboard();
 sidebarFetchWeather();
 renderDesire();
 buyCheckCarryover();
@@ -8942,6 +9192,7 @@ document.getElementById('logout-btn').addEventListener('click', function() {
         renderDesire();
         buyCheckCarryover();
         renderBuy();
+        renderDashboard();
               }
 
       window.lsAutoSave = function() {
