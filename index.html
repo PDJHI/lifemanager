@@ -3479,16 +3479,25 @@ function renderNextWeekTodo() {
     addRow.style.cssText = 'margin-top:2px;';
     var addInp = document.createElement('input');
     addInp.type = 'text'; addInp.placeholder = '+ 추가';
-    addInp.setAttribute('data-no-autosave', '1');
     addInp.style.cssText = 'width:100%;font-size:12px;padding:4px 6px;border:0.5px dashed var(--border-md);border-radius:var(--radius-md);background:transparent;color:var(--text-primary);outline:none;font-family:inherit;box-sizing:border-box;';
-    (function(dayIdx, key){
-      addInp.onfocus = function() { addInp.style.borderStyle='solid'; };
-      addInp.onblur  = function() { addInp.style.borderStyle='dashed'; };
-      addInp.onkeydown = function(e){
-        if (e.key === 'Enter') { e.preventDefault(); commitAdd(key, dayIdx, addInp); renderNextWeekTodo(); }
-        if (e.key === 'Escape') { addInp.value=''; addInp.blur(); }
-      };
-    })(di, nwKey);
+    addInp.addEventListener('focus', function() { this.style.borderStyle='solid'; });
+    addInp.addEventListener('blur',  function() { this.style.borderStyle='dashed'; });
+    (function(inp, dayIdx, key){
+      inp.addEventListener('keydown', function(e){
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          e.stopPropagation();
+          var v = inp.value.trim();
+          if (!v) return;
+          if (!todoStore[key]) todoStore[key] = [];
+          todoStore[key].push({ id: nextTodoId++, dayIdx: dayIdx, text: v, priority: 'mid', done: false });
+          inp.value = '';
+          console.log('[nw add] key:', key, 'dayIdx:', dayIdx, 'val:', v, 'count:', todoStore[key].length);
+          lsAutoSave();
+          renderNextWeekTodo();
+        }
+      });
+    })(addInp, di, nwKey);
     addRow.appendChild(addInp);
     col.appendChild(addRow);
 
