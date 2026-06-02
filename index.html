@@ -1411,6 +1411,19 @@
             </div>
           </div>
 
+          <!-- 오늘의 쓰레기통 -->
+          <div class="card" style="padding:12px 16px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+              <div class="card-title"><i class="ti ti-trash"></i>오늘의 쓰레기통</div>
+            </div>
+            <div id="trash-list" style="display:flex;flex-direction:column;gap:4px;margin-bottom:6px;"></div>
+            <div style="display:flex;gap:6px;">
+              <input type="text" id="trash-add-input" placeholder="+ 버리고 싶은 생각, 감정, 습관..." maxlength="80"
+                onkeydown="if(event.key==='Enter')trashInlineAdd()"
+                style="flex:1;font-size:14px;padding:5px 10px;border:0.5px dashed var(--border-md);border-radius:var(--radius-md);background:transparent;color:var(--text-primary);font-family:inherit;outline:none;">
+            </div>
+          </div>
+
           <!-- 5행: 오늘의 기록 -->
           <div class="card" style="padding:12px 16px;">
             <div class="card-title" style="margin-bottom:8px;"><i class="ti ti-pencil"></i>오늘의 기록</div>
@@ -1567,13 +1580,21 @@
                 <div id="retro-wf-rewards" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
               </div>
             </div>
-            <!-- 이번 주의 부처 + 주간 Buy 요약 -->
+            <!-- 이번 주의 부처 + 이번 주의 쓰레기통 + 주간 Buy 요약 -->
             <div class="grid-2">
-              <div class="card">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-                  <div class="card-title"><i class="ti ti-sparkles"></i>이번 주의 부처</div>
+              <div style="display:flex;flex-direction:column;gap:14px;">
+                <div class="card">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                    <div class="card-title"><i class="ti ti-sparkles"></i>이번 주의 부처</div>
+                  </div>
+                  <div id="retro-desire-week"></div>
                 </div>
-                <div id="retro-desire-week"></div>
+                <div class="card">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                    <div class="card-title"><i class="ti ti-trash"></i>이번 주의 쓰레기통</div>
+                  </div>
+                  <div id="retro-trash-week"></div>
+                </div>
               </div>
               <div class="card">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
@@ -4944,6 +4965,7 @@ function diaryShowEditor(k) {
   document.getElementById('diary-editor-view').style.display = '';
   renderDiaryEditor();
   renderDesire();
+  renderTrash();
 }
 
 function diaryOpenNew() {
@@ -5329,6 +5351,72 @@ function desireInlineAdd() {
   renderDesire(); lsAutoSave();
 }
 
+// ── 오늘의 쓰레기통 ────────────────────────────────────────────
+var trashNextId = 1;
+
+function trashGetToday() {
+  var dk = diaryDateKey(diaryViewDate);
+  var data = diaryGetOrCreate(dk);
+  if (!data.trash) data.trash = [];
+  return data.trash;
+}
+
+function renderTrash() {
+  var list = document.getElementById('trash-list');
+  if (!list) return;
+  var items = trashGetToday();
+  list.innerHTML = '';
+  items.forEach(function(item, i) {
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg-secondary);';
+    var icon = document.createElement('span');
+    icon.textContent = '🗑️'; icon.style.fontSize = '15px';
+    row.appendChild(icon);
+    var txt = document.createElement('span');
+    txt.style.cssText = 'flex:1;font-size:15px;color:var(--text-primary);cursor:text;';
+    txt.textContent = item.text;
+    txt.title = '더블클릭하여 편집';
+    txt.ondblclick = function(e) {
+      e.stopPropagation();
+      txt.contentEditable = 'true';
+      txt.style.outline = '1px solid var(--border-md)'; txt.style.borderRadius = '3px'; txt.style.padding = '0 3px';
+      txt.focus();
+      var r = document.createRange(); r.selectNodeContents(txt);
+      window.getSelection().removeAllRanges(); window.getSelection().addRange(r);
+    };
+    txt.onblur = function() {
+      var v = txt.textContent.trim();
+      if (v) { item.text = v; } else { items.splice(i, 1); }
+      txt.contentEditable = 'false'; txt.style.outline = ''; txt.style.padding = '';
+      lsAutoSave(); renderTrash();
+    };
+    txt.onkeydown = function(e) {
+      if (e.key==='Enter') { e.preventDefault(); txt.blur(); }
+      if (e.key==='Escape') { txt.textContent = item.text; txt.blur(); }
+    };
+    row.appendChild(txt);
+    var del = document.createElement('i');
+    del.className = 'ti ti-x';
+    del.style.cssText = 'font-size:11px;color:var(--text-tertiary);cursor:pointer;opacity:0;transition:opacity 0.1s;flex-shrink:0;';
+    (function(idx) {
+      del.onclick = function(e) { e.stopPropagation(); items.splice(idx, 1); lsAutoSave(); renderTrash(); };
+    })(i);
+    row.onmouseenter = function() { del.style.opacity='1'; };
+    row.onmouseleave = function() { del.style.opacity='0'; };
+    row.appendChild(del);
+    list.appendChild(row);
+  });
+}
+
+function trashInlineAdd() {
+  var inp = document.getElementById('trash-add-input');
+  if (!inp) return;
+  var v = inp.value.trim(); if (!v) return;
+  trashGetToday().push({ id: trashNextId++, text: v });
+  inp.value = '';
+  lsAutoSave(); renderTrash();
+}
+
 // ── Affirmation ────────────────────────────────────────────────
 function diaryContentKeydown(e) {
   var ta    = e.target;
@@ -5497,12 +5585,12 @@ function affmRender() {
     var fb = document.createElement('div');
     fb.style.cssText = 'font-size:11px;min-height:14px;';
 
-    (function(affText, i, feedbackEl, textarea) {
+    (function(affText, i, feedbackEl, textarea, totalIdx) {
       var adjustH = function() { textarea.style.height='auto'; textarea.style.height=textarea.scrollHeight+'px'; };
       setTimeout(adjustH, 0);
       textarea.oninput = function() {
         adjustH();
-        diaryData.affirmationTypings[i] = textarea.value;
+        diaryData.affirmationTypings[totalIdx] = textarea.value;
         lsAutoSave();
         var original = affText.trim();
         var typed = textarea.value.trim();
@@ -5518,7 +5606,16 @@ function affmRender() {
         textarea.style.borderColor = pct===100 ? '#4CAF82' : '#F6A623';
         feedbackEl.innerHTML = pct===100 ? '<span style="color:#4CAF82;">🎉 완벽!</span>' : '<span style="color:#F6A623;">'+pct+'%</span>';
       };
-    })(aff.text, idx, fb, ta);
+      textarea.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          // 다음 따라쓰기 입력칸으로 포커스 이동
+          var all = document.querySelectorAll('#affm-list textarea');
+          var next = all[totalIdx + 1];
+          if (next) { next.focus(); next.select(); }
+        }
+      });
+    })(aff.text, idx, fb, ta, idx);
 
     right.appendChild(ta);
     right.appendChild(fb);
@@ -6142,9 +6239,9 @@ function renderRetroWeeklyDashboard() {
   }
 
   // ── 이번 주의 부처 ──────────────────────────────────────
+  const DAY_KR = ['월','화','수','목','금','토','일'];
   const desireWeekEl = document.getElementById('retro-desire-week');
   if (desireWeekEl) {
-    const DAY_KR = ['월','화','수','목','금','토','일'];
     // 이번 주 7일치 desireStore 수집
     const weekEntries = Array.from({length:7}, (_,i) => {
       const dt = addDays(mon, i);
@@ -6170,6 +6267,37 @@ function renderRetroWeeklyDashboard() {
                 </div>`).join('')}
             </div>
           </div>`).join('') + `</div>`;
+    }
+  }
+
+  // ── 이번 주의 쓰레기통 ────────────────────────────────────────
+  const trashWeekEl = document.getElementById('retro-trash-week');
+  if (trashWeekEl) {
+    const trashEntries = Array.from({length:7}, function(_,i) {
+      const dt = addDays(mon, i);
+      const dk = dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+      const data = diaryStore[dk];
+      const items = (data && data.trash) || [];
+      return { label: DAY_KR[i], date: (dt.getMonth()+1)+'/'+dt.getDate(), items: items };
+    }).filter(function(d){ return d.items.length > 0; });
+
+    if (!trashEntries.length) {
+      trashWeekEl.innerHTML = '<div style="font-size:13px;color:var(--text-tertiary);padding:4px 0;">이번 주 기록된 쓰레기통이 없어요</div>';
+    } else {
+      trashWeekEl.innerHTML = '<div style="display:flex;flex-direction:column;gap:10px;">'
+        + trashEntries.map(function(d) {
+          return '<div>'
+            + '<div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:5px;">'+d.label+' · '+d.date+'</div>'
+            + '<div style="display:flex;flex-direction:column;gap:3px;">'
+            + d.items.map(function(item) {
+                return '<div style="display:flex;align-items:center;gap:7px;padding:4px 8px;border-radius:var(--radius-md);background:var(--bg-secondary);border:0.5px solid var(--border);">'
+                  + '<span style="font-size:13px;">🗑️</span>'
+                  + '<span style="font-size:13px;color:var(--text-primary);">'+(item.text||item)+'</span>'
+                  + '</div>';
+              }).join('')
+            + '</div></div>';
+        }).join('')
+        + '</div>';
     }
   }
 
