@@ -91,6 +91,7 @@
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
   .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
 
   /* Stat cards */
   .stat-card { background: var(--bg-secondary); border-radius: var(--radius-md); padding: 14px; }
@@ -1528,7 +1529,7 @@
 
           <!-- 종합 대시보드 -->
           <div id="retro-weekly-dashboard" style="display:flex;flex-direction:column;gap:12px;">
-            <div class="grid-4" id="retro-summary-cards"></div>
+            <div class="grid-5" id="retro-summary-cards"></div>
             <div class="grid-2">
               <div class="card">
                 <div class="card-title" style="margin-bottom:16px;"><i class="ti ti-checkbox"></i>루틴 주간 요약</div>
@@ -1578,6 +1579,13 @@
                   <i class="ti ti-gift" style="font-size:14px;"></i>보상
                 </div>
                 <div id="retro-wf-rewards" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+              </div>
+              <!-- 3행: 원씽 -->
+              <div style="padding-top:12px;border-top:0.5px solid var(--border);">
+                <div style="font-size:12px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+                  <span style="font-size:14px;">⭐</span>원씽
+                </div>
+                <div id="retro-wf-onething" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;"></div>
               </div>
             </div>
             <!-- 이번 주의 부처 + 이번 주의 쓰레기통 + 주간 Buy 요약 -->
@@ -1643,7 +1651,7 @@
             <div style="font-size:15px;font-weight:600;color:var(--text-primary);" id="retro-monthly-year"></div>
           </div>
 
-          <div id="retro-monthly-summary" style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;"></div>
+          <div id="retro-monthly-summary" style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;"></div>
           <div class="grid-2">
             <div class="card">
               <div class="card-title" style="margin-bottom:16px;"><i class="ti ti-checkbox"></i>루틴 월간 요약</div>
@@ -1700,7 +1708,7 @@
             </div>
             <div style="font-size:15px;font-weight:600;color:var(--text-primary);" id="retro-quarterly-year"></div>
           </div>
-          <div id="retro-quarterly-summary" style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;"></div>
+          <div id="retro-quarterly-summary" style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;"></div>
           <div class="grid-2">
             <div class="card">
               <div class="card-title" style="margin-bottom:16px;"><i class="ti ti-checkbox"></i>루틴 분기 요약</div>
@@ -1757,7 +1765,7 @@
             </div>
             <div style="font-size:15px;font-weight:600;color:var(--text-primary);" id="retro-yearly-decade"></div>
           </div>
-          <div id="retro-yearly-summary" style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;"></div>
+          <div id="retro-yearly-summary" style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;"></div>
           <div class="grid-2">
             <div class="card">
               <div class="card-title" style="margin-bottom:16px;"><i class="ti ti-checkbox"></i>루틴 연간 요약</div>
@@ -1971,6 +1979,8 @@ let nextRoutineId = 1;
 // ── Todo data: { [weekKey]: [ {id, dayIdx(0=월), text, priority, done} ] } ──
 let todoStore = {};
 let nextTodoId = 1;
+let oneThingStore = {};  // { 'weekKey-OT-di': text }
+let oneThingDone  = {};  // { 'weekKey-OT-di': bool }
 
 // ── Current week being viewed ───────────────────────────────────
 let viewMonday = getMonday(now);
@@ -2115,7 +2125,62 @@ function renderWeeklyTodo() {
       <span style="font-size:11px;color:${isToday ? 'rgba(255,255,255,0.6)' : 'var(--text-tertiary)'}">${formatDate(dt)}</span>`;
     col.appendChild(hdr);
 
-    // ── Todo items (note style) ─────────────────────────────────
+    // ── One Thing ────────────────────────────────────────────────
+    var otKey = weekKey(viewMonday) + '-OT-' + di;
+    var otVal = oneThingStore[otKey] || '';
+    var otDone = oneThingDone[otKey] || false;
+
+    var otRow = document.createElement('div');
+    otRow.style.cssText = 'display:flex;align-items:center;gap:6px;padding:5px 6px;border-radius:var(--radius-md);margin-bottom:6px;background:' + (otDone ? 'rgba(67,233,123,0.08)' : 'rgba(124,131,253,0.08)') + ';border:0.5px solid ' + (otDone ? '#43E97B' : '#7C83FD') + ';';
+
+    var otStar = document.createElement('span');
+    otStar.textContent = '⭐';
+    otStar.style.cssText = 'font-size:12px;flex-shrink:0;';
+    otRow.appendChild(otStar);
+
+    var otTxt = document.createElement('div');
+    otTxt.contentEditable = 'false';
+    otTxt.style.cssText = 'flex:1;font-size:12px;line-height:1.4;color:' + (otDone ? 'var(--text-tertiary)' : 'var(--text-primary)') + ';' + (otDone ? 'text-decoration:line-through;' : '') + 'outline:none;word-break:break-word;min-height:16px;';
+    otTxt.textContent = otVal || '';
+    otTxt.setAttribute('data-placeholder', '원씽 입력...');
+    if (!otVal) otTxt.style.opacity = '0.4';
+    otTxt.setAttribute('data-placeholder', '원씽 입력...');
+
+    otTxt.onfocus = function() { if (!oneThingStore[otKey]) otTxt.style.opacity = '0.4'; };
+    otTxt.onclick = function() {
+      otTxt.contentEditable = 'true';
+      otTxt.style.opacity = '1';
+      if (!otTxt.textContent.trim()) otTxt.textContent = '';
+      otTxt.focus();
+      var r = document.createRange(); r.selectNodeContents(otTxt);
+      window.getSelection().removeAllRanges(); window.getSelection().addRange(r);
+    };
+    otTxt.onblur = function() {
+      var v = otTxt.textContent.trim();
+      oneThingStore[otKey] = v;
+      otTxt.contentEditable = 'false';
+      if (!v) otTxt.style.opacity = '0.4';
+      lsAutoSave(); renderWeeklyTodo();
+    };
+    otTxt.onkeydown = function(e) {
+      if (e.key === 'Enter') { e.preventDefault(); otTxt.blur(); }
+      if (e.key === 'Escape') { otTxt.textContent = oneThingStore[otKey] || ''; otTxt.blur(); }
+    };
+    otRow.appendChild(otTxt);
+
+    var otChk = document.createElement('div');
+    otChk.style.cssText = 'width:14px;height:14px;border-radius:50%;border:1.5px solid ' + (otDone ? '#43E97B' : '#7C83FD') + ';flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;background:' + (otDone ? '#43E97B' : 'transparent') + ';transition:all 0.15s;';
+    otChk.innerHTML = otDone ? '<i class="ti ti-check" style="font-size:8px;color:white"></i>' : '';
+    (function(k) {
+      otChk.onclick = function(e) {
+        e.stopPropagation();
+        oneThingDone[k] = !oneThingDone[k];
+        lsAutoSave(); renderWeeklyTodo();
+      };
+    })(otKey);
+    otRow.appendChild(otChk);
+
+    col.appendChild(otRow);
     dayTodos.forEach((t, ti) => {
       const item = document.createElement('div');
       item.dataset.id = t.id;
@@ -2401,15 +2466,39 @@ function renderDashboard() {
   if (svEl) svEl.textContent = streak + '일';
   if (ssEl) ssEl.textContent = streak > 0 ? '연속 달성 중 🔥' : '오늘 루틴을 완료하세요';
 
-  // ⑤ 오늘 투두 목록
+  // ⑤ 오늘 투두 목록 (원씽 포함)
   var todayDi = (now.getDay() + 6) % 7; // 0=월
   var todayTodos = todos.filter(function(t){ return t.dayIdx === todayDi; });
   var ttEl = document.getElementById('dash-today-todo-list');
   if (ttEl) {
-    if (!todayTodos.length) {
+    ttEl.innerHTML = '';
+
+    // 원씽 먼저 표시
+    var otKey = wKey + '-OT-' + todayDi;
+    var otText = oneThingStore[otKey] || '';
+    var otDoneVal = oneThingDone[otKey] || false;
+    if (otText) {
+      var otRow = document.createElement('div');
+      otRow.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:var(--radius-md);margin-bottom:8px;background:' + (otDoneVal ? 'rgba(67,233,123,0.08)' : 'rgba(124,131,253,0.10)') + ';border:0.5px solid ' + (otDoneVal ? '#43E97B' : '#7C83FD') + ';';
+      var otStarEl = document.createElement('span');
+      otStarEl.textContent = '⭐'; otStarEl.style.fontSize = '13px';
+      var otTxtEl = document.createElement('span');
+      otTxtEl.style.cssText = 'flex:1;font-size:13px;font-weight:600;' + (otDoneVal ? 'text-decoration:line-through;color:var(--text-tertiary);' : 'color:var(--text-primary);');
+      otTxtEl.textContent = otText;
+      var otChkEl = document.createElement('div');
+      otChkEl.style.cssText = 'width:16px;height:16px;border-radius:50%;border:1.5px solid ' + (otDoneVal ? '#43E97B' : '#7C83FD') + ';display:flex;align-items:center;justify-content:center;cursor:pointer;background:' + (otDoneVal ? '#43E97B' : 'transparent') + ';flex-shrink:0;';
+      otChkEl.innerHTML = otDoneVal ? '<i class="ti ti-check" style="font-size:9px;color:white"></i>' : '';
+      otChkEl.onclick = function() {
+        oneThingDone[otKey] = !oneThingDone[otKey];
+        lsAutoSave(); renderDashboard();
+      };
+      otRow.appendChild(otStarEl); otRow.appendChild(otTxtEl); otRow.appendChild(otChkEl);
+      ttEl.appendChild(otRow);
+    }
+
+    if (!todayTodos.length && !otText) {
       ttEl.innerHTML = '<div style="font-size:13px;color:var(--text-tertiary);padding:8px 0;">오늘 등록된 투두가 없어요</div>';
-    } else {
-      ttEl.innerHTML = '';
+    } else if (todayTodos.length) {
       todayTodos.slice(0,6).forEach(function(t) {
         var row = document.createElement('div');
         row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:0.5px solid var(--border);';
@@ -2432,7 +2521,7 @@ function renderDashboard() {
         ttEl.appendChild(more);
       }
       if (ttEl.lastElementChild) ttEl.lastElementChild.style.borderBottom = 'none';
-    }
+    } // end else if todayTodos.length
   }
 
   // ⑥ 이번 주 목표
@@ -6105,6 +6194,13 @@ function renderRetroWeeklyDashboard() {
     const avgScore      = diaryScores.length ? (diaryScores.reduce((a,b)=>a+b,0)/diaryScores.length).toFixed(1) : '-';
     const avgHue        = diaryScores.length ? Math.round((parseFloat(avgScore)/10)*120) : null;
 
+    const otDoneCount = KR_DAYS_MON.reduce(function(cnt, _, di) {
+      return cnt + (oneThingDone[wKey + '-OT-' + di] ? 1 : 0);
+    }, 0);
+    const otInputCount = KR_DAYS_MON.reduce(function(cnt, _, di) {
+      return cnt + (oneThingStore[wKey + '-OT-' + di] ? 1 : 0);
+    }, 0);
+
     sumCards.innerHTML = `
       <div class="card" style="text-align:center;">
         <div style="font-size:25px;font-weight:700;color:var(--text-primary);">${routineDays}<span style="font-size:15px;color:var(--text-tertiary);">/7일</span></div>
@@ -6115,6 +6211,11 @@ function renderRetroWeeklyDashboard() {
         <div style="font-size:25px;font-weight:700;color:var(--text-primary);">${doneTodos}<span style="font-size:15px;color:var(--text-tertiary);">/${totalTodos}</span></div>
         <div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;">투두 완료</div>
         <div style="height:3px;background:var(--bg-secondary);border-radius:2px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:${totalTodos?Math.round(doneTodos/totalTodos*100):0}%;background:#7C83FD;border-radius:2px;"></div></div>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:25px;font-weight:700;color:var(--text-primary);">${otDoneCount}<span style="font-size:15px;color:var(--text-tertiary);">/${otInputCount}</span></div>
+        <div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;">원씽 달성</div>
+        <div style="height:3px;background:var(--bg-secondary);border-radius:2px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:${otInputCount?Math.round(otDoneCount/otInputCount*100):0}%;background:#F6A623;border-radius:2px;"></div></div>
       </div>
       <div class="card" style="text-align:center;">
         <div style="font-size:25px;font-weight:700;color:var(--text-primary);">${diaryDays}<span style="font-size:15px;color:var(--text-tertiary);">/7일</span></div>
@@ -6386,6 +6487,53 @@ function renderRetroWeeklyDashboard() {
         </div>`).join('');
     }
   }
+
+  // ── 원씽 ─────────────────────────────────────────────────────
+  var otEl = document.getElementById('retro-wf-onething');
+  if (otEl) {
+    otEl.innerHTML = '';
+    KR_DAYS_MON.forEach(function(dayName, di) {
+      var otKey = wKey + '-OT-' + di;
+      var text  = oneThingStore[otKey] || '';
+      var done  = oneThingDone[otKey]  || false;
+
+      var cell = document.createElement('div');
+      cell.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:5px;';
+
+      // 요일 레이블
+      var lbl = document.createElement('div');
+      lbl.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-tertiary);';
+      lbl.textContent = dayName;
+      cell.appendChild(lbl);
+
+      // 달성 원
+      var circle = document.createElement('div');
+      circle.style.cssText = 'width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;'
+        + (text
+          ? (done ? 'background:#43E97B;border:1.5px solid #43E97B;' : 'background:rgba(124,131,253,0.12);border:1.5px solid #7C83FD;')
+          : 'background:var(--bg-secondary);border:0.5px dashed var(--border-md);');
+      circle.innerHTML = text
+        ? (done ? '<i class="ti ti-check" style="font-size:14px;color:white;"></i>' : '<span style="font-size:14px;">⭐</span>')
+        : '<span style="font-size:12px;color:var(--text-tertiary);">—</span>';
+      cell.appendChild(circle);
+
+      // 원씽 텍스트
+      if (text) {
+        var t = document.createElement('div');
+        t.style.cssText = 'font-size:10px;color:' + (done ? 'var(--text-tertiary)' : 'var(--text-primary)') + ';text-align:center;line-height:1.3;word-break:break-all;' + (done ? 'text-decoration:line-through;' : '');
+        t.textContent = text.length > 10 ? text.slice(0, 10) + '…' : text;
+        t.title = text;
+        cell.appendChild(t);
+      } else {
+        var empty = document.createElement('div');
+        empty.style.cssText = 'font-size:10px;color:var(--text-tertiary);';
+        empty.textContent = '미입력';
+        cell.appendChild(empty);
+      }
+
+      otEl.appendChild(cell);
+    });
+  }
 }
 
 // 주간 회고에서 목표 토글 (wfStore 직접 수정 후 양쪽 리렌더)
@@ -6495,6 +6643,16 @@ function renderRetroMonthlyDashboard() {
     const avgHue       = scores.length ? Math.round(parseFloat(avgScore)/10*120) : null;
     const monthMins    = allDays.reduce((s,d)=>s+d.totalMins,0);
 
+
+    // 원씽 달성 집계 (월간)
+    var otDone = 0, otInput = 0;
+    allDays.forEach(function(d) {
+      var mon2 = getMonday(d.dt);
+      var wk2  = weekKey(mon2);
+      var di2  = (d.dt.getDay() + 6) % 7;
+      var otKey2 = wk2 + '-OT-' + di2;
+      if (oneThingStore[otKey2]) { otInput++; if (oneThingDone[otKey2]) otDone++; }
+    });
     sumEl.innerHTML = `
       <div class="card" style="text-align:center;">
         <div style="font-size:25px;font-weight:700;color:var(--text-primary);">${routineDays}<span style="font-size:15px;color:var(--text-tertiary);">/${daysInMonth}일</span></div>
@@ -6515,6 +6673,12 @@ function renderRetroMonthlyDashboard() {
         <div style="font-size:25px;font-weight:700;${avgHue?'color:hsl('+avgHue+',50%,40%)':'color:var(--text-tertiary)'};">${avgScore}${avgScore!=='-'?'<span style="font-size:15px;color:var(--text-tertiary);"> / 10</span>':''}</div>
         <div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;">하루 평균 점수</div>
         <div style="height:3px;background:var(--bg-secondary);border-radius:2px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:${avgScore!=='-'?Math.round(parseFloat(avgScore)/10*100):0}%;background:${avgHue?'hsl('+avgHue+',60%,55%)':'var(--border)'};border-radius:2px;"></div></div>
+      </div>
+
+      <div class="card" style="text-align:center;">
+        <div style="font-size:25px;font-weight:700;color:var(--text-primary);">${otDone}<span style="font-size:15px;color:var(--text-tertiary);">/${otInput}</span></div>
+        <div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;">원씽 달성</div>
+        <div style="height:3px;background:var(--bg-secondary);border-radius:2px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:${otInput?Math.round(otDone/otInput*100):0}%;background:#F6A623;border-radius:2px;"></div></div>
       </div>
       <div class="card" style="text-align:center;" id="retro-monthly-score-card">
         <div style="font-size:25px;font-weight:700;color:var(--text-primary);" id="retro-monthly-avg-score">—</div>
@@ -6761,11 +6925,22 @@ function renderRetroYearlyDashboard() {
     const avgScore    = scores.length ? (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1) : '-';
     const avgHue      = scores.length ? Math.round(parseFloat(avgScore)/10*120) : null;
     const total       = allDays.length;
+
+    // 원씽 달성 집계
+    var otDone = 0, otInput = 0;
+    allDays.forEach(function(d) {
+      var mon2 = getMonday(d.dt);
+      var wk2  = weekKey(mon2);
+      var di2  = (d.dt.getDay() + 6) % 7;
+      var otKey2 = wk2 + '-OT-' + di2;
+      if (oneThingStore[otKey2]) { otInput++; if (oneThingDone[otKey2]) otDone++; }
+    });
     sumEl.innerHTML = `
       <div class="card" style="text-align:center;"><div style="font-size:25px;font-weight:700;color:var(--text-primary);">${routineDays}<span style="font-size:15px;color:var(--text-tertiary);">/${total}일</span></div><div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;">루틴 달성일</div><div style="height:3px;background:var(--bg-secondary);border-radius:2px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:${Math.round(routineDays/total*100)}%;background:#43E97B;border-radius:2px;"></div></div></div>
       <div class="card" style="text-align:center;"><div style="font-size:25px;font-weight:700;color:var(--text-primary);">${doneTodos}<span style="font-size:15px;color:var(--text-tertiary);">/${totalTodos}</span></div><div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;">투두 완료</div><div style="height:3px;background:var(--bg-secondary);border-radius:2px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:${totalTodos?Math.round(doneTodos/totalTodos*100):0}%;background:#7C83FD;border-radius:2px;"></div></div></div>
       <div class="card" style="text-align:center;"><div style="font-size:25px;font-weight:700;color:var(--text-primary);">${diaryDays}<span style="font-size:15px;color:var(--text-tertiary);">/${total}일</span></div><div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;">일기 작성일</div><div style="height:3px;background:var(--bg-secondary);border-radius:2px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:${Math.round(diaryDays/total*100)}%;background:#FF6B9D;border-radius:2px;"></div></div></div>
       <div class="card" style="text-align:center;"><div style="font-size:25px;font-weight:700;${avgHue?'color:hsl('+avgHue+',50%,40%)':'color:var(--text-tertiary)'};">${avgScore}${avgScore!=='-'?'<span style="font-size:15px;color:var(--text-tertiary);"> / 10</span>':''}</div><div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;">하루 평균 점수</div><div style="height:3px;background:var(--bg-secondary);border-radius:2px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:${avgScore!=='-'?Math.round(parseFloat(avgScore)/10*100):0}%;background:${avgHue?'hsl('+avgHue+',60%,55%)':'var(--border)'};border-radius:2px;"></div></div></div>
+      <div class="card" style="text-align:center;"><div style="font-size:25px;font-weight:700;color:var(--text-primary);">${otDone}<span style="font-size:15px;color:var(--text-tertiary);">/${otInput}</span></div><div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;">원씽 달성</div><div style="height:3px;background:var(--bg-secondary);border-radius:2px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:${otInput?Math.round(otDone/otInput*100):0}%;background:#F6A623;border-radius:2px;"></div></div></div>
       <div class="card" style="text-align:center;" id="retro-yearly-score-card">
         <div style="font-size:25px;font-weight:700;color:var(--text-primary);" id="retro-yearly-avg-score">—</div>
         <div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;">올해 회고 점수 / 10</div>
@@ -7172,6 +7347,12 @@ function renderRetroQuarterlyDashboard() {
         <div style="font-size:25px;font-weight:700;${avgHue?'color:hsl('+avgHue+',50%,40%)':'color:var(--text-tertiary)'};">${avgScore}${avgScore!=='-'?'<span style="font-size:15px;color:var(--text-tertiary);"> / 10</span>':''}</div>
         <div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;">하루 평균 점수</div>
         <div style="height:3px;background:var(--bg-secondary);border-radius:2px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:${avgScore!=='-'?Math.round(parseFloat(avgScore)/10*100):0}%;background:${avgHue?'hsl('+avgHue+',60%,55%)':'var(--border)'};border-radius:2px;"></div></div>
+      </div>
+
+      <div class="card" style="text-align:center;">
+        <div style="font-size:25px;font-weight:700;color:var(--text-primary);">${otDone}<span style="font-size:15px;color:var(--text-tertiary);">/${otInput}</span></div>
+        <div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;">원씽 달성</div>
+        <div style="height:3px;background:var(--bg-secondary);border-radius:2px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:${otInput?Math.round(otDone/otInput*100):0}%;background:#F6A623;border-radius:2px;"></div></div>
       </div>
       <div class="card" style="text-align:center;" id="retro-quarterly-score-card">
         <div style="font-size:25px;font-weight:700;color:var(--text-primary);" id="retro-quarterly-avg-score">—</div>
@@ -8995,6 +9176,10 @@ function dataExport() {
     _exported: new Date().toISOString(),
     routines,
     todoStore,
+    oneThingStore,
+    oneThingDone,
+    oneThingStore,
+    oneThingDone,
     streakData,
     wfStore,
     tlCatParents,
@@ -9034,6 +9219,10 @@ function dataImport() {
         migrateRoutineCategories();
         if (p.routineCheckData)   Object.assign(routineCheckData, p.routineCheckData);
         if (p.todoStore)          Object.assign(todoStore, p.todoStore);
+        if (p.oneThingStore)     Object.assign(oneThingStore, p.oneThingStore);
+        if (p.oneThingDone)      Object.assign(oneThingDone, p.oneThingDone);
+        if (p.oneThingStore)     Object.assign(oneThingStore, p.oneThingStore);
+        if (p.oneThingDone)      Object.assign(oneThingDone, p.oneThingDone);
         if (p.streakData)         Object.assign(streakData, p.streakData);
         if (p.wfStore) { Object.keys(wfStore).forEach(k=>delete wfStore[k]); Object.assign(wfStore, p.wfStore); }
         if (p.tlCatParents && p.tlCatParents.length)  tlCatParents  = p.tlCatParents;
@@ -9101,6 +9290,8 @@ function lsSave() {
       routines,
       routineCheckData,
       todoStore,
+    oneThingStore,
+    oneThingDone,
       streakData,
       wfStore,
       tlCatParents,
@@ -9263,6 +9454,8 @@ document.getElementById('logout-btn').addEventListener('click', function() {
         routines,
         routineCheckData,
         todoStore,
+    oneThingStore,
+    oneThingDone,
         streakData,
         wfStore,
         tlCatParents,
@@ -9301,6 +9494,8 @@ document.getElementById('logout-btn').addEventListener('click', function() {
         if (p.routines) routines = p.routines;
         if (p.routineCheckData)   Object.assign(routineCheckData, p.routineCheckData);
         if (p.todoStore)          Object.assign(todoStore, p.todoStore);
+        if (p.oneThingStore)     Object.assign(oneThingStore, p.oneThingStore);
+        if (p.oneThingDone)      Object.assign(oneThingDone, p.oneThingDone);
         if (p.streakData)         Object.assign(streakData, p.streakData);
         if (p.wfStore) { Object.keys(wfStore).forEach(k=>delete wfStore[k]); Object.assign(wfStore, p.wfStore); }
         if (p.tlCatParents && p.tlCatParents.length)  tlCatParents  = p.tlCatParents;
