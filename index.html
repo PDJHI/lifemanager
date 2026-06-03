@@ -2846,13 +2846,13 @@ function renderWeekFromMonday(mon) {
     if (!routineStats.length) {
       dailyEl.innerHTML = '<div style="font-size:13px;color:var(--text-tertiary);padding:8px 0;">등록된 루틴이 없어요</div>';
     } else {
-      dailyEl.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px 16px;">'
+      dailyEl.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px 24px;">'
         + routineStats.map(function(s) {
           var pct2 = Math.round(s.achieved / s.total * 100);
-          return '<div style="display:flex;align-items:center;gap:8px;min-width:0;">'
-            + '<span style="font-size:13px;color:var(--text-primary);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+s.name+'</span>'
+          return '<div style="display:flex;align-items:center;gap:6px;min-width:0;">'
+            + '<span style="font-size:12px;color:var(--text-primary);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+s.name+'</span>'
             + '<span style="font-size:11px;color:var(--text-tertiary);flex-shrink:0;">'+s.achieved+'/'+s.total+'</span>'
-            + '<div style="width:36px;height:3px;border-radius:2px;background:var(--border);flex-shrink:0;">'
+            + '<div style="width:28px;height:3px;border-radius:2px;background:var(--border);flex-shrink:0;">'
             +   '<div style="height:100%;border-radius:2px;background:'+(pct2===100?'#43E97B':'var(--text-primary)')+';width:'+pct2+'%;"></div>'
             + '</div>'
             + '</div>';
@@ -5065,6 +5065,7 @@ function diaryShowEditor(k) {
   diaryViewDate = diaryKeyToDate(k);
   document.getElementById('diary-list-view').style.display = 'none';
   document.getElementById('diary-editor-view').style.display = '';
+  appPushState('diary-editor');
   renderDiaryEditor();
   renderDesire();
   renderTrash();
@@ -5990,6 +5991,7 @@ function retroShowList(type) {
 }
 
 function retroShowDetail(type) {
+  appPushState('retro-' + type);
   document.getElementById(`retro-${type}-list-view`).style.display = 'none';
   const dv = document.getElementById(`retro-${type}-detail-view`);
   dv.style.display = 'flex';
@@ -6581,7 +6583,43 @@ function retroGoToWf() {
   renderWf();
 }
 
-function retroWeekNav_legacy(dir) { retroNav('weekly', dir); }
+// ── 브라우저 뒤로가기 처리 ──────────────────────────────────────
+var _appNavStack = [];
+
+function appPushState(label) {
+  _appNavStack.push(label);
+  try { history.pushState({ appNav: label }, '', location.pathname + location.search); } catch(e) {}
+}
+
+window.addEventListener('popstate', function(e) {
+  // 브라우저 뒤로가기 → 앱 내 이전 상태로 복원
+  if (_appNavStack.length > 0) {
+    _appNavStack.pop();
+    // 현재 보여지는 화면에 따라 목록으로 돌아가기
+    var diaryEditor = document.getElementById('diary-editor-view');
+    if (diaryEditor && diaryEditor.style.display !== 'none') {
+      diaryBackToList(); return;
+    }
+    var retroWeeklyDetail = document.getElementById('retro-weekly-detail-view');
+    if (retroWeeklyDetail && retroWeeklyDetail.style.display !== 'none') {
+      retroBack('weekly'); return;
+    }
+    var retroMonthlyDetail = document.getElementById('retro-monthly-detail-view');
+    if (retroMonthlyDetail && retroMonthlyDetail.style.display !== 'none') {
+      retroBack('monthly'); return;
+    }
+    var retroQuarterlyDetail = document.getElementById('retro-quarterly-detail-view');
+    if (retroQuarterlyDetail && retroQuarterlyDetail.style.display !== 'none') {
+      retroBack('quarterly'); return;
+    }
+    var retroYearlyDetail = document.getElementById('retro-yearly-detail-view');
+    if (retroYearlyDetail && retroYearlyDetail.style.display !== 'none') {
+      retroBack('yearly'); return;
+    }
+  }
+  // 스택이 비었으면 앱 나가지 않도록 다시 pushState
+  try { history.pushState({}, '', location.pathname + location.search); } catch(e) {}
+});
 
 
 // ── 루틴 카테고리별 달성 현황 렌더 (월간/분기/연간 공용) ──────────
@@ -9416,6 +9454,8 @@ renderRetroWeeklyDashboard();
 updateStats();
 renderDashboard();
 sidebarFetchWeather();
+// 초기 history state 설정 (브라우저 뒤로가기가 앱을 벗어나지 않도록)
+try { history.replaceState({ appNav: 'home' }, '', location.pathname + location.search); } catch(e) {}
 renderDesire();
 buyCheckCarryover();
 renderBuy();
