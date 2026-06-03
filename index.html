@@ -1573,19 +1573,19 @@
                   </div>
                 </div>
               </div>
-              <!-- 2행: 보상 -->
-              <div style="padding-top:12px;border-top:0.5px solid var(--border);">
-                <div style="font-size:12px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
-                  <i class="ti ti-gift" style="font-size:14px;"></i>보상
-                </div>
-                <div id="retro-wf-rewards" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
-              </div>
-              <!-- 3행: 원씽 -->
+              <!-- 2행: 원씽 -->
               <div style="padding-top:12px;border-top:0.5px solid var(--border);">
                 <div style="font-size:12px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
                   <span style="font-size:14px;">⭐</span>원씽
                 </div>
                 <div id="retro-wf-onething" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;"></div>
+              </div>
+              <!-- 3행: 보상 -->
+              <div style="padding-top:12px;border-top:0.5px solid var(--border);">
+                <div style="font-size:12px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+                  <i class="ti ti-gift" style="font-size:14px;"></i>보상
+                </div>
+                <div id="retro-wf-rewards" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
               </div>
             </div>
             <!-- 이번 주의 부처 + 이번 주의 쓰레기통 + 주간 Buy 요약 -->
@@ -2011,7 +2011,7 @@ navItems.forEach(item => {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     item.classList.add('active');
     document.getElementById('page-' + item.dataset.page).classList.add('active');
-    if (item.dataset.page === 'routine') { switchTab('today'); }
+    if (item.dataset.page === 'routine') { wfViewMonday = getMonday(now); switchTab('today'); }
   });
 });
 document.querySelector('[data-page="dashboard"]').click();
@@ -2052,8 +2052,17 @@ function renderStreakWeek() {
     const dt      = addDays(mon, i);
     const isToday = dt.toDateString() === now.toDateString();
     const isFuture= dt > now;
-    const k       = streakDayKey(dt);
-    const achieved = !isFuture && streakData[k];
+    const dk = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+    const checks     = routineCheckData[dk] || {};
+    const dayRoutines = routines.filter(r => r.days.includes(i));
+    const doneCnt = dayRoutines.filter(r => checks[r.id]).length;
+    const total   = dayRoutines.length;
+    const allDone = total > 0 && doneCnt === total;
+    const partial = !allDone && doneCnt > 0;
+
+    // streakData 동기화
+    const sk = streakDayKey(dt);
+    if (!isFuture) streakData[sk] = allDone;
 
     const cell = document.createElement('div');
     cell.style.cssText = `display:flex;flex-direction:column;align-items:center;gap:5px;`;
@@ -2063,11 +2072,15 @@ function renderStreakWeek() {
     dayLbl.textContent = DAY_NAMES[i];
 
     const dot = document.createElement('div');
-    dot.style.cssText = `width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;
-      background:${isToday && achieved ? 'var(--text-primary)' : achieved ? 'var(--bg-secondary)' : isFuture ? 'transparent' : 'transparent'};
-      border:${isToday ? '2px solid var(--text-primary)' : achieved ? '0.5px solid var(--border-md)' : '0.5px dashed var(--border)'};`;
-    dot.textContent = isFuture ? '' : achieved ? '✓' : '✗';
-    dot.style.color = achieved ? (isToday ? 'var(--bg-primary)' : 'var(--text-primary)') : 'var(--text-tertiary)';
+    dot.style.cssText = `width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:${partial?'11px':'14px'};`
+      + (isFuture ? 'background:transparent;border:0.5px dashed var(--border);'
+        : allDone  ? 'background:var(--text-primary);border:1.5px solid var(--text-primary);'
+        : partial  ? 'background:rgba(124,131,253,0.10);border:1.5px solid #7C83FD;'
+        : 'background:var(--bg-secondary);border:0.5px solid var(--border-md);');
+    dot.innerHTML = isFuture ? ''
+      : allDone  ? '<i class="ti ti-check" style="font-size:14px;color:var(--bg-primary)"></i>'
+      : partial  ? `<span style="font-weight:600;color:#7C83FD;">${doneCnt}/${total}</span>`
+      : `<span style="color:var(--text-tertiary);">—</span>`;
 
     const dateLbl = document.createElement('div');
     dateLbl.style.cssText = `font-size:11px;color:var(--text-tertiary);`;
@@ -2833,13 +2846,13 @@ function renderWeekFromMonday(mon) {
     if (!routineStats.length) {
       dailyEl.innerHTML = '<div style="font-size:13px;color:var(--text-tertiary);padding:8px 0;">등록된 루틴이 없어요</div>';
     } else {
-      dailyEl.innerHTML = '<div style="display:flex;flex-direction:column;gap:6px;">'
+      dailyEl.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px 16px;">'
         + routineStats.map(function(s) {
           var pct2 = Math.round(s.achieved / s.total * 100);
-          return '<div style="display:flex;align-items:center;gap:10px;">'
+          return '<div style="display:flex;align-items:center;gap:8px;min-width:0;">'
             + '<span style="font-size:13px;color:var(--text-primary);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+s.name+'</span>'
-            + '<span style="font-size:12px;color:var(--text-tertiary);flex-shrink:0;">'+s.achieved+'/'+s.total+'</span>'
-            + '<div style="width:60px;height:4px;border-radius:2px;background:var(--border);flex-shrink:0;">'
+            + '<span style="font-size:11px;color:var(--text-tertiary);flex-shrink:0;">'+s.achieved+'/'+s.total+'</span>'
+            + '<div style="width:36px;height:3px;border-radius:2px;background:var(--border);flex-shrink:0;">'
             +   '<div style="height:100%;border-radius:2px;background:'+(pct2===100?'#43E97B':'var(--text-primary)')+';width:'+pct2+'%;"></div>'
             + '</div>'
             + '</div>';
@@ -5280,9 +5293,8 @@ function renderDiaryEditor() {
   document.getElementById('diary-weather-error').style.display   = 'none';
   document.getElementById('diary-weather-loading').style.display = '';
   diaryFetchWeather();
-  // 확언 렌더 (매일 동일한 목록, 따라쓰기는 날짜별)
+  // 확언 렌더 (매일 동일한 목록, 따라쓰기는 날짜별 복원)
   affmRender();
-  affmReset();
   // 저장된 내용 줄마다 ▪ 붙이기 (이미 있으면 스킵)
   const rawContent = data.content || '';
   document.getElementById('diary-content').value = rawContent
@@ -5679,7 +5691,11 @@ function affmRender() {
       setTimeout(adjustH, 0);
       textarea.oninput = function() {
         adjustH();
-        diaryData.affirmationTypings[totalIdx] = textarea.value;
+        // 항상 현재 날짜 데이터에 저장
+        var curDk = diaryDateKey(diaryViewDate);
+        var curData = diaryGetOrCreate(curDk);
+        if (!curData.affirmationTypings) curData.affirmationTypings = {};
+        curData.affirmationTypings[totalIdx] = textarea.value;
         lsAutoSave();
         var original = affText.trim();
         var typed = textarea.value.trim();
@@ -5723,8 +5739,8 @@ function affmAdd() {
 }
 
 function affmReset() {
-  var dk = diaryDateKey(diaryViewDate);
-  var d = diaryGetOrCreate(dk);
+  var curDk = diaryDateKey(diaryViewDate);
+  var d = diaryGetOrCreate(curDk);
   d.affirmationTypings = {};
   lsAutoSave(); affmRender();
 }
@@ -6561,6 +6577,7 @@ function retroGoToWf() {
   document.querySelector('[data-page="routine"]').classList.add('active');
   document.getElementById('page-routine').classList.add('active');
   switchTab('today');
+  wfViewMonday = getMonday(now);
   renderWf();
 }
 
