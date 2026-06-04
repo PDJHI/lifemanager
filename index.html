@@ -292,9 +292,9 @@
       </div>
       <i id="toggle-sidebar" class="ti ti-layout-sidebar-left-collapse" onclick="toggleSidebar()" title="사이드바 접기"></i>
     </div>
-    <div class="date-block" style="margin:8px 16px 4px;text-align:center;">
-      <div class="date-day" id="s-date"></div>
-      <div class="date-info" id="s-day"></div>
+    <div class="date-block" style="margin:8px 16px 4px;text-align:center;display:block;width:auto;">
+      <div class="date-day" id="s-date" style="text-align:center;"></div>
+      <div class="date-info" id="s-day" style="text-align:center;"></div>
     </div>
     <div class="nav-section">
       <div class="nav-label">메인</div>
@@ -8736,14 +8736,10 @@ function renderMGoalsList() {
     </div>`; return;
   }
   listEl.innerHTML = entries.map(([k, d]) => {
-    const badges = RETRO_MONTHLY_CATS.map(cat =>
-      (d.cats && d.cats[cat] && d.cats[cat].goal) ? `<span style="font-size:12px;color:var(--text-tertiary);">${cat}</span>` : ''
-    ).filter(Boolean).join(' · ');
     return `<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:0.5px solid var(--border);">
       <div onclick="mGoalsOpenEntry('${k}')" style="display:flex;align-items:center;gap:12px;flex:1;cursor:pointer;min-width:0;">
         <div style="flex:1;min-width:0;">
-          <div style="font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:3px;">${mGoalsLabelOf(k)} ${d.slogan ? `<span style="font-size:13px;font-weight:400;color:var(--text-tertiary);">· ${d.slogan}</span>` : ''}</div>
-          <div style="font-size:12px;color:var(--text-tertiary);">${badges||'목표 미작성'}</div>
+          <div style="font-size:15px;font-weight:600;color:var(--text-primary);">${mGoalsLabelOf(k)} ${d.slogan ? `<span style="font-size:13px;font-weight:400;color:var(--text-tertiary);">· ${d.slogan}</span>` : ''}</div>
         </div>
       </div>
       <i class="ti ti-chevron-right" onclick="mGoalsOpenEntry('${k}')" style="color:var(--text-tertiary);font-size:16px;cursor:pointer;"></i>
@@ -9341,14 +9337,28 @@ function renderRetroHome() {
     const entries = Object.entries(retroWeeklyContent)
       .filter(([,v]) => v).sort((a,b) => b[0].localeCompare(a[0])).slice(0, 4);
     wEl.innerHTML = entries.length
-      ? entries.map(([k, v]) => `
-        <div onclick="selectRetro('weekly');retroWeeklyLoad('${k}')" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border);cursor:pointer;">
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:13px;font-weight:600;color:var(--text-primary);">${k}</div>
-            <div style="font-size:11px;color:var(--text-tertiary);margin-top:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${v.replace(/▪\s*/g,'').slice(0,50)}</div>
-          </div>
-          <i class="ti ti-chevron-right" style="color:var(--text-tertiary);font-size:13px;flex-shrink:0;"></i>
-        </div>`).join('')
+      ? entries.map(([k, v]) => {
+          var m = k.match(/^(\d{4})-W(\d{2})-(\d{2})$/);
+          var avgScore = '-';
+          if (m) {
+            var mon = new Date(parseInt(m[1]), parseInt(m[2])-1, parseInt(m[3]));
+            var scores = [];
+            for (var i = 0; i < 7; i++) {
+              var dt = addDays(mon, i);
+              var dk = dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+              var sc = diaryStore[dk] && diaryStore[dk].score;
+              if (sc) scores.push(sc);
+            }
+            if (scores.length) avgScore = (scores.reduce(function(a,b){return a+b;},0)/scores.length).toFixed(1);
+          }
+          return `<div onclick="selectRetro('weekly');retroWeeklyLoad('${k}')" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border);cursor:pointer;">
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13px;font-weight:600;color:var(--text-primary);">${fmtWeekKey(k)}</div>
+            </div>
+            ${avgScore !== '-' ? `<span style="font-size:11px;color:var(--text-tertiary);">avg ${avgScore}</span>` : ''}
+            <i class="ti ti-chevron-right" style="color:var(--text-tertiary);font-size:13px;flex-shrink:0;margin-left:4px;"></i>
+          </div>`;
+        }).join('')
       : '<div style="padding:16px 0;text-align:center;font-size:12px;color:var(--text-tertiary);">아직 작성된 회고가 없어요</div>';
     if (wEl.lastElementChild) wEl.lastElementChild.style.borderBottom = 'none';
   }
@@ -9360,16 +9370,16 @@ function renderRetroHome() {
       .filter(([,c]) => c['_saved']).sort((a,b) => b[0].localeCompare(a[0])).slice(0, 4);
     mEl.innerHTML = entries.length
       ? entries.map(([mk, cats]) => {
-          const badges = ['자산','관계','건강','경험','커리어','성장'].map(cat => {
-            const a = (cats[cat] && cats[cat].achieved); if (!a) return '';
-            return `<span style="font-size:11px;">${{자산:'💰',관계:'🤝',건강:'💪',경험:'🌟',커리어:'🚀',성장:'🌱'}[cat]}${a==='달성'?'✅':a==='부분달성'?'🔶':'❌'}</span>`;
-          }).filter(Boolean).join(' ');
+          const avgScore = (() => {
+            const scores = RETRO_MONTHLY_CATS.map(c => cats[c] && parseFloat(cats[c].score)).filter(Boolean);
+            return scores.length ? (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1) : null;
+          })();
           return `<div onclick="selectRetro('monthly');retroMonthlyJumpTo('${mk}')" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border);cursor:pointer;">
             <div style="flex:1;min-width:0;">
-              <div style="font-size:13px;font-weight:600;color:var(--text-primary);">${mk}</div>
-              <div style="font-size:11px;color:var(--text-tertiary);margin-top:2px;">${badges||'기록됨'}</div>
+              <div style="font-size:13px;font-weight:600;color:var(--text-primary);">${fmtMonthKey(mk)}</div>
             </div>
-            <i class="ti ti-chevron-right" style="color:var(--text-tertiary);font-size:13px;flex-shrink:0;"></i>
+            ${avgScore ? `<span style="font-size:11px;color:var(--text-tertiary);">avg ${avgScore}</span>` : ''}
+            <i class="ti ti-chevron-right" style="color:var(--text-tertiary);font-size:13px;flex-shrink:0;margin-left:4px;"></i>
           </div>`;
         }).join('')
       : '<div style="padding:16px 0;text-align:center;font-size:12px;color:var(--text-tertiary);">아직 작성된 회고가 없어요</div>';
@@ -9382,19 +9392,13 @@ function renderRetroHome() {
     const entries = Object.entries(retroQuarterlyData)
       .filter(([,c]) => c['_saved']).sort((a,b) => b[0].localeCompare(a[0])).slice(0, 4);
     qEl.innerHTML = entries.length
-      ? entries.map(([qk, cats]) => {
-          const badges = ['자산','관계','건강','경험','커리어','성장'].map(cat => {
-            const a = (cats[cat] && cats[cat].achieved); if (!a) return '';
-            return `<span style="font-size:11px;">${{자산:'💰',관계:'🤝',건강:'💪',경험:'🌟',커리어:'🚀',성장:'🌱'}[cat]}${a==='달성'?'✅':a==='부분달성'?'🔶':'❌'}</span>`;
-          }).filter(Boolean).join(' ');
-          return `<div onclick="selectRetro('quarterly');retroQuarterlyJumpTo('${qk}')" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border);cursor:pointer;">
+      ? entries.map(([qk]) =>
+          `<div onclick="selectRetro('quarterly');retroQuarterlyJumpTo('${qk}')" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border);cursor:pointer;">
             <div style="flex:1;min-width:0;">
-              <div style="font-size:13px;font-weight:600;color:var(--text-primary);">${qk}</div>
-              <div style="font-size:11px;color:var(--text-tertiary);margin-top:2px;">${badges||'기록됨'}</div>
+              <div style="font-size:13px;font-weight:600;color:var(--text-primary);">${fmtQKey(qk)}</div>
             </div>
             <i class="ti ti-chevron-right" style="color:var(--text-tertiary);font-size:13px;flex-shrink:0;"></i>
-          </div>`;
-        }).join('')
+          </div>`).join('')
       : '<div style="padding:16px 0;text-align:center;font-size:12px;color:var(--text-tertiary);">아직 작성된 회고가 없어요</div>';
     if (qEl.lastElementChild) qEl.lastElementChild.style.borderBottom = 'none';
   }
@@ -9405,19 +9409,13 @@ function renderRetroHome() {
     const entries = Object.entries(retroYearlyData)
       .filter(([,c]) => c['_saved']).sort((a,b) => b[0].localeCompare(a[0])).slice(0, 4);
     yEl.innerHTML = entries.length
-      ? entries.map(([yk, cats]) => {
-          const badges = ['자산','관계','건강','경험','커리어','성장'].map(cat => {
-            const a = (cats[cat] && cats[cat].achieved); if (!a) return '';
-            return `<span style="font-size:11px;">${{자산:'💰',관계:'🤝',건강:'💪',경험:'🌟',커리어:'🚀',성장:'🌱'}[cat]}${a==='달성'?'✅':a==='부분달성'?'🔶':'❌'}</span>`;
-          }).filter(Boolean).join(' ');
-          return `<div onclick="selectRetro('yearly');retroYearlyJumpTo('${yk}')" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border);cursor:pointer;">
+      ? entries.map(([yk]) =>
+          `<div onclick="selectRetro('yearly');retroYearlyJumpTo('${yk}')" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border);cursor:pointer;">
             <div style="flex:1;min-width:0;">
               <div style="font-size:13px;font-weight:600;color:var(--text-primary);">${yk}년</div>
-              <div style="font-size:11px;color:var(--text-tertiary);margin-top:2px;">${badges||'기록됨'}</div>
             </div>
             <i class="ti ti-chevron-right" style="color:var(--text-tertiary);font-size:13px;flex-shrink:0;"></i>
-          </div>`;
-        }).join('')
+          </div>`).join('')
       : '<div style="padding:16px 0;text-align:center;font-size:12px;color:var(--text-tertiary);">아직 작성된 회고가 없어요</div>';
     if (yEl.lastElementChild) yEl.lastElementChild.style.borderBottom = 'none';
   }
@@ -9934,18 +9932,23 @@ document.getElementById('logout-btn').addEventListener('click', function() {
       appEl.style.display  = '';
       document.querySelector('[data-page="dashboard"]').click();
 
-      // 10분 비활동 시 자동 로그아웃 (입력 중 포함)
+      // 10분 비활동 시 자동 로그아웃
       const IDLE_MS = 10 * 60 * 1000;
-      let idleTimer = null;
-      window._resetIdle = function() {
-        clearTimeout(idleTimer);
-        idleTimer = setTimeout(() => signOut(auth), IDLE_MS);
-      };
-      ['mousemove','mousedown','keydown','keypress','keyup',
-       'touchstart','touchmove','scroll','click','input','change','focus','wheel']
-        .forEach(evt => {
-          window.addEventListener(evt, window._resetIdle, { passive: true, capture: true });
-        });
+      if (!window._idleTimerSetup) {
+        window._idleTimerSetup = true;
+        window._idleTimer = null;
+        window._resetIdle = function() {
+          clearTimeout(window._idleTimer);
+          window._idleTimer = setTimeout(function() {
+            if (window._fbSignOut) window._fbSignOut();
+          }, IDLE_MS);
+        };
+        ['mousemove','mousedown','keydown','keypress','keyup',
+         'touchstart','touchmove','scroll','click','input','change','focus','wheel']
+          .forEach(function(evt) {
+            window.addEventListener(evt, window._resetIdle, { passive: true, capture: true });
+          });
+      }
       window._resetIdle();
 
     } else {
