@@ -9122,28 +9122,29 @@ function retroNav(type, dir) {
   retroShowDetail(type);
 }
 
+// weekKey → "6월 2주차 (6/2~6/8)" 변환
+function fmtWeekKey(k) {
+  var m = k.match(/^(\d{4})-W(\d{2})-(\d{2})$/);
+  if (!m) return k;
+  var mon = new Date(parseInt(m[1]), parseInt(m[2])-1, parseInt(m[3]));
+  var sun = new Date(mon); sun.setDate(sun.getDate()+6);
+  var weekNum = Math.ceil(mon.getDate() / 7);
+  return (mon.getMonth()+1) + '월 ' + weekNum + '주차 (' + (mon.getMonth()+1) + '/' + mon.getDate() + '~' + (sun.getMonth()+1) + '/' + sun.getDate() + ')';
+}
+// "2026-05" → "2026년 5월" 변환
+function fmtMonthKey(k) {
+  var p = k.split('-');
+  if (p.length === 2) return p[0] + '년 ' + parseInt(p[1]) + '월';
+  return k;
+}
+// "2026-Q2" → "2026년 2분기" 변환
+function fmtQKey(k) {
+  var m = k.match(/^(\d{4})-Q(\d)$/);
+  if (m) return m[1] + '년 ' + m[2] + '분기';
+  return k;
+}
+
 function renderRetro(type) {
-  // weekKey → "6월 2주차 (6/2~6/8)" 변환
-  function fmtWeekKey(k) {
-    var m = k.match(/^(\d{4})-W(\d{2})-(\d{2})$/);
-    if (!m) return k;
-    var mon = new Date(parseInt(m[1]), parseInt(m[2])-1, parseInt(m[3]));
-    var sun = new Date(mon); sun.setDate(sun.getDate()+6);
-    var weekNum = Math.ceil(mon.getDate() / 7);
-    return (mon.getMonth()+1) + '월 ' + weekNum + '주차 (' + (mon.getMonth()+1) + '/' + mon.getDate() + '~' + (sun.getMonth()+1) + '/' + sun.getDate() + ')';
-  }
-  // "2026-05" → "2026년 5월" 변환
-  function fmtMonthKey(k) {
-    var p = k.split('-');
-    if (p.length === 2) return p[0] + '년 ' + parseInt(p[1]) + '월';
-    return k;
-  }
-  // "2026-Q2" → "2026년 2분기" 변환
-  function fmtQKey(k) {
-    var m = k.match(/^(\d{4})-Q(\d)$/);
-    if (m) return m[1] + '년 ' + m[2] + '분기';
-    return k;
-  }
   const listRenderers = {
     weekly: () => {
       const listEl = document.getElementById('retro-weekly-list');
