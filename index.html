@@ -499,10 +499,10 @@
           <!-- 올해의 보상 -->
           <div class="card" style="padding:14px 16px;">
             <div class="card-title" style="margin-bottom:10px;"><i class="ti ti-gift"></i>올해의 보상</div>
-            <textarea id="yearly-reward-input" rows="3"
-              placeholder="▪ 올해 목표를 달성하면 나에게 줄 보상을 적어보세요..."
-              onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this)"
-              style="width:100%;resize:none;border:0.5px solid var(--border-md);border-radius:var(--radius-md);outline:none;background:var(--bg-secondary);font-size:15px;color:var(--text-primary);font-family:inherit;line-height:1.8;padding:8px 10px;"></textarea>
+            <div id="yearly-reward-list" style="display:flex;flex-direction:column;gap:4px;margin-bottom:6px;"></div>
+            <input type="text" id="yearly-reward-add" placeholder="+ 보상 추가..."
+              onkeydown="if(event.key==='Enter')yGoalsRewardAdd()"
+              style="width:100%;font-size:14px;padding:5px 10px;border:0.5px dashed var(--border-md);border-radius:var(--radius-md);background:transparent;color:var(--text-primary);font-family:inherit;outline:none;box-sizing:border-box;">
           </div>
 
           <!-- 세부 목표 -->
@@ -570,10 +570,10 @@
           <!-- 이번 분기 보상 -->
           <div class="card" style="padding:14px 16px;">
             <div class="card-title" style="margin-bottom:10px;"><i class="ti ti-gift"></i>이번 분기 보상</div>
-            <textarea id="qgoals-reward-input" rows="3"
-              placeholder="▪ 이번 분기 목표를 달성하면 나에게 줄 보상을 적어보세요..."
-              onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this)"
-              style="width:100%;resize:none;border:0.5px solid var(--border-md);border-radius:var(--radius-md);outline:none;background:var(--bg-secondary);font-size:15px;color:var(--text-primary);font-family:inherit;line-height:1.8;padding:8px 10px;"></textarea>
+            <div id="qgoals-reward-list" style="display:flex;flex-direction:column;gap:4px;margin-bottom:6px;"></div>
+            <input type="text" id="qgoals-reward-add" placeholder="+ 보상 추가..."
+              onkeydown="if(event.key==='Enter')qGoalsRewardAdd()"
+              style="width:100%;font-size:14px;padding:5px 10px;border:0.5px dashed var(--border-md);border-radius:var(--radius-md);background:transparent;color:var(--text-primary);font-family:inherit;outline:none;box-sizing:border-box;">
           </div>
 
           <!-- 세부 목표 -->
@@ -641,10 +641,10 @@
           <!-- 이번 달 보상 -->
           <div class="card" style="padding:14px 16px;">
             <div class="card-title" style="margin-bottom:10px;"><i class="ti ti-gift"></i>이번 달 보상</div>
-            <textarea id="mgoals-reward-input" rows="3"
-              placeholder="▪ 이번 달 목표를 달성하면 나에게 줄 보상을 적어보세요..."
-              onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this)"
-              style="width:100%;resize:none;border:0.5px solid var(--border-md);border-radius:var(--radius-md);outline:none;background:var(--bg-secondary);font-size:15px;color:var(--text-primary);font-family:inherit;line-height:1.8;padding:8px 10px;"></textarea>
+            <div id="mgoals-reward-list" style="display:flex;flex-direction:column;gap:4px;margin-bottom:6px;"></div>
+            <input type="text" id="mgoals-reward-add" placeholder="+ 보상 추가..."
+              onkeydown="if(event.key==='Enter')mGoalsRewardAdd()"
+              style="width:100%;font-size:14px;padding:5px 10px;border:0.5px dashed var(--border-md);border-radius:var(--radius-md);background:transparent;color:var(--text-primary);font-family:inherit;outline:none;box-sizing:border-box;">
             <div id="mgoals-last-reward" style="margin-top:10px;display:none;">
               <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">지난달 보상</div>
               <div id="mgoals-last-reward-text" style="font-size:13px;color:var(--text-secondary);padding:6px 10px;border-radius:var(--radius-md);background:var(--bg-secondary);border:0.5px solid var(--border);white-space:pre-wrap;"></div>
@@ -1574,14 +1574,14 @@
                 </div>
               </div>
               <!-- 2행: 원씽 -->
-              <div style="padding-top:12px;border-top:0.5px solid var(--border);">
+              <div style="margin-top:14px;padding-top:14px;border-top:0.5px solid var(--border);">
                 <div style="font-size:12px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
                   <span style="font-size:14px;">⭐</span>원씽
                 </div>
                 <div id="retro-wf-onething" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;"></div>
               </div>
               <!-- 3행: 보상 -->
-              <div style="padding-top:12px;border-top:0.5px solid var(--border);">
+              <div style="margin-top:14px;padding-top:14px;border-top:0.5px solid var(--border);">
                 <div style="font-size:12px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
                   <i class="ti ti-gift" style="font-size:14px;"></i>보상
                 </div>
@@ -2722,19 +2722,26 @@ function renderDashboard() {
       tlEl.innerHTML = '<div style="font-size:13px;color:var(--text-tertiary);padding:8px 0;">오늘 기록된 시간이 없어요</div>';
     } else {
       tlEl.innerHTML = '';
-      // 카테고리별 합산
+      // 대분류 기준 합산
       var catMin = {};
+      var catColor = {};
       tlToday.forEach(function(block) {
-        var cat = tlGetCat(block.catId);
-        var label = cat ? cat.name : (block.label || '기타');
-        catMin[label] = (catMin[label] || 0) + (block.dur || 0);
+        var cat    = tlGetCat(block.catId);
+        var child  = tlCatChildren.find(function(c){ return c.id === block.catId; });
+        var parent = child ? tlCatParents.find(function(p){ return p.id === child.parentId; }) : null;
+        var label  = parent ? parent.name : (cat ? cat.name : '기타');
+        var color  = parent ? parent.color : (cat ? cat.color : '#aaa');
+        catMin[label]   = (catMin[label]   || 0) + (block.dur || 0);
+        catColor[label] = color;
       });
-      var total = tlToday.reduce(function(s,b){return s+(b.dur||0);}, 0);
+      var total = tlToday.reduce(function(s,b){ return s+(b.dur||0); }, 0);
       Object.keys(catMin).forEach(function(cat) {
         var min = catMin[cat];
         var pct = total ? Math.round(min/total*100) : 0;
         var row = document.createElement('div');
         row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:3px 0;';
+        var dot = document.createElement('div');
+        dot.style.cssText = 'width:8px;height:8px;border-radius:50%;flex-shrink:0;background:' + (catColor[cat] || 'var(--text-primary)') + ';';
         var lbl = document.createElement('span');
         lbl.style.cssText = 'font-size:13px;color:var(--text-primary);flex:1;';
         lbl.textContent = cat;
@@ -2742,11 +2749,11 @@ function renderDashboard() {
         time.style.cssText = 'font-size:12px;color:var(--text-tertiary);flex-shrink:0;';
         time.textContent = Math.floor(min/60) + 'h ' + (min%60) + 'm';
         var bar = document.createElement('div');
-        bar.style.cssText = 'width:60px;height:4px;border-radius:2px;background:var(--border);flex-shrink:0;';
+        bar.style.cssText = 'width:50px;height:4px;border-radius:2px;background:var(--border);flex-shrink:0;';
         var fill = document.createElement('div');
-        fill.style.cssText = 'height:100%;border-radius:2px;background:var(--text-primary);width:'+pct+'%;';
+        fill.style.cssText = 'height:100%;border-radius:2px;background:' + (catColor[cat] || 'var(--text-primary)') + ';width:' + pct + '%;opacity:0.8;';
         bar.appendChild(fill);
-        row.appendChild(lbl); row.appendChild(time); row.appendChild(bar);
+        row.appendChild(dot); row.appendChild(lbl); row.appendChild(time); row.appendChild(bar);
         tlEl.appendChild(row);
       });
     }
@@ -5232,10 +5239,6 @@ function renderDiaryList() {
     const d = diaryKeyToDate(k);
     const days = ['일','월','화','수','목','금','토'];
     const scoreStars = v.score ? '★'.repeat(Math.round(v.score/2)) + '☆'.repeat(5-Math.round(v.score/2)) : '';
-    const moodChips = (v.mood||[]).slice(0,3).map(m => {
-      const o = DIARY_MOOD_OPTIONS.find(x=>x.label===m);
-      return o ? `<span style="font-size:13px">${o.emoji}</span>` : '';
-    }).join('');
     const preview = (v.content||'').replace(/\n/g,' ').slice(0,60);
     const hue = v.score ? Math.round((v.score/10)*120) : null;
     return `
@@ -5253,12 +5256,9 @@ function renderDiaryList() {
       <div style="flex:1;min-width:0;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
           <span style="font-size:15px;font-weight:600;color:var(--text-primary);">${v.title||'제목 없음'}</span>
-          ${v.weather ? `<span style="font-size:15px;" title="${(WMO_LABELS && WMO_LABELS[v.weather.code])||''} ${v.weather.temp}°C">${(WMO_CODES && WMO_CODES[v.weather.code])||'🌡️'} <span style="font-size:11px;color:var(--text-tertiary);">${v.weather.temp}°C</span></span>` : ''}
-          ${moodChips}
         </div>
         ${scoreStars ? `<div style="font-size:12px;color:#F6A623;letter-spacing:-1px;margin-bottom:3px;">${scoreStars} <span style="color:var(--text-tertiary);font-size:11px;">${v.score}점</span></div>` : ''}
         ${preview ? `<div style="font-size:13px;color:var(--text-tertiary);line-height:1.5;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${preview}</div>` : ''}
-        ${v.body ? `<div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;">${DIARY_BODY_OPTIONS.find(b=>b.label===v.body) ? DIARY_BODY_OPTIONS.find(b=>b.label===v.body).emoji : ''} ${v.body}</div>` : ''}
       </div>
       <i class="ti ti-chevron-right" style="color:var(--text-tertiary);font-size:16px;flex-shrink:0;align-self:center;"></i>
     </div>`;
@@ -7139,20 +7139,39 @@ function renderRetroYearlyDashboard() {
     }
   }
 
-  const rewardEl = document.getElementById('retro-yearly-reward-grid');
-  if (rewardEl) {
+  // 보상 — 카드 구조
+  const rewardElY = document.getElementById('retro-yearly-reward-grid');
+  if (rewardElY) {
     if (!retroYearlyData[yk]) retroYearlyData[yk] = {};
-    const yGoalReward = (yearlyGoalsData[retroCursor['yearly'].getFullYear()] && yearlyGoalsData[retroCursor['yearly'].getFullYear()].reward) || '';
-    if (!retroYearlyData[yk]['_reward'] && yGoalReward) {
-      retroYearlyData[yk]['_reward'] = yGoalReward;
+    const yData = yearlyGoalsData[retroCursor['yearly'].getFullYear()];
+    if (!retroYearlyData[yk]._rewardItems) {
+      var srcItemsY = yData && yData.rewardItems;
+      if (srcItemsY && srcItemsY.length) {
+        retroYearlyData[yk]._rewardItems = srcItemsY.map(function(x){ return { id: ygNextId++, text: x.text }; });
+      } else {
+        var legacyRY = (yData && yData.reward) || retroYearlyData[yk]['_reward'] || '';
+        retroYearlyData[yk]._rewardItems = legacyRY.trim()
+          ? legacyRY.split('\n').map(function(l){ return l.replace(/^[▪◦\-\s]+/,'').trim(); }).filter(Boolean).map(function(t){ return { id: ygNextId++, text: t }; })
+          : [];
+      }
     }
-    const rewardVal = retroYearlyData[yk]['_reward'] || '';
-    rewardEl.innerHTML = `
-      ${yGoalReward && rewardVal === yGoalReward ? `<div style="font-size:11px;color:#185FA5;margin-bottom:6px;display:flex;align-items:center;gap:4px;"><span style="padding:1px 6px;border-radius:8px;background:#E6F1FB;font-weight:600;">연간목표 연동</span></div>` : ''}
-      <textarea id="retro-yearly-reward-ta" rows="3"
-        placeholder="▪ 올해 목표를 달성하면 나에게 줄 보상을 적어보세요..."
-        onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroYearlySetReward(this.value)"
-        style="width:100%;resize:none;border:0.5px solid var(--border-md);border-radius:var(--radius-md);outline:none;background:var(--bg-secondary);font-size:15px;color:var(--text-primary);font-family:inherit;line-height:1.8;padding:8px 10px;">${rewardVal}</textarea>`;
+    var rItemsY = retroYearlyData[yk]._rewardItems;
+    rewardElY.innerHTML = '';
+    if (!rItemsY.length) {
+      rewardElY.innerHTML = '<div style="font-size:13px;color:var(--text-tertiary);">등록된 보상이 없어요</div>';
+    } else {
+      rItemsY.forEach(function(item) {
+        var row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg-secondary);margin-bottom:4px;';
+        var dot = document.createElement('div');
+        dot.style.cssText = 'width:6px;height:6px;border-radius:50%;background:#EF9F27;flex-shrink:0;';
+        var txt = document.createElement('span');
+        txt.style.cssText = 'flex:1;font-size:14px;color:var(--text-primary);';
+        txt.textContent = item.text;
+        row.appendChild(dot); row.appendChild(txt);
+        rewardElY.appendChild(row);
+      });
+    }
   }
 }
 
@@ -7457,8 +7476,8 @@ function renderRetroQuarterlyDashboard() {
 
   const yearEl  = document.getElementById('retro-quarterly-year');
   const labelEl = document.getElementById('retro-quarterly-label');
-  if (yearEl)  yearEl.textContent  = `${year}년`;
-  if (labelEl) labelEl.textContent = `Q${q}`;
+  if (yearEl)  yearEl.textContent  = year + '년';
+  if (labelEl) labelEl.textContent = 'Q' + q;
 
   // 분기 날짜 범위
   const startMonth = (q-1)*3;
@@ -7467,7 +7486,7 @@ function renderRetroQuarterlyDashboard() {
     const dim = new Date(year, m+1, 0).getDate();
     for (let dd = 1; dd <= dim; dd++) {
       const dt = new Date(year, m, dd);
-      const dk = `${year}-${String(m+1).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
+      const dk = year+'-'+String(m+1).padStart(2,'0')+'-'+String(dd).padStart(2,'0');
       const diary = diaryStore[dk];
       const hasDiary = !!((diary && diary.title) || (diary && diary.content));
       const score = (diary && diary.score) || 0;
@@ -7478,7 +7497,7 @@ function renderRetroQuarterlyDashboard() {
       const todos = (todoStore[wk]||[]).filter(t=>t.dayIdx===dowIdx);
       allDays.push({ dt, dk, hasDiary, score, diary, totalMins, timeLogs,
         todoDone: todos.filter(t=>t.done).length, todoTotal: todos.length,
-        routineAchieved: streakData[`${year}-${m}-${dd}`]||false });
+        routineAchieved: streakData[dt.getFullYear()+'-'+dt.getMonth()+'-'+dt.getDate()]||false });
     }
   }
 
@@ -7493,38 +7512,24 @@ function renderRetroQuarterlyDashboard() {
     const avgScore    = scores.length ? (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1) : '-';
     const avgHue      = scores.length ? Math.round(parseFloat(avgScore)/10*120) : null;
     const total       = allDays.length;
-    sumEl.innerHTML = `
-      <div class="card" style="text-align:center;">
-        <div style="font-size:25px;font-weight:700;color:var(--text-primary);">${routineDays}<span style="font-size:15px;color:var(--text-tertiary);">/${total}일</span></div>
-        <div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;">루틴 달성일</div>
-        <div style="height:3px;background:var(--bg-secondary);border-radius:2px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:${Math.round(routineDays/total*100)}%;background:#43E97B;border-radius:2px;"></div></div>
-      </div>
-      <div class="card" style="text-align:center;">
-        <div style="font-size:25px;font-weight:700;color:var(--text-primary);">${doneTodos}<span style="font-size:15px;color:var(--text-tertiary);">/${totalTodos}</span></div>
-        <div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;">투두 완료</div>
-        <div style="height:3px;background:var(--bg-secondary);border-radius:2px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:${totalTodos?Math.round(doneTodos/totalTodos*100):0}%;background:#7C83FD;border-radius:2px;"></div></div>
-      </div>
-      <div class="card" style="text-align:center;">
-        <div style="font-size:25px;font-weight:700;color:var(--text-primary);">${diaryDays}<span style="font-size:15px;color:var(--text-tertiary);">/${total}일</span></div>
-        <div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;">일기 작성일</div>
-        <div style="height:3px;background:var(--bg-secondary);border-radius:2px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:${Math.round(diaryDays/total*100)}%;background:#FF6B9D;border-radius:2px;"></div></div>
-      </div>
-      <div class="card" style="text-align:center;">
-        <div style="font-size:25px;font-weight:700;${avgHue?'color:hsl('+avgHue+',50%,40%)':'color:var(--text-tertiary)'};">${avgScore}${avgScore!=='-'?'<span style="font-size:15px;color:var(--text-tertiary);"> / 10</span>':''}</div>
-        <div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;">하루 평균 점수</div>
-        <div style="height:3px;background:var(--bg-secondary);border-radius:2px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:${avgScore!=='-'?Math.round(parseFloat(avgScore)/10*100):0}%;background:${avgHue?'hsl('+avgHue+',60%,55%)':'var(--border)'};border-radius:2px;"></div></div>
-      </div>
 
-      <div class="card" style="text-align:center;">
-        <div style="font-size:25px;font-weight:700;color:var(--text-primary);">${otDone}<span style="font-size:15px;color:var(--text-tertiary);">/${otInput}</span></div>
-        <div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;">원씽 달성</div>
-        <div style="height:3px;background:var(--bg-secondary);border-radius:2px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:${otInput?Math.round(otDone/otInput*100):0}%;background:#F6A623;border-radius:2px;"></div></div>
-      </div>
-      <div class="card" style="text-align:center;" id="retro-quarterly-score-card">
-        <div style="font-size:25px;font-weight:700;color:var(--text-primary);" id="retro-quarterly-avg-score">—</div>
-        <div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;">이번 분기 회고 점수 / 10</div>
-        <div style="height:3px;background:var(--bg-secondary);border-radius:2px;margin-top:8px;overflow:hidden;"><div id="retro-quarterly-avg-bar" style="height:100%;width:0%;background:#7C83FD;border-radius:2px;"></div></div>
-      </div>`;
+    // 원씽 달성 집계
+    var otDone = 0, otInput = 0;
+    allDays.forEach(function(day) {
+      var mon2 = getMonday(day.dt);
+      var wk2  = weekKey(mon2);
+      var di2  = (day.dt.getDay() + 6) % 7;
+      var otKey2 = wk2 + '-OT-' + di2;
+      if (oneThingStore[otKey2]) { otInput++; if (oneThingDone[otKey2]) otDone++; }
+    });
+
+    sumEl.innerHTML =
+      '<div class="card" style="text-align:center;"><div style="font-size:25px;font-weight:700;color:var(--text-primary);">'+routineDays+'<span style="font-size:15px;color:var(--text-tertiary);">/'+total+'일</span></div><div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;">루틴 달성일</div><div style="height:3px;background:var(--bg-secondary);border-radius:2px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:'+Math.round(routineDays/total*100)+'%;background:#43E97B;border-radius:2px;"></div></div></div>' +
+      '<div class="card" style="text-align:center;"><div style="font-size:25px;font-weight:700;color:var(--text-primary);">'+doneTodos+'<span style="font-size:15px;color:var(--text-tertiary);">/'+totalTodos+'</span></div><div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;">투두 완료</div><div style="height:3px;background:var(--bg-secondary);border-radius:2px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:'+(totalTodos?Math.round(doneTodos/totalTodos*100):0)+'%;background:#7C83FD;border-radius:2px;"></div></div></div>' +
+      '<div class="card" style="text-align:center;"><div style="font-size:25px;font-weight:700;color:var(--text-primary);">'+diaryDays+'<span style="font-size:15px;color:var(--text-tertiary);">/'+total+'일</span></div><div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;">일기 작성일</div><div style="height:3px;background:var(--bg-secondary);border-radius:2px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:'+Math.round(diaryDays/total*100)+'%;background:#FF6B9D;border-radius:2px;"></div></div></div>' +
+      '<div class="card" style="text-align:center;"><div style="font-size:25px;font-weight:700;'+(avgHue?'color:hsl('+avgHue+',50%,40%)':'color:var(--text-tertiary)')+';">'+avgScore+(avgScore!=='-'?'<span style="font-size:15px;color:var(--text-tertiary);"> / 10</span>':'')+'</div><div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;">하루 평균 점수</div><div style="height:3px;background:var(--bg-secondary);border-radius:2px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:'+(avgScore!=='-'?Math.round(parseFloat(avgScore)/10*100):0)+'%;background:'+(avgHue?'hsl('+avgHue+',60%,55%)':'var(--border)')+';border-radius:2px;"></div></div></div>' +
+      '<div class="card" style="text-align:center;"><div style="font-size:25px;font-weight:700;color:var(--text-primary);">'+otDone+'<span style="font-size:15px;color:var(--text-tertiary);">/'+otInput+'</span></div><div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;">원씽 달성</div><div style="height:3px;background:var(--bg-secondary);border-radius:2px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:'+(otInput?Math.round(otDone/otInput*100):0)+'%;background:#F6A623;border-radius:2px;"></div></div></div>' +
+      '<div class="card" style="text-align:center;" id="retro-quarterly-score-card"><div style="font-size:25px;font-weight:700;color:var(--text-primary);" id="retro-quarterly-avg-score">—</div><div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;">이번 분기 회고 점수 / 10</div><div style="height:3px;background:var(--bg-secondary);border-radius:2px;margin-top:8px;overflow:hidden;"><div id="retro-quarterly-avg-bar" style="height:100%;width:0%;background:#7C83FD;border-radius:2px;"></div></div></div>';
   }
   renderQuarterlyScoreCard();
 
@@ -7541,41 +7546,53 @@ function renderRetroQuarterlyDashboard() {
     }));
     const sorted = Object.entries(parentMap).sort((a,b)=>b[1]-a[1]);
     const totalMins = allDays.reduce((s,d)=>s+d.totalMins,0);
-    if (!sorted.length) { timeCatEl.innerHTML = '<div style="font-size:13px;color:var(--text-tertiary);">시간 기록 없음</div>'; }
-    else {
+    if (!sorted.length) {
+      timeCatEl.innerHTML = '<div style="font-size:13px;color:var(--text-tertiary);">시간 기록 없음</div>';
+    } else {
       const maxV = sorted[0][1];
-      timeCatEl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">` +
+      timeCatEl.innerHTML = '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">' +
         sorted.map(([pid,min]) => {
           const p = tlCatParents.find(x=>x.id===pid)||{name:'기타',color:'#aaa'};
           const pct = totalMins ? Math.round(min/totalMins*100) : 0;
-          return `<div>
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-              <div style="display:flex;align-items:center;gap:5px;"><div style="width:8px;height:8px;border-radius:3px;background:${p.color};"></div><span style="font-size:13px;color:var(--text-primary);">${p.name}</span></div>
-              <span style="font-size:12px;color:var(--text-tertiary);">${tlFormatDur(min)} · ${pct}%</span>
-            </div>
-            <div style="height:5px;background:var(--bg-secondary);border-radius:3px;overflow:hidden;"><div style="height:100%;width:${Math.round(min/maxV*100)}%;background:${p.color};border-radius:3px;"></div></div>
-          </div>`;
-        }).join('') + `</div>`;
+          return '<div><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;"><div style="display:flex;align-items:center;gap:5px;"><div style="width:8px;height:8px;border-radius:3px;background:'+p.color+';"></div><span style="font-size:13px;color:var(--text-primary);">'+p.name+'</span></div><span style="font-size:12px;color:var(--text-tertiary);">'+tlFormatDur(min)+' · '+pct+'%</span></div><div style="height:5px;background:var(--bg-secondary);border-radius:3px;overflow:hidden;"><div style="height:100%;width:'+Math.round(min/maxV*100)+'%;background:'+p.color+';border-radius:3px;"></div></div></div>';
+        }).join('') + '</div>';
     }
   }
 
-  // 보상
+  // 보상 — 카드 구조 (분기목표 연동)
   const rewardEl = document.getElementById('retro-quarterly-reward-grid');
   if (rewardEl) {
     if (!retroQuarterlyData[qk]) retroQuarterlyData[qk] = {};
-    const qNum = Math.ceil((retroCursor['quarterly'].getMonth()+1)/3);
-    const qGoalKey = `${retroCursor['quarterly'].getFullYear()}-Q${qNum}`;
-    const qGoalReward = (qGoalsData[qGoalKey] && qGoalsData[qGoalKey].reward) || '';
-    if (!retroQuarterlyData[qk]['_reward'] && qGoalReward) {
-      retroQuarterlyData[qk]['_reward'] = qGoalReward;
+    const qGoalKey = year + '-Q' + q;
+    const qData = qGoalsData[qGoalKey];
+    if (!retroQuarterlyData[qk]._rewardItems) {
+      var srcItems = qData && qData.rewardItems;
+      if (srcItems && srcItems.length) {
+        retroQuarterlyData[qk]._rewardItems = srcItems.map(function(x){ return { id: ygNextId++, text: x.text }; });
+      } else {
+        var legacyR = (qData && qData.reward) || retroQuarterlyData[qk]['_reward'] || '';
+        retroQuarterlyData[qk]._rewardItems = legacyR.trim()
+          ? legacyR.split('\n').map(function(l){ return l.replace(/^[▪◦\-\s]+/,'').trim(); }).filter(Boolean).map(function(t){ return { id: ygNextId++, text: t }; })
+          : [];
+      }
     }
-    const rewardVal = retroQuarterlyData[qk]['_reward'] || '';
-    rewardEl.innerHTML = `
-      ${qGoalReward && rewardVal === qGoalReward ? `<div style="font-size:11px;color:#185FA5;margin-bottom:6px;display:flex;align-items:center;gap:4px;"><span style="padding:1px 6px;border-radius:8px;background:#E6F1FB;font-weight:600;">분기목표 연동</span></div>` : ''}
-      <textarea id="retro-quarterly-reward-ta" rows="3"
-        placeholder="▪ 이번 분기 목표를 달성하면 나에게 줄 보상을 적어보세요..."
-        onkeydown="diaryContentKeydown(event)" oninput="diaryContentInit(this);retroQuarterlySetReward(this.value)"
-        style="width:100%;resize:none;border:0.5px solid var(--border-md);border-radius:var(--radius-md);outline:none;background:var(--bg-secondary);font-size:15px;color:var(--text-primary);font-family:inherit;line-height:1.8;padding:8px 10px;">${rewardVal}</textarea>`;
+    var rItems = retroQuarterlyData[qk]._rewardItems;
+    rewardEl.innerHTML = '';
+    if (!rItems.length) {
+      rewardEl.innerHTML = '<div style="font-size:13px;color:var(--text-tertiary);">등록된 보상이 없어요</div>';
+    } else {
+      rItems.forEach(function(item) {
+        var row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg-secondary);margin-bottom:4px;';
+        var dot = document.createElement('div');
+        dot.style.cssText = 'width:6px;height:6px;border-radius:50%;background:#EF9F27;flex-shrink:0;';
+        var txt = document.createElement('span');
+        txt.style.cssText = 'flex:1;font-size:14px;color:var(--text-primary);';
+        txt.textContent = item.text;
+        row.appendChild(dot); row.appendChild(txt);
+        rewardEl.appendChild(row);
+      });
+    }
   }
 }
 
@@ -8586,8 +8603,15 @@ function renderQGoals() {
   disp.style.display = ''; inp.style.display = 'none';
   disp.textContent = data.slogan || '더블클릭하여 슬로건을 입력하세요...';
   disp.style.color = data.slogan ? 'var(--text-primary)' : 'var(--text-tertiary)';
-  const rewardEl = document.getElementById('qgoals-reward-input');
-  if (rewardEl) rewardEl.value = data.reward || '';
+  const rewardListQEl = document.getElementById('qgoals-reward-list');
+  if (rewardListQEl) {
+    if (!data.rewardItems) {
+      data.rewardItems = (data.reward && data.reward.trim())
+        ? data.reward.split('\n').map(function(l){ return l.replace(/^[▪◦\-\s]+/,'').trim(); }).filter(Boolean).map(function(t){ return { id: ygNextId++, text: t }; })
+        : [];
+    }
+    renderMGoalsRewardList(rewardListQEl, data);
+  }
   const catsEl  = document.getElementById('qgoals-cats');
   const stratEl = document.getElementById('qgoals-strategy');
   if (!catsEl || !stratEl) return;
@@ -8711,25 +8735,17 @@ function renderMGoalsList() {
       <span style="font-size:13px;">새 월간 목표 버튼으로 시작해보세요</span>
     </div>`; return;
   }
-  const ICON_OPTS = ['🌱','🔥','🌊','⭐','🎯','💎','🌸','🌙','🦋','🏔️','🌈','✨','🍀','🎵','🧭'];
   listEl.innerHTML = entries.map(([k, d]) => {
     const badges = RETRO_MONTHLY_CATS.map(cat =>
-      (d.cats && d.cats[cat] && d.cats[cat].goal) ? `<span style="font-size:12px;">${RETRO_MONTHLY_EMOJIS[cat]}</span>` : ''
-    ).filter(Boolean).join(' ');
-    const icon = d.icon || '📅';
-    const iconPicker = ICON_OPTS.map(ic =>
-      `<span onclick="event.stopPropagation();mGoalsSetIcon('${k}','${ic}')" style="cursor:pointer;font-size:18px;padding:2px;border-radius:4px;background:${ic===icon?'var(--bg-secondary)':'transparent'};">${ic}</span>`
-    ).join('');
+      (d.cats && d.cats[cat] && d.cats[cat].goal) ? `<span style="font-size:12px;color:var(--text-tertiary);">${cat}</span>` : ''
+    ).filter(Boolean).join(' · ');
     return `<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:0.5px solid var(--border);">
       <div onclick="mGoalsOpenEntry('${k}')" style="display:flex;align-items:center;gap:12px;flex:1;cursor:pointer;min-width:0;">
-        <div style="font-size:28px;">${icon}</div>
         <div style="flex:1;min-width:0;">
           <div style="font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:3px;">${mGoalsLabelOf(k)} ${d.slogan ? `<span style="font-size:13px;font-weight:400;color:var(--text-tertiary);">· ${d.slogan}</span>` : ''}</div>
-          <div style="font-size:13px;color:var(--text-tertiary);">${badges||'목표 미작성'}</div>
+          <div style="font-size:12px;color:var(--text-tertiary);">${badges||'목표 미작성'}</div>
         </div>
       </div>
-      <div class="icon-picker-wrap" style="display:none;flex-wrap:wrap;gap:2px;max-width:160px;" id="icon-picker-${k}">${iconPicker}</div>
-      <button onclick="event.stopPropagation();toggleIconPicker('${k}')" style="font-size:12px;padding:3px 8px;border-radius:6px;border:0.5px solid var(--border-md);background:transparent;color:var(--text-tertiary);cursor:pointer;flex-shrink:0;">아이콘</button>
       <i class="ti ti-chevron-right" onclick="mGoalsOpenEntry('${k}')" style="color:var(--text-tertiary);font-size:16px;cursor:pointer;"></i>
     </div>`;
   }).join('');
@@ -8746,6 +8762,146 @@ function mGoalsSetIcon(k, icon) {
   lsAutoSave();
   renderMGoalsList();
 }
+function renderMGoalsRewardList(listEl, data) {
+  listEl.innerHTML = '';
+  (data.rewardItems || []).forEach(function(item, idx) {
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg-secondary);';
+    var dot = document.createElement('div');
+    dot.style.cssText = 'width:6px;height:6px;border-radius:50%;background:#EF9F27;flex-shrink:0;';
+    row.appendChild(dot);
+    var txt = document.createElement('span');
+    txt.style.cssText = 'flex:1;font-size:15px;color:var(--text-primary);cursor:text;outline:none;';
+    txt.textContent = item.text;
+    txt.title = '더블클릭하여 편집';
+    txt.ondblclick = function(e) {
+      e.stopPropagation();
+      txt.contentEditable = 'true';
+      txt.style.background = 'var(--bg-primary)'; txt.style.borderRadius = '3px'; txt.style.padding = '0 3px';
+      txt.focus();
+      var r = document.createRange(); r.selectNodeContents(txt);
+      window.getSelection().removeAllRanges(); window.getSelection().addRange(r);
+    };
+    txt.onblur = function() {
+      var v = txt.textContent.trim();
+      if (v) { item.text = v; } else { data.rewardItems.splice(idx, 1); }
+      txt.contentEditable = 'false'; txt.style.background = ''; txt.style.padding = '';
+      lsAutoSave(); renderMGoalsRewardList(listEl, data);
+    };
+    txt.onkeydown = function(e) {
+      if (e.key==='Enter') { e.preventDefault(); txt.blur(); }
+      if (e.key==='Escape') { txt.textContent = item.text; txt.blur(); }
+    };
+    row.appendChild(txt);
+    var del = document.createElement('i');
+    del.className = 'ti ti-x';
+    del.style.cssText = 'font-size:11px;color:var(--text-tertiary);cursor:pointer;opacity:0;transition:opacity 0.1s;flex-shrink:0;';
+    (function(id) {
+      del.onclick = function(e) { e.stopPropagation(); data.rewardItems = data.rewardItems.filter(function(x){ return x.id !== id; }); lsAutoSave(); renderMGoalsRewardList(listEl, data); };
+    })(item.id);
+    row.onmouseenter = function() { del.style.opacity='1'; };
+    row.onmouseleave = function() { del.style.opacity='0'; };
+    row.appendChild(del);
+    listEl.appendChild(row);
+  });
+}
+
+function mGoalsRewardAdd() {
+  var inp = document.getElementById('mgoals-reward-add');
+  if (!inp) return;
+  var v = inp.value.trim(); if (!v) return;
+  var data = mGoalsGet(mGoalsCurKey);
+  if (!data.rewardItems) data.rewardItems = [];
+  data.rewardItems.push({ id: ygNextId++, text: v });
+  inp.value = '';
+  var listEl = document.getElementById('mgoals-reward-list');
+  if (listEl) renderMGoalsRewardList(listEl, data);
+  lsAutoSave();
+}
+
+function qGoalsRewardAdd() {
+  var inp = document.getElementById('qgoals-reward-add');
+  if (!inp) return;
+  var v = inp.value.trim(); if (!v) return;
+  var data = qGoalsGet(qGoalsCurKey);
+  if (!data.rewardItems) data.rewardItems = [];
+  data.rewardItems.push({ id: ygNextId++, text: v });
+  inp.value = '';
+  var listEl = document.getElementById('qgoals-reward-list');
+  if (listEl) renderMGoalsRewardList(listEl, data);
+  lsAutoSave();
+}
+
+function yGoalsRewardAdd() {
+  var inp = document.getElementById('yearly-reward-add');
+  if (!inp) return;
+  var v = inp.value.trim(); if (!v) return;
+  var data = yearlyGoalsGet(yearlyGoalsKey());
+  if (!data.rewardItems) data.rewardItems = [];
+  data.rewardItems.push({ id: ygNextId++, text: v });
+  inp.value = '';
+  var listEl = document.getElementById('yearly-reward-list');
+  if (listEl) renderMGoalsRewardList(listEl, data);
+  lsAutoSave();
+}
+
+function renderMGoals() {
+  listEl.innerHTML = '';
+  (data.rewardItems || []).forEach(function(item, idx) {
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg-secondary);';
+    var dot = document.createElement('div');
+    dot.style.cssText = 'width:6px;height:6px;border-radius:50%;background:#EF9F27;flex-shrink:0;';
+    row.appendChild(dot);
+    var txt = document.createElement('span');
+    txt.style.cssText = 'flex:1;font-size:15px;color:var(--text-primary);cursor:text;outline:none;';
+    txt.textContent = item.text;
+    txt.title = '더블클릭하여 편집';
+    txt.ondblclick = function(e) {
+      e.stopPropagation();
+      txt.contentEditable = 'true';
+      txt.style.background = 'var(--bg-primary)'; txt.style.borderRadius = '3px'; txt.style.padding = '0 3px';
+      txt.focus();
+      var r = document.createRange(); r.selectNodeContents(txt);
+      window.getSelection().removeAllRanges(); window.getSelection().addRange(r);
+    };
+    txt.onblur = function() {
+      var v = txt.textContent.trim();
+      if (v) { item.text = v; } else { data.rewardItems.splice(idx, 1); }
+      txt.contentEditable = 'false'; txt.style.background = ''; txt.style.padding = '';
+      lsAutoSave(); renderMGoalsRewardList(listEl, data);
+    };
+    txt.onkeydown = function(e) {
+      if (e.key==='Enter') { e.preventDefault(); txt.blur(); }
+      if (e.key==='Escape') { txt.textContent = item.text; txt.blur(); }
+    };
+    row.appendChild(txt);
+    var del = document.createElement('i');
+    del.className = 'ti ti-x';
+    del.style.cssText = 'font-size:11px;color:var(--text-tertiary);cursor:pointer;opacity:0;transition:opacity 0.1s;flex-shrink:0;';
+    (function(id) {
+      del.onclick = function(e) { e.stopPropagation(); data.rewardItems = data.rewardItems.filter(function(x){ return x.id !== id; }); lsAutoSave(); renderMGoalsRewardList(listEl, data); };
+    })(item.id);
+    row.onmouseenter = function() { del.style.opacity='1'; };
+    row.onmouseleave = function() { del.style.opacity='0'; };
+    row.appendChild(del);
+    listEl.appendChild(row);
+  });
+}
+
+function mGoalsRewardAdd() {
+  var inp = document.getElementById('mgoals-reward-add');
+  if (!inp) return;
+  var v = inp.value.trim(); if (!v) return;
+  var data = mGoalsGet(mGoalsCurKey);
+  if (!data.rewardItems) data.rewardItems = [];
+  data.rewardItems.push({ id: ygNextId++, text: v });
+  inp.value = '';
+  var listEl = document.getElementById('mgoals-reward-list');
+  if (listEl) renderMGoalsRewardList(listEl, data);
+  lsAutoSave();
+}
+
 function renderMGoals() {
   const data = mGoalsGet(mGoalsCurKey);
   document.getElementById('mgoals-label').textContent      = mGoalsLabelOf(mGoalsCurKey);
@@ -8755,8 +8911,16 @@ function renderMGoals() {
   disp.style.display = ''; inp.style.display = 'none';
   disp.textContent = data.slogan || '더블클릭하여 슬로건을 입력하세요...';
   disp.style.color = data.slogan ? 'var(--text-primary)' : 'var(--text-tertiary)';
-  const rewardEl = document.getElementById('mgoals-reward-input');
-  if (rewardEl) rewardEl.value = data.reward || '';
+  const rewardListEl = document.getElementById('mgoals-reward-list');
+  if (rewardListEl) {
+    // 기존 문자열 → items 마이그레이션
+    if (!data.rewardItems) {
+      data.rewardItems = (data.reward && data.reward.trim())
+        ? data.reward.split('\n').map(function(l){ return l.replace(/^[▪◦\-\s]+/,'').trim(); }).filter(Boolean).map(function(t){ return { id: ygNextId++, text: t }; })
+        : [];
+    }
+    renderMGoalsRewardList(rewardListEl, data);
+  }
   // 지난달 보상 표시
   const [yr, mo] = mGoalsCurKey.split('-').map(Number);
   const prevD = new Date(yr, mo - 2, 1);
@@ -8808,9 +8972,14 @@ function renderYearlyGoals() {
   }
 
   // 보상
-  const rewardEl = document.getElementById('yearly-reward-input');
-  if (rewardEl) {
-    rewardEl.value = data.reward || '';
+  const rewardListYEl = document.getElementById('yearly-reward-list');
+  if (rewardListYEl) {
+    if (!data.rewardItems) {
+      data.rewardItems = (data.reward && data.reward.trim())
+        ? data.reward.split('\n').map(function(l){ return l.replace(/^[▪◦\-\s]+/,'').trim(); }).filter(Boolean).map(function(t){ return { id: ygNextId++, text: t }; })
+        : [];
+    }
+    renderMGoalsRewardList(rewardListYEl, data);
   }
 
   // 세부 목표 — 항목 카드 구조
@@ -8986,14 +9155,29 @@ function renderRetro(type) {
       const entries = Object.entries(retroWeeklyContent)
         .filter(([,v]) => v).sort((a,b) => b[0].localeCompare(a[0])).slice(0, 10);
       if (!entries.length) { listEl.innerHTML = '<div style="padding:16px 0;text-align:center;font-size:15px;color:var(--text-tertiary);">아직 작성된 회고가 없어요</div>'; return; }
-      listEl.innerHTML = entries.map(([k, v]) => `
-        <div onclick="retroWeeklyLoad('${k}')" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border);cursor:pointer;">
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:15px;font-weight:600;color:var(--text-primary);">${fmtWeekKey(k)}</div>
-            <div style="font-size:12px;color:var(--text-tertiary);margin-top:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${v.replace(/▪\s*/g,'').slice(0,60)}</div>
-          </div>
-          <i class="ti ti-chevron-right" style="color:var(--text-tertiary);font-size:16px;"></i>
-        </div>`).join('');
+      listEl.innerHTML = entries.map(([k, v]) => {
+        // 해당 주 하루 평균 점수 계산
+        var m = k.match(/^(\d{4})-W(\d{2})-(\d{2})$/);
+        var avgScore = '-';
+        if (m) {
+          var mon = new Date(parseInt(m[1]), parseInt(m[2])-1, parseInt(m[3]));
+          var scores = [];
+          for (var i = 0; i < 7; i++) {
+            var dt = addDays(mon, i);
+            var dk = dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+            var sc = diaryStore[dk] && diaryStore[dk].score;
+            if (sc) scores.push(sc);
+          }
+          if (scores.length) avgScore = (scores.reduce(function(a,b){return a+b;},0)/scores.length).toFixed(1);
+        }
+        return '<div onclick="retroWeeklyLoad(\''+k+'\')" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border);cursor:pointer;">'
+          + '<div style="flex:1;min-width:0;">'
+          + '<div style="font-size:15px;font-weight:600;color:var(--text-primary);">'+fmtWeekKey(k)+'</div>'
+          + '</div>'
+          + (avgScore !== '-' ? '<span style="font-size:13px;font-weight:600;color:var(--text-tertiary);">avg '+avgScore+'</span>' : '')
+          + '<i class="ti ti-chevron-right" style="color:var(--text-tertiary);font-size:16px;margin-left:4px;"></i>'
+          + '</div>';
+      }).join('');
       if (listEl.lastElementChild) listEl.lastElementChild.style.borderBottom = 'none';
     },
     monthly: () => {
@@ -9006,7 +9190,7 @@ function renderRetro(type) {
       listEl.innerHTML = entries.map(([mk, cats]) => {
         const badges = RETRO_MONTHLY_CATS.map(cat => {
           const a = (cats[cat] && cats[cat].achieved); if (!a) return '';
-          return `<span style="font-size:13px;">${RETRO_MONTHLY_EMOJIS[cat]}${a==='달성'?'✅':a==='부분달성'?'🔶':'❌'}</span>`;
+          return `<span style="font-size:13px;">${a==='달성'?'✅':a==='부분달성'?'🔶':'❌'} ${cat}</span>`;
         }).filter(Boolean).join(' ');
         const avgScore = (() => {
           const scores = RETRO_MONTHLY_CATS.map(c => cats[c] && parseFloat(cats[c].score)).filter(Boolean);
@@ -9034,7 +9218,7 @@ function renderRetro(type) {
       listEl.innerHTML = entries.map(([qk, cats]) => {
         const badges = RETRO_MONTHLY_CATS.map(cat => {
           const a = (cats[cat] && cats[cat].achieved); if (!a) return '';
-          return `<span style="font-size:12px;">${RETRO_MONTHLY_EMOJIS[cat]}${a==='달성'?'✅':a==='부분달성'?'🔶':'❌'}</span>`;
+          return `<span style="font-size:12px;">${a==='달성'?'✅':a==='부분달성'?'🔶':'❌'} ${cat}</span>`;
         }).filter(Boolean).join(' ');
         return `<div onclick="retroQuarterlyJumpTo('${qk}')" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border);cursor:pointer;">
           <div style="flex:1;min-width:0;"><div style="font-size:15px;font-weight:600;color:var(--text-primary);">${fmtQKey(qk)}</div>
@@ -9053,7 +9237,7 @@ function renderRetro(type) {
       listEl.innerHTML = entries.map(([yk, cats]) => {
         const badges = RETRO_MONTHLY_CATS.map(cat => {
           const a = (cats[cat] && cats[cat].achieved); if (!a) return '';
-          return `<span style="font-size:12px;">${RETRO_MONTHLY_EMOJIS[cat]}${a==='달성'?'✅':a==='부분달성'?'🔶':'❌'}</span>`;
+          return `<span style="font-size:12px;">${a==='달성'?'✅':a==='부분달성'?'🔶':'❌'} ${cat}</span>`;
         }).filter(Boolean).join(' ');
         return `<div onclick="retroYearlyJumpTo('${yk}')" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border);cursor:pointer;">
           <div style="flex:1;min-width:0;"><div style="font-size:15px;font-weight:600;color:var(--text-primary);">${yk}년</div>
