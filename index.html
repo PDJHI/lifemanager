@@ -2251,12 +2251,123 @@ function renderWeeklyTodo() {
       del.className = 'ti ti-x';
       del.style.cssText = 'font-size:11px;color:var(--text-tertiary);flex-shrink:0;cursor:pointer;margin-top:3px;opacity:0;transition:opacity 0.1s;';
       del.onclick = e => { e.stopPropagation(); deleteTodo(key, t.id); };
-      item.onmouseenter = () => del.style.opacity = '1';
-      item.onmouseleave = () => del.style.opacity = '0';
+
+      // move button — visible on hover
+      const moveBtn = document.createElement('i');
+      moveBtn.className = 'ti ti-calendar-event';
+      moveBtn.style.cssText = 'font-size:12px;color:var(--text-tertiary);flex-shrink:0;cursor:pointer;margin-top:2px;opacity:0;transition:opacity 0.15s;';
+      moveBtn.title = '날짜 이동';
+      moveBtn.onclick = e => {
+        e.stopPropagation();
+        // 기존 캘린더 제거
+        document.querySelectorAll('.todo-move-cal').forEach(d => d.remove());
+
+        var calYear  = now.getFullYear();
+        var calMonth = now.getMonth();
+
+        var overlay = document.createElement('div');
+        overlay.className = 'todo-move-cal';
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);';
+
+        var popup = document.createElement('div');
+        popup.style.cssText = 'background:var(--bg-primary);border-radius:var(--radius-md);box-shadow:0 8px 32px rgba(0,0,0,0.18);padding:16px;min-width:280px;';
+        popup.onclick = ev => ev.stopPropagation();
+
+        function renderCal() {
+          popup.innerHTML = '';
+
+          // 헤더
+          var hdr = document.createElement('div');
+          hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;';
+          var prev = document.createElement('button');
+          prev.innerHTML = '<i class="ti ti-chevron-left"></i>';
+          prev.style.cssText = 'background:transparent;border:none;cursor:pointer;color:var(--text-primary);font-size:16px;padding:2px 6px;';
+          prev.onclick = () => { calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCal(); };
+          var next = document.createElement('button');
+          next.innerHTML = '<i class="ti ti-chevron-right"></i>';
+          next.style.cssText = 'background:transparent;border:none;cursor:pointer;color:var(--text-primary);font-size:16px;padding:2px 6px;';
+          next.onclick = () => { calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCal(); };
+          var title = document.createElement('span');
+          title.style.cssText = 'font-size:14px;font-weight:600;color:var(--text-primary);';
+          title.textContent = calYear + '년 ' + (calMonth+1) + '월';
+          hdr.appendChild(prev); hdr.appendChild(title); hdr.appendChild(next);
+          popup.appendChild(hdr);
+
+          // 요일 헤더
+          var dayHdr = document.createElement('div');
+          dayHdr.style.cssText = 'display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px;';
+          ['일','월','화','수','목','금','토'].forEach(d => {
+            var cell = document.createElement('div');
+            cell.style.cssText = 'text-align:center;font-size:11px;color:var(--text-tertiary);padding:2px 0;';
+            cell.textContent = d;
+            dayHdr.appendChild(cell);
+          });
+          popup.appendChild(dayHdr);
+
+          // 날짜 그리드
+          var grid = document.createElement('div');
+          grid.style.cssText = 'display:grid;grid-template-columns:repeat(7,1fr);gap:2px;';
+          var firstDay = new Date(calYear, calMonth, 1).getDay();
+          var daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+          for (var i=0; i<firstDay; i++) {
+            grid.appendChild(document.createElement('div'));
+          }
+          for (var d=1; d<=daysInMonth; d++) {
+            var cell = document.createElement('div');
+            var thisDate = new Date(calYear, calMonth, d);
+            var isToday  = thisDate.toDateString() === now.toDateString();
+            var isCurDay = t.dayIdx === (thisDate.getDay()+6)%7
+              && weekKey(getMonday(thisDate)) === key;
+            cell.style.cssText = 'text-align:center;font-size:13px;padding:5px 2px;border-radius:6px;cursor:pointer;'
+              + (isToday  ? 'background:var(--text-primary);color:var(--bg-primary);font-weight:700;'
+              : isCurDay ? 'background:var(--bg-secondary);color:var(--text-primary);font-weight:600;border:1px solid var(--border-md);'
+              : 'color:var(--text-primary);');
+            cell.textContent = d;
+            cell.onmouseenter = function() { if(!isToday && !isCurDay) this.style.background='var(--bg-secondary)'; };
+            cell.onmouseleave = function() { if(!isToday && !isCurDay) this.style.background=''; };
+            (function(targetDate) {
+              cell.onclick = () => {
+                var targetMon = getMonday(targetDate);
+                var targetKey = weekKey(targetMon);
+                var targetDi  = (targetDate.getDay() + 6) % 7;
+                // 현재 키에서 제거
+                todoStore[key] = todoStore[key].filter(x => x.id !== t.id);
+                // 대상 키에 추가
+                if (!todoStore[targetKey]) todoStore[targetKey] = [];
+                t.dayIdx = targetDi;
+                todoStore[targetKey].push(t);
+                overlay.remove();
+                lsAutoSave(); renderWeeklyTodo(); updateStats();
+              };
+            })(thisDate);
+            grid.appendChild(cell);
+          }
+          popup.appendChild(grid);
+
+          // 취소
+          var cancelRow = document.createElement('div');
+          cancelRow.style.cssText = 'text-align:center;margin-top:12px;';
+          var cancelBtn = document.createElement('button');
+          cancelBtn.textContent = '취소';
+          cancelBtn.style.cssText = 'font-size:13px;padding:4px 16px;border-radius:6px;border:0.5px solid var(--border-md);background:transparent;color:var(--text-tertiary);cursor:pointer;font-family:inherit;';
+          cancelBtn.onclick = () => overlay.remove();
+          cancelRow.appendChild(cancelBtn);
+          popup.appendChild(cancelRow);
+        }
+
+        renderCal();
+        overlay.appendChild(popup);
+        document.body.appendChild(overlay);
+        overlay.onclick = () => overlay.remove();
+      };
+
+      item.addEventListener('mouseenter', () => { del.style.opacity = '1'; moveBtn.style.opacity = '1'; });
+      item.addEventListener('mouseleave', () => { del.style.opacity = '0'; moveBtn.style.opacity = '0'; });
 
       item.appendChild(dot);
       item.appendChild(chk);
       item.appendChild(txt);
+      item.appendChild(moveBtn);
       item.appendChild(del);
       col.appendChild(item);
     });
