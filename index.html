@@ -6332,7 +6332,9 @@ function renderRetroWeeklyDashboard() {
     const checks2 = routineCheckData[dk] || {};
     const dayRoutines2 = routines.filter(r => r.days.includes(i));
     const doneCnt2 = dayRoutines2.filter(r => checks2[r.id]).length;
-    const routineAchieved = !isFuture && dayRoutines2.length > 0 && doneCnt2 === dayRoutines2.length;
+    const totalCnt2 = dayRoutines2.length;
+    const routineAchieved = !isFuture && totalCnt2 > 0 && doneCnt2 === totalCnt2;
+    const routinePartial  = !isFuture && doneCnt2 > 0 && doneCnt2 < totalCnt2;
     // 투두
     const wk = weekKey(getMonday(dt));
     const dayIdx = i; // 0=월
@@ -6346,7 +6348,7 @@ function renderRetroWeeklyDashboard() {
     // 시간
     const timeLogs = tlLogs[dk] || [];
     const totalMins = timeLogs.reduce((s,l)=>s+l.dur, 0);
-    return { dt, dk, i, isToday, isFuture, routineAchieved, todoDone, todoTotal, hasDiary, score, diary, totalMins, timeLogs };
+    return { dt, dk, i, isToday, isFuture, routineAchieved, routinePartial, doneCnt2, totalCnt2, todoDone, todoTotal, hasDiary, score, diary, totalMins, timeLogs };
   });
 
   // ── 요약 카드 4개 ─────────────────────────────────────────────
@@ -6434,22 +6436,46 @@ function renderRetroWeeklyDashboard() {
   // ── 루틴 요일별 달성 현황 ────────────────────────────────────
   const routineGrid = document.getElementById('retro-routine-grid');
   if (routineGrid) {
-    routineGrid.innerHTML = days.map(d => {
-      // 해당 요일에 스케줄된 루틴 중 달성한 카테고리 색상 계산
-      const CAT_COLORS = { '자산':'#FFD93D','관계':'#4FC3F7','건강':'#43E97B','경험':'#FF6B9D','커리어':'#7C83FD','성장':'#C77DFF' };
-      const dayRoutines = routines.filter(r => r.days.includes(d.i));
-      const cats = Array.from(new Set(dayRoutines.map(function(r){return r.cat})));
-      const dotColor = d.routineAchieved && cats.length ? (CAT_COLORS[cats[0]] || '#43E97B') : '#43E97B';
-      return `
-      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-        <div style="font-size:10px;color:${d.isToday?'var(--text-primary)':'var(--text-tertiary)'};font-weight:${d.isToday?700:400};">${DAY[d.i]}</div>
-        <div style="width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;
-          background:${d.routineAchieved?dotColor+'33':'transparent'};
-          border:${d.isToday?'2px solid '+dotColor:d.routineAchieved?'1px solid '+dotColor:'0.5px dashed var(--border)'};
-          color:${d.routineAchieved?dotColor:'var(--text-tertiary)'};
-        ">${d.isFuture?'':d.routineAchieved?'✓':'✗'}</div>
-      </div>`;
-    }).join('');
+    routineGrid.innerHTML = '';
+    for (var i = 0; i < 7; i++) {
+      var dt2     = addDays(mon, i);
+      var isToday2= dt2.toDateString() === now.toDateString();
+      var isFut2  = dt2 > now;
+      var dk2     = dt2.getFullYear()+'-'+String(dt2.getMonth()+1).padStart(2,'0')+'-'+String(dt2.getDate()).padStart(2,'0');
+      var chks2   = routineCheckData[dk2] || {};
+      var dayR2   = routines.filter(function(r){ return r.days.includes(i); });
+      var done2   = dayR2.filter(function(r){ return chks2[r.id]; }).length;
+      var tot2    = dayR2.length;
+      var allDone2= tot2 > 0 && done2 === tot2;
+      var part2   = !allDone2 && done2 > 0;
+
+      var cell2 = document.createElement('div');
+      cell2.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:5px;';
+
+      var dayLbl2 = document.createElement('div');
+      dayLbl2.style.cssText = 'font-size:11px;color:'+(isToday2?'var(--text-primary)':'var(--text-tertiary)')+';font-weight:'+(isToday2?'700':'400')+';';
+      dayLbl2.textContent = DAY[i];
+
+      var dot2 = document.createElement('div');
+      dot2.style.cssText = 'width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:'+(part2?'11px':'14px')+';'
+        + (isFut2    ? 'background:transparent;border:0.5px dashed var(--border);'
+          : allDone2 ? 'background:var(--text-primary);border:1.5px solid var(--text-primary);'
+          : part2    ? 'background:rgba(124,131,253,0.10);border:1.5px solid #7C83FD;'
+          :            'background:var(--bg-secondary);border:0.5px solid var(--border-md);');
+      dot2.innerHTML = isFut2    ? ''
+        : allDone2 ? '<i class="ti ti-check" style="font-size:14px;color:var(--bg-primary)"></i>'
+        : part2    ? '<span style="font-weight:600;color:#7C83FD;">'+done2+'/'+tot2+'</span>'
+        :            '<span style="color:var(--text-tertiary);">—</span>';
+
+      var dateLbl2 = document.createElement('div');
+      dateLbl2.style.cssText = 'font-size:11px;color:var(--text-tertiary);';
+      dateLbl2.textContent = (dt2.getMonth()+1)+'/'+dt2.getDate();
+
+      cell2.appendChild(dayLbl2);
+      cell2.appendChild(dot2);
+      cell2.appendChild(dateLbl2);
+      routineGrid.appendChild(cell2);
+    }
   }
 
   // ── 투두 7일 그리드 ──────────────────────────────────────────
