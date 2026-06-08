@@ -2494,6 +2494,7 @@ function syncTodayRoutines() {
       checks[r.id] = item.classList.contains('done');
       updateStats();
       updateStreakData();
+      renderStreakWeek();
       lsAutoSave();
     };
     listEl.appendChild(item);
@@ -3044,33 +3045,44 @@ function renderWeekFromMonday(mon) {
     }
   }
 
-  // ── 주간 투두 ──────────────────────────────────────────────────
+  // ── 주간 투두 (완료 항목만) ────────────────────────────────────
   const dayKeys = Array.from({length:7}, (_,i) => {
     const d = addDays(mon, i);
-    return { d, key: `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` };
+    const wk = weekKey(getMonday(d));
+    return { d, di: i, wk };
   });
-  const allTodos = dayKeys.flatMap(({key}) => todoStore[key]||[]);
+  const allTodos = dayKeys.flatMap(({di, wk}) => (todoStore[wk]||[]).filter(t=>t.dayIdx===di));
   const doneTodo = allTodos.filter(t=>t.done).length;
   const pct = allTodos.length ? Math.round(doneTodo/allTodos.length*100) : 0;
   document.getElementById('lw-todo-prog').style.width = pct+'%';
   document.getElementById('lw-todo-prog-label').textContent = pct+'%';
 
-  const renderDay = ({d, key}) => {
-    const items = todoStore[key] || [];
+  const renderDay = ({d, di, wk}) => {
+    const doneItems = (todoStore[wk]||[]).filter(t=>t.dayIdx===di && t.done);
+    if (!doneItems.length) return '';
     return `<div style="border:0.5px solid var(--border);border-radius:var(--radius-md);padding:10px;">
-      <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);margin-bottom:6px;">${KR[d.getDay()===0?6:d.getDay()-1]} <span style="font-weight:400;">${d.getMonth()+1}/${d.getDate()}</span></div>
-      ${items.length ? items.map(t=>`
+      <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);margin-bottom:6px;">${KR[di]} <span style="font-weight:400;">${d.getMonth()+1}/${d.getDate()}</span></div>
+      ${doneItems.map(t=>`
         <div style="display:flex;align-items:center;gap:6px;padding:3px 0;">
-          <div style="width:13px;height:13px;border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
-            background:${t.done?'var(--text-primary)':'transparent'};border:1.5px solid var(--border-md);">
-            ${t.done?'<i class="ti ti-check" style="font-size:8px;color:var(--bg-primary)"></i>':''}
+          <div style="width:13px;height:13px;border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--text-primary);border:1.5px solid var(--text-primary);">
+            <i class="ti ti-check" style="font-size:8px;color:var(--bg-primary)"></i>
           </div>
-          <span style="font-size:11px;${t.done?'text-decoration:line-through;color:var(--text-tertiary);':''}">${t.text}</span>
-        </div>`).join('') : '<div style="font-size:11px;color:var(--text-tertiary);">-</div>'}
+          <span style="font-size:11px;color:var(--text-tertiary);text-decoration:line-through;">${t.text}</span>
+        </div>`).join('')}
     </div>`;
   };
-  document.getElementById('lw-todo-grid').innerHTML  = dayKeys.slice(0,4).map(renderDay).join('');
-  document.getElementById('lw-todo-grid2').innerHTML = dayKeys.slice(4).map(renderDay).join('');
+  const row1Html = dayKeys.slice(0,4).map(renderDay).filter(Boolean);
+  const row2Html = dayKeys.slice(4).map(renderDay).filter(Boolean);
+  const grid1 = document.getElementById('lw-todo-grid');
+  const grid2 = document.getElementById('lw-todo-grid2');
+  if (grid1) {
+    grid1.style.gridTemplateColumns = `repeat(${Math.max(row1Html.length,1)},1fr)`;
+    grid1.innerHTML = row1Html.join('') || '<div style="font-size:13px;color:var(--text-tertiary);">완료한 투두가 없어요</div>';
+  }
+  if (grid2) {
+    grid2.style.gridTemplateColumns = `repeat(${Math.max(row2Html.length,1)},1fr)`;
+    grid2.innerHTML = row2Html.join('');
+  }
 }
 
 function renderLastWeek() {
@@ -3244,56 +3256,53 @@ function desireGetToday() {
 }
 
 function renderDesire() {
-  const items = desireGetToday();
-  const list  = document.getElementById('desire-list');
-  const empty = document.getElementById('desire-empty');
+  var list = document.getElementById('desire-list');
+  if (!list) return;
+  var items = desireGetToday();
   list.innerHTML = '';
-  if (!items.length) { if (empty) empty.style.display = 'block'; return; }
-  if (empty) empty.style.display = 'none';
-  items.forEach(item => {
-    const row = document.createElement('div');
-    row.className = 'routine-item' + (item.done ? ' done' : '');
-    row.style.cssText = 'padding:7px 4px;';
-
-    const chk = document.createElement('div');
-    chk.className = 'check-box';
-    chk.innerHTML = '<i class="ti ti-check"></i>';
-    chk.onclick = e => { e.stopPropagation(); item.done = !item.done; renderDesire(); lsAutoSave(); };
-
-    const txt = document.createElement('span');
-    txt.className = 'routine-name';
-    txt.style.fontSize = '13px';
+  items.forEach(function(item, idx) {
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg-secondary);';
+    var icon = document.createElement('span');
+    icon.textContent = '✨'; icon.style.fontSize = '15px';
+    row.appendChild(icon);
+    var txt = document.createElement('span');
+    txt.style.cssText = 'flex:1;font-size:15px;color:var(--text-primary);cursor:text;outline:none;';
     txt.textContent = item.text;
-    txt.title = '더블클릭 편집';
-    txt.ondblclick = e => {
+    txt.title = '더블클릭하여 편집';
+    txt.ondblclick = function(e) {
       e.stopPropagation();
       txt.contentEditable = 'true';
-      txt.style.outline = '1px solid var(--border-md)';
-      txt.style.borderRadius = '3px';
-      txt.style.padding = '0 3px';
+      txt.style.outline = '1px solid var(--border-md)'; txt.style.borderRadius = '3px'; txt.style.padding = '0 3px';
       txt.focus();
-      const range = document.createRange(); range.selectNodeContents(txt);
-      window.getSelection().removeAllRanges(); window.getSelection().addRange(range);
+      var r = document.createRange(); r.selectNodeContents(txt);
+      window.getSelection().removeAllRanges(); window.getSelection().addRange(r);
     };
-    txt.onblur = () => {
-      const val = txt.textContent.trim();
-      if (val) item.text = val; else txt.textContent = item.text;
+    txt.onblur = function() {
+      var v = txt.textContent.trim();
+      if (v) { item.text = v; } else { items.splice(idx, 1); }
       txt.contentEditable = 'false'; txt.style.outline = ''; txt.style.padding = '';
-      lsAutoSave();
+      lsAutoSave(); renderDesire();
     };
-    txt.onkeydown = e => {
+    txt.onkeydown = function(e) {
       if (e.key === 'Enter') { e.preventDefault(); txt.blur(); }
       if (e.key === 'Escape') { txt.textContent = item.text; txt.blur(); }
     };
-
-    const del = document.createElement('i');
+    row.appendChild(txt);
+    var del = document.createElement('i');
     del.className = 'ti ti-x';
     del.style.cssText = 'font-size:11px;color:var(--text-tertiary);cursor:pointer;opacity:0;transition:opacity 0.1s;flex-shrink:0;';
-    del.onclick = e => { e.stopPropagation(); const k = todayKey(); desireStore[k] = desireStore[k].filter(x=>x.id!==item.id); renderDesire(); lsAutoSave(); };
-    row.onmouseenter = () => del.style.opacity = '1';
-    row.onmouseleave = () => del.style.opacity = '0';
-
-    row.appendChild(chk); row.appendChild(txt); row.appendChild(del);
+    (function(id) {
+      del.onclick = function(e) {
+        e.stopPropagation();
+        var k = todayKey();
+        desireStore[k] = desireStore[k].filter(function(x){ return x.id !== id; });
+        lsAutoSave(); renderDesire();
+      };
+    })(item.id);
+    row.onmouseenter = function() { del.style.opacity = '1'; };
+    row.onmouseleave = function() { del.style.opacity = '0'; };
+    row.appendChild(del);
     list.appendChild(row);
   });
 }
@@ -6390,33 +6399,34 @@ function renderRetroWeeklyDashboard() {
   const routineCatEl = document.getElementById('retro-routine-cat');
   if (routineCatEl) {
     const CAT_COLORS = { '자산':'#FFD93D','관계':'#4FC3F7','건강':'#43E97B','경험':'#FF6B9D','커리어':'#7C83FD','성장':'#C77DFF' };
-    // 이번 주 해당 요일들의 루틴 데이터 집계
     const TIME_SLOTS = ['공통','아침','오전','오후','저녁'];
     const cats = Array.from(new Set(routines.map(function(r){return r.cat}))).filter(c => !TIME_SLOTS.includes(c));
     if (!cats.length) {
       routineCatEl.innerHTML = '<div style="font-size:13px;color:var(--text-tertiary);">루틴 데이터가 없습니다.</div>';
     } else {
-      routineCatEl.innerHTML = cats.map(cat => {
-        const catRoutines = routines.filter(r => r.cat === cat);
-        // 이번 주 각 요일에 해당 카테고리 루틴이 있는 날 기준으로 달성 계산
+      routineCatEl.innerHTML = cats.map(function(cat) {
+        const catRoutines = routines.filter(function(r){ return r.cat === cat; });
         let scheduled = 0, achieved = 0;
-        days.forEach(d => {
+        days.forEach(function(d) {
           if (d.isFuture) return;
-          const dayRoutines = catRoutines.filter(r => r.days.includes(d.i));
-          if (!dayRoutines.length) return;
-          scheduled++;
-          if (d.routineAchieved) achieved++;
+          // 해당 날짜의 routineCheckData 직접 참조
+          const checks = routineCheckData[d.dk] || {};
+          catRoutines.forEach(function(r) {
+            if (!r.days.includes(d.i)) return;
+            scheduled++;
+            if (checks[r.id]) achieved++;
+          });
         });
         const pct = scheduled ? Math.round(achieved / scheduled * 100) : 0;
         const color = CAT_COLORS[cat] || '#aaa';
-        return `<div style="display:flex;align-items:center;gap:10px;">
-          <div style="width:8px;height:8px;border-radius:2px;background:${color};flex-shrink:0;"></div>
-          <div style="font-size:13px;color:var(--text-primary);min-width:52px;">${cat}</div>
-          <div style="flex:1;height:5px;background:var(--bg-secondary);border-radius:3px;overflow:hidden;">
-            <div style="height:100%;width:${pct}%;background:${color};border-radius:3px;transition:width 0.4s;"></div>
-          </div>
-          <div style="font-size:12px;color:var(--text-tertiary);min-width:48px;text-align:right;">${achieved}/${scheduled}일 · ${pct}%</div>
-        </div>`;
+        return '<div style="display:flex;align-items:center;gap:10px;">'
+          + '<div style="width:8px;height:8px;border-radius:2px;background:'+color+';flex-shrink:0;"></div>'
+          + '<div style="font-size:13px;color:var(--text-primary);min-width:52px;">'+cat+'</div>'
+          + '<div style="flex:1;height:5px;background:var(--bg-secondary);border-radius:3px;overflow:hidden;">'
+          +   '<div style="height:100%;width:'+pct+'%;background:'+color+';border-radius:3px;transition:width 0.4s;"></div>'
+          + '</div>'
+          + '<div style="font-size:12px;color:var(--text-tertiary);min-width:48px;text-align:right;">'+achieved+'/'+scheduled+'일 · '+pct+'%</div>'
+          + '</div>';
       }).join('');
     }
   }
