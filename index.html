@@ -6408,18 +6408,21 @@ function renderRetroWeeklyDashboard() {
     } else {
       routineCatEl.innerHTML = cats.map(function(cat) {
         const catRoutines = routines.filter(function(r){ return r.cat === cat; });
-        let scheduled = 0, achieved = 0;
+        let scheduledDays = 0, achievedDays = 0;
         days.forEach(function(d) {
           if (d.isFuture) return;
-          // 해당 날짜의 routineCheckData 직접 참조
+          // 이 날 이 카테고리에 예정된 루틴이 하나라도 있는지
+          const hasSched = catRoutines.some(function(r){ return r.days.includes(d.i); });
+          if (!hasSched) return;
+          scheduledDays++;
+          // 예정된 루틴을 모두 달성했는지
           const checks = routineCheckData[d.dk] || {};
-          catRoutines.forEach(function(r) {
-            if (!r.days.includes(d.i)) return;
-            scheduled++;
-            if (checks[r.id]) achieved++;
-          });
+          const doneAll = catRoutines
+            .filter(function(r){ return r.days.includes(d.i); })
+            .every(function(r){ return checks[r.id]; });
+          if (doneAll) achievedDays++;
         });
-        const pct = scheduled ? Math.round(achieved / scheduled * 100) : 0;
+        const pct = scheduledDays ? Math.round(achievedDays / scheduledDays * 100) : 0;
         const color = CAT_COLORS[cat] || '#aaa';
         return '<div style="display:flex;align-items:center;gap:10px;">'
           + '<div style="width:8px;height:8px;border-radius:2px;background:'+color+';flex-shrink:0;"></div>'
@@ -6427,7 +6430,7 @@ function renderRetroWeeklyDashboard() {
           + '<div style="flex:1;height:5px;background:var(--bg-secondary);border-radius:3px;overflow:hidden;">'
           +   '<div style="height:100%;width:'+pct+'%;background:'+color+';border-radius:3px;transition:width 0.4s;"></div>'
           + '</div>'
-          + '<div style="font-size:12px;color:var(--text-tertiary);min-width:48px;text-align:right;">'+achieved+'/'+scheduled+'일 · '+pct+'%</div>'
+          + '<div style="font-size:12px;color:var(--text-tertiary);min-width:48px;text-align:right;">'+achievedDays+'/'+scheduledDays+'일 · '+pct+'%</div>'
           + '</div>';
       }).join('');
     }
