@@ -5444,7 +5444,7 @@ function renderDiaryEditor() {
   // 저장된 내용 줄마다 ▪ 붙이기 (이미 있으면 스킵)
   const rawContent = data.content || '';
   document.getElementById('diary-content').value = rawContent
-    ? rawContent.split('\n').map(l => l.startsWith('▪') ? l : (l.trim() ? '▪ ' + l : l)).join('\n')
+    ? rawContent.split('\n').map(l => /^[\s]*[▪◦\-]/.test(l) ? l : (l.trim() ? '▪ ' + l : l)).join('\n')
     : '';
 
   // Score number input
@@ -6318,7 +6318,7 @@ function renderRetroWeeklyDashboard() {
   const ta = document.getElementById('retro-weekly-content');
   if (ta) {
     ta.value = savedContent
-      ? savedContent.split('\n').map(l => l.startsWith('▪') ? l : (l.trim() ? '▪ '+l : l)).join('\n')
+      ? savedContent.split('\n').map(l => /^[\s]*[▪◦\-]/.test(l) ? l : (l.trim() ? '▪ '+l : l)).join('\n')
       : '';
   }
 
