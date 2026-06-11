@@ -1813,6 +1813,7 @@
           <span style="font-size:15px;font-weight:600;color:var(--text-primary);min-width:100px;text-align:center" id="tl-date-label"></span>
           <button class="add-btn" onclick="tlNextDay()"><i class="ti ti-chevron-right"></i></button>
           <button class="add-btn" onclick="tlGoToday()" id="tl-today-btn" style="display:none;">오늘</button>
+          <button class="add-btn" onclick="tlAutoFillWeekday()" id="tl-autofill-btn" title="평일 스케줄 자동 채우기" style="font-size:12px;">평일 자동채우기</button>
         </div>
       </div>
 
@@ -4286,6 +4287,7 @@ const TL_DEFAULT_PARENTS = [
   { id:'p6', name:'성장',   color:'#C77DFF' },
   { id:'p7', name:'회사',   color:'#FFA07A' },
   { id:'p8', name:'일상',   color:'#A8EDEA' },
+  { id:'p9', name:'수면',   color:'#B39DDB' },
 ];
 const TL_DEFAULT_CHILDREN = [
   { id:'c1', parentId:'p1', name:'투자',      color:'#FDDB92' },
@@ -4377,6 +4379,13 @@ function renderTimelog() {
   document.getElementById('tl-date-label').textContent =
     `${tlViewDate.getMonth()+1}/${tlViewDate.getDate()} (${dayNames[tlViewDate.getDay()]})`;
   document.getElementById('tl-today-btn').style.display = isToday ? 'none' : '';
+  // 평일 자동채우기 버튼: 주말이면 흐리게
+  const autoFillBtn = document.getElementById('tl-autofill-btn');
+  if (autoFillBtn) {
+    const isWeekend = tlViewDate.getDay() === 0 || tlViewDate.getDay() === 6;
+    autoFillBtn.style.opacity = isWeekend ? '0.35' : '1';
+    autoFillBtn.style.pointerEvents = isWeekend ? 'none' : '';
+  }
 
   // 팔레트 스워치 렌더
   tlInitPalettes();
@@ -5167,6 +5176,67 @@ function tlJumpDay(i) {
 function tlPrevDay() { tlViewDate = addDays(tlViewDate,-1); renderTimelog(); }
 function tlNextDay() { tlViewDate = addDays(tlViewDate, 1); renderTimelog(); }
 function tlGoToday() { tlViewDate = new Date(now); tlViewDate.setHours(0,0,0,0); renderTimelog(); }
+
+// ── 평일 시간가계부 자동채우기 ──────────────────────────────────
+// 이미지 기준 고정 스케줄 (catParentName, catChildName, label, start, end)
+const TL_WEEKDAY_TEMPLATE = [
+  { parentName: '수면', childName: null,   label: '취침',        start: '00:00', end: '06:00' },
+  { parentName: '일상', childName: '휴식', label: '사워',        start: '06:00', end: '06:20' },
+  { parentName: '건강', childName: '운동', label: '스쿼트 100개', start: '06:20', end: '06:30' },
+  { parentName: '일상', childName: '휴식', label: '출근 준비',   start: '06:30', end: '07:00' },
+  { parentName: '건강', childName: '식사', label: '아침',        start: '07:00', end: '07:10' },
+  { parentName: '일상', childName: '이동', label: '출근',        start: '07:10', end: '08:00' },
+];
+
+// 이름으로 catId 찾기 (childName이 null이면 대분류 ID 반환)
+function tlFindCatId(parentName, childName) {
+  const parent = tlCatParents.find(p => p.name === parentName);
+  if (!parent) return null;
+  if (!childName) return parent.id;
+  const child = tlCatChildren.find(c => c.parentId === parent.id && c.name === childName);
+  return child ? child.id : parent.id;
+}
+
+function tlAutoFillWeekday() {
+  const k = tlDateKey(tlViewDate);
+  const dayOfWeek = tlViewDate.getDay(); // 0=일, 6=토
+  if (dayOfWeek === 0 || dayOfWeek === 6) {
+    alert('오늘은 주말입니다. 평일에만 자동 채우기를 사용할 수 있습니다.');
+    return;
+  }
+  if (tlLogs[k] && tlLogs[k].length > 0) {
+    if (!confirm('이미 기록이 있습니다. 기존 항목에 추가할까요?')) return;
+  }
+  if (!tlLogs[k]) tlLogs[k] = [];
+  TL_WEEKDAY_TEMPLATE.forEach(function(item) {
+    const catId = tlFindCatId(item.parentName, item.childName);
+    if (!catId) return;
+    const dur = tlTimeDiff(item.start, item.end);
+    tlLogs[k].push({ id: tlNextLogId++, catId, label: item.label, start: item.start, end: item.end, dur });
+  });
+  renderTimelog();
+  lsAutoSave();
+}
+
+// 내일부터 평일에 자동 채우기 (앱 로드 시 실행)
+function tlAutoFillFutureWeekdays() {
+  // 오늘 다음 날부터 7일 이내 평일에 기록 없으면 자동 채우기
+  for (var i = 1; i <= 7; i++) {
+    var d = addDays(now, i);
+    var dow = d.getDay();
+    if (dow === 0 || dow === 6) continue; // 주말 건너뜀
+    var k = tlDateKey(d);
+    if (tlLogs[k] && tlLogs[k].length > 0) continue; // 이미 기록 있으면 건너뜀
+    tlLogs[k] = [];
+    TL_WEEKDAY_TEMPLATE.forEach(function(item) {
+      var catId = tlFindCatId(item.parentName, item.childName);
+      if (!catId) return;
+      var dur = tlTimeDiff(item.start, item.end);
+      tlLogs[k].push({ id: tlNextLogId++, catId: catId, label: item.label, start: item.start, end: item.end, dur: dur });
+    });
+  }
+  lsAutoSave();
+}
 
 // ── Diary ─────────────────────────────────────────────────────────
 let diaryStore = {};
@@ -9807,6 +9877,13 @@ function migrateRoutineCategories() {
   });
 }
 
+// 저장된 tlCatParents에 수면 대분류가 없으면 추가
+function migrateTlSleepCat() {
+  if (!tlCatParents.find(p => p.name === '수면')) {
+    tlCatParents.push({ id: 'p9', name: '수면', color: '#B39DDB' });
+  }
+}
+
 function lsLoad() {
   try {
     const raw = localStorage.getItem(LS_KEY);
@@ -9850,7 +9927,9 @@ window.addEventListener('beforeunload', lsSave);
 
 // ── 앱 초기화 ───────────────────────────────────────────────────
 lsLoad();
+migrateTlSleepCat();
 syncTodayRoutines();
+tlAutoFillFutureWeekdays();
 switchTab('today');
 renderWeeklyTodo();
 renderWf();
