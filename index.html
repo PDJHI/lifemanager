@@ -1814,6 +1814,7 @@
           <button class="add-btn" onclick="tlNextDay()"><i class="ti ti-chevron-right"></i></button>
           <button class="add-btn" onclick="tlGoToday()" id="tl-today-btn" style="display:none;">오늘</button>
           <button class="add-btn" onclick="tlAutoFillWeekday()" id="tl-autofill-btn" title="평일 스케줄 자동 채우기" style="font-size:12px;">평일 자동채우기</button>
+          <button class="add-btn" onclick="tlCopyPrevDay()" id="tl-copyprev-btn" title="전날 항목을 오늘로 복사" style="font-size:12px;">전날 복사</button>
         </div>
       </div>
 
@@ -4978,6 +4979,45 @@ function tlPasteLog() {
   tlLogs[k].push({ id: tlNextLogId++, catId: _tlClipboard.catId, label: _tlClipboard.label, start: newStart, end: newEnd, dur });
   renderTimelog();
   lsAutoSave();
+}
+
+// ── 전날 항목 전체 복사 ──────────────────────────────────────────
+function tlCopyPrevDay() {
+  const prevDate = new Date(tlViewDate);
+  prevDate.setDate(prevDate.getDate() - 1);
+  const prevKey = tlDateKey(prevDate);
+  const prevLogs = (tlLogs[prevKey] || []);
+  if (!prevLogs.length) {
+    const toast = document.createElement('div');
+    toast.textContent = '전날 항목이 없습니다';
+    toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text-primary);color:var(--bg-primary);padding:10px 20px;border-radius:20px;font-size:12px;font-weight:600;z-index:9999;pointer-events:none;';
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.style.opacity='0'; setTimeout(()=>toast.remove(),300); }, 2000);
+    return;
+  }
+  const curKey = tlDateKey(tlViewDate);
+  const curLogs = (tlLogs[curKey] || []);
+  if (curLogs.length > 0) {
+    if (!confirm(`현재 날짜에 이미 ${curLogs.length}개 항목이 있습니다.\n전날 항목(${prevLogs.length}개)을 추가로 붙여넣을까요?`)) return;
+  }
+  if (!tlLogs[curKey]) tlLogs[curKey] = [];
+  prevLogs.slice().sort((a,b)=>a.start.localeCompare(b.start)).forEach(log => {
+    tlLogs[curKey].push({
+      id: tlNextLogId++,
+      catId: log.catId,
+      label: log.label,
+      start: log.start,
+      end: log.end,
+      dur: log.dur
+    });
+  });
+  renderTimelog();
+  lsAutoSave();
+  const toast = document.createElement('div');
+  toast.textContent = `✓ 전날 항목 ${prevLogs.length}개를 복사했습니다`;
+  toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text-primary);color:var(--bg-primary);padding:10px 20px;border-radius:20px;font-size:12px;font-weight:600;z-index:9999;pointer-events:none;opacity:1;transition:opacity 0.3s;';
+  document.body.appendChild(toast);
+  setTimeout(() => { toast.style.opacity='0'; setTimeout(()=>toast.remove(),300); }, 2500);
 }
 
 // 모달 닫기 클릭
