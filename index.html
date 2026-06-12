@@ -1218,6 +1218,24 @@
       </div>
     </div>
 
+    <!-- ===== ONE THING EDIT MODAL ===== -->
+    <div class="modal-overlay" id="ot-edit-modal">
+      <div class="modal" style="width:360px;">
+        <div class="modal-title">
+          <span>⭐ 원씽 편집</span>
+          <i class="ti ti-x modal-close" onclick="otCloseEdit()"></i>
+        </div>
+        <div class="modal-field">
+          <div class="modal-label">오늘의 원씽</div>
+          <input class="modal-input" id="ot-edit-input" placeholder="오늘 반드시 해야 할 한 가지..."/>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" onclick="otCloseEdit()">취소</button>
+          <button class="btn-primary" onclick="otSaveEdit()">저장</button>
+        </div>
+      </div>
+    </div>
+
     <!-- ===== DIARY ===== -->
     <div class="page" id="page-diary">
 
@@ -2155,34 +2173,21 @@ function renderWeeklyTodo() {
     otRow.appendChild(otStar);
 
     var otTxt = document.createElement('div');
-    otTxt.contentEditable = 'false';
-    otTxt.style.cssText = 'flex:1;font-size:12px;line-height:1.4;color:' + (otDone ? 'var(--text-tertiary)' : 'var(--text-primary)') + ';' + (otDone ? 'text-decoration:line-through;' : '') + 'outline:none;word-break:break-word;min-height:16px;';
-    otTxt.textContent = otVal || '';
-    otTxt.setAttribute('data-placeholder', '원씽 입력...');
-    if (!otVal) otTxt.style.opacity = '0.4';
-    otTxt.setAttribute('data-placeholder', '원씽 입력...');
-
-    otTxt.onfocus = function() { if (!oneThingStore[otKey]) otTxt.style.opacity = '0.4'; };
-    otTxt.onclick = function() {
-      otTxt.contentEditable = 'true';
-      otTxt.style.opacity = '1';
-      if (!otTxt.textContent.trim()) otTxt.textContent = '';
-      otTxt.focus();
-      var r = document.createRange(); r.selectNodeContents(otTxt);
-      window.getSelection().removeAllRanges(); window.getSelection().addRange(r);
-    };
-    otTxt.onblur = function() {
-      var v = otTxt.textContent.trim();
-      oneThingStore[otKey] = v;
-      otTxt.contentEditable = 'false';
-      if (!v) otTxt.style.opacity = '0.4';
-      lsAutoSave(); renderWeeklyTodo();
-    };
-    otTxt.onkeydown = function(e) {
-      if (e.key === 'Enter') { e.preventDefault(); otTxt.blur(); }
-      if (e.key === 'Escape') { otTxt.textContent = oneThingStore[otKey] || ''; otTxt.blur(); }
-    };
+    otTxt.style.cssText = 'flex:1;font-size:12px;line-height:1.4;color:' + (otDone ? 'var(--text-tertiary)' : (otVal ? 'var(--text-primary)' : 'var(--text-tertiary)')) + ';' + (otDone ? 'text-decoration:line-through;' : '') + 'word-break:break-word;min-height:16px;cursor:pointer;';
+    otTxt.textContent = otVal || '원씽 입력...';
+    (function(k) {
+      otTxt.addEventListener('click', function() { otOpenEdit(k); });
+    })(otKey);
     otRow.appendChild(otTxt);
+
+    var otEditBtn = document.createElement('button');
+    otEditBtn.style.cssText = 'background:none;border:none;cursor:pointer;padding:2px 3px;color:var(--text-tertiary);font-size:11px;flex-shrink:0;display:flex;align-items:center;';
+    otEditBtn.innerHTML = '<i class="ti ti-pencil"></i>';
+    otEditBtn.title = '원씽 편집';
+    (function(k) {
+      otEditBtn.addEventListener('click', function(e) { e.stopPropagation(); otOpenEdit(k); });
+    })(otKey);
+    otRow.appendChild(otEditBtn);
 
     var otChk = document.createElement('div');
     otChk.style.cssText = 'width:14px;height:14px;border-radius:50%;border:1.5px solid ' + (otDone ? '#43E97B' : '#7C83FD') + ';flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;background:' + (otDone ? '#43E97B' : 'transparent') + ';transition:all 0.15s;';
@@ -5021,7 +5026,39 @@ function tlCopyPrevDay() {
 }
 
 // 모달 닫기 클릭
+document.getElementById('ot-edit-modal').addEventListener('click', function(e){ if(e.target===this) otCloseEdit(); });
+document.getElementById('ot-edit-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') { e.preventDefault(); otSaveEdit(); }
+  if (e.key === 'Escape') { e.preventDefault(); otCloseEdit(); }
+});
+
+let _otEditKey = null;
+function otOpenEdit(key) {
+  _otEditKey = key;
+  document.getElementById('ot-edit-input').value = oneThingStore[key] || '';
+  document.getElementById('ot-edit-modal').classList.add('open');
+  setTimeout(() => document.getElementById('ot-edit-input').focus(), 50);
+}
+function otSaveEdit() {
+  if (!_otEditKey) return;
+  const v = document.getElementById('ot-edit-input').value.trim();
+  oneThingStore[_otEditKey] = v;
+  lsAutoSave();
+  renderWeeklyTodo();
+  otCloseEdit();
+}
+function otCloseEdit() {
+  _otEditKey = null;
+  document.getElementById('ot-edit-modal').classList.remove('open');
+}
+
 document.getElementById('tl-edit-modal').addEventListener('click', function(e){ if(e.target===this) tlCloseEdit(); });
+['tl-edit-label','tl-edit-start','tl-edit-end'].forEach(id => {
+  document.getElementById(id).addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); tlSaveEdit(); }
+    if (e.key === 'Escape') { e.preventDefault(); tlCloseEdit(); }
+  });
+});
 
 // 인라인 편집 헬퍼
 function tlInlineEdit(e, el, obj, type) {
@@ -5221,9 +5258,9 @@ function tlGoToday() { tlViewDate = new Date(now); tlViewDate.setHours(0,0,0,0);
 // 이미지 기준 고정 스케줄 (catParentName, catChildName, label, start, end)
 const TL_WEEKDAY_TEMPLATE = [
   { parentName: '수면', childName: null,   label: '취침',        start: '00:00', end: '06:00' },
-  { parentName: '일상', childName: '휴식', label: '사워',        start: '06:00', end: '06:20' },
+  { parentName: '일상', childName: '정비', label: '샤워',        start: '06:00', end: '06:20' },
   { parentName: '건강', childName: '운동', label: '스쿼트 100개', start: '06:20', end: '06:30' },
-  { parentName: '일상', childName: '휴식', label: '출근 준비',   start: '06:30', end: '07:00' },
+  { parentName: '일상', childName: '정비', label: '출근 준비',   start: '06:30', end: '07:00' },
   { parentName: '건강', childName: '식사', label: '아침',        start: '07:00', end: '07:10' },
   { parentName: '일상', childName: '이동', label: '출근',        start: '07:10', end: '08:00' },
 ];
