@@ -2162,13 +2162,13 @@ function renderWeeklyTodo() {
       <span style="font-size:11px;color:${isToday ? 'rgba(255,255,255,0.6)' : 'var(--text-tertiary)'}">${formatDate(dt)}</span>`;
     hdr.appendChild(hdrLeft);
 
-    // 지난주 같은 요일 미완료 항목 복사 버튼
+    // 지난주 같은 요일 항목 복사 버튼 (완료/미완료 모두)
     const lwKey = weekKey(addDays(viewMonday, -7));
-    const lwUndone = (todoStore[lwKey] || []).filter(t => t.dayIdx === di && !t.done);
-    if (lwUndone.length) {
+    const lwItems = (todoStore[lwKey] || []).filter(t => t.dayIdx === di);
+    if (lwItems.length) {
       const dayCopyBtn = document.createElement('button');
       dayCopyBtn.innerHTML = '<i class="ti ti-copy" style="font-size:11px;"></i>';
-      dayCopyBtn.title = '지난주 ' + dayName + ' 미완료 항목 가져오기';
+      dayCopyBtn.title = '지난주 ' + dayName + ' 항목 가져오기';
       dayCopyBtn.style.cssText = `background:none;border:none;cursor:pointer;padding:1px 3px;color:${isToday ? 'rgba(255,255,255,0.6)' : 'var(--text-tertiary)'};display:flex;align-items:center;flex-shrink:0;`;
       (function(items, dayIdx, key) {
         dayCopyBtn.addEventListener('click', function(e) {
@@ -2184,7 +2184,7 @@ function renderWeeklyTodo() {
           });
           if (added > 0) { lsAutoSave(); renderWeeklyTodo(); updateStats(); }
         });
-      })(lwUndone, di, key);
+      })(lwItems, di, key);
       hdr.appendChild(dayCopyBtn);
     }
     col.appendChild(hdr);
