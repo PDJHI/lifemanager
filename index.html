@@ -3052,7 +3052,7 @@ function renderWeekFromMonday(mon) {
     }
   }
 
-  // ── 주간 투두 (완료 항목만) ────────────────────────────────────
+  // ── 주간 투두 (완료 + 미완료 항목) ────────────────────────────────────
   const dayKeys = Array.from({length:7}, (_,i) => {
     const d = addDays(mon, i);
     const wk = weekKey(getMonday(d));
@@ -3065,10 +3065,20 @@ function renderWeekFromMonday(mon) {
   document.getElementById('lw-todo-prog-label').textContent = pct+'%';
 
   const renderDay = ({d, di, wk}) => {
-    const doneItems = (todoStore[wk]||[]).filter(t=>t.dayIdx===di && t.done);
-    if (!doneItems.length) return '';
+    const items = (todoStore[wk]||[]).filter(t=>t.dayIdx===di);
+    if (!items.length) return '';
+    const undoneItems = items.filter(t=>!t.done).sort((a,b)=>{
+      const order = {high:0, mid:1, low:2};
+      return (order[a.priority]??1) - (order[b.priority]??1);
+    });
+    const doneItems = items.filter(t=>t.done);
     return `<div style="border:0.5px solid var(--border);border-radius:var(--radius-md);padding:10px;">
       <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);margin-bottom:6px;">${KR[di]} <span style="font-weight:400;">${d.getMonth()+1}/${d.getDate()}</span></div>
+      ${undoneItems.map(t=>`
+        <div style="display:flex;align-items:center;gap:6px;padding:3px 0;">
+          <div style="width:13px;height:13px;border-radius:3px;flex-shrink:0;border:1.5px solid ${PRIO_COLOR[t.priority]||'var(--border-md)'};"></div>
+          <span style="font-size:11px;color:var(--text-primary);">${t.text}</span>
+        </div>`).join('')}
       ${doneItems.map(t=>`
         <div style="display:flex;align-items:center;gap:6px;padding:3px 0;">
           <div style="width:13px;height:13px;border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--text-primary);border:1.5px solid var(--text-primary);">
@@ -3084,7 +3094,7 @@ function renderWeekFromMonday(mon) {
   const grid2 = document.getElementById('lw-todo-grid2');
   if (grid1) {
     grid1.style.gridTemplateColumns = `repeat(${Math.max(row1Html.length,1)},1fr)`;
-    grid1.innerHTML = row1Html.join('') || '<div style="font-size:13px;color:var(--text-tertiary);">완료한 투두가 없어요</div>';
+    grid1.innerHTML = row1Html.join('') || '<div style="font-size:13px;color:var(--text-tertiary);">투두가 없어요</div>';
   }
   if (grid2) {
     grid2.style.gridTemplateColumns = `repeat(${Math.max(row2Html.length,1)},1fr)`;
