@@ -2382,8 +2382,8 @@ function renderWeeklyTodo() {
                 var targetMon = getMonday(targetDate);
                 var targetKey = weekKey(targetMon);
                 var targetDi  = (targetDate.getDay() + 6) % 7;
-                // 현재 키에서 제거
-                todoStore[key] = todoStore[key].filter(x => x.id !== t.id);
+                // 현재 키에서 제거 (객체 참조로 비교해 중복 ID 오작동 방지)
+                todoStore[key] = todoStore[key].filter(x => x !== t);
                 // 대상 키에 추가
                 if (!todoStore[targetKey]) todoStore[targetKey] = [];
                 t.dayIdx = targetDi;
@@ -2458,8 +2458,10 @@ function commitAdd(key, di, inp) {
 
 function deleteTodo(key, id) {
   if (!todoStore[key]) return;
-  const t = todoStore[key].find(x => x.id === id);
-  todoStore[key] = todoStore[key].filter(x => x.id !== id);
+  const idx = todoStore[key].findIndex(x => x.id === id);
+  if (idx === -1) return;
+  const t = todoStore[key][idx];
+  todoStore[key].splice(idx, 1);
 
   // 이번주 투두 삭제 시 다음주 같은 텍스트(이월된 항목)도 함께 삭제
   if (t) {
@@ -10309,7 +10311,20 @@ document.getElementById('logout-btn').addEventListener('click', function() {
 
       screen.style.display = 'none';
       appEl.style.display  = '';
-      document.querySelector('[data-page="dashboard"]').click();
+      (function() {
+        const last = localStorage.getItem('mlm_last_page');
+        if (last) {
+          const idx = last.indexOf(':');
+          const type = last.slice(0, idx);
+          const val  = last.slice(idx + 1);
+          if (type === 'page') {
+            const el = document.querySelector('[data-page="' + val + '"]');
+            if (el) { el.click(); return; }
+          } else if (type === 'goals') { selectGoals(val); return; }
+          else if (type === 'retro')   { selectRetro(val); return; }
+        }
+        document.querySelector('[data-page="dashboard"]').click();
+      })();
 
       // 10분 비활동 시 자동 로그아웃
       const IDLE_MS = 30 * 60 * 1000; // 30분 비활동 시 로그아웃
