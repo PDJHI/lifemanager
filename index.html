@@ -5406,8 +5406,17 @@ let diaryCalMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 let diaryMode = 'list'; // 'list' | 'editor'
 
 const DIARY_SCORE_LABELS = ['','최악 😞','나쁨 😕','보통 😐','좋음 🙂','최고 😄','완벽 🤩','행복 🥰','최고야 🌟','눈부심 ✨','완벽한 하루 🎉'];
-const DIARY_BODY_OPTIONS = [{emoji:'💪',label:'최상'},{emoji:'😊',label:'좋음'},{emoji:'😐',label:'보통'},{emoji:'😩',label:'피곤'},{emoji:'🤒',label:'아픔'}];
-const DIARY_MOOD_OPTIONS = [{emoji:'😄',label:'기쁨'},{emoji:'😌',label:'평온'},{emoji:'🥰',label:'설렘'},{emoji:'🤔',label:'고민'},{emoji:'😤',label:'답답'},{emoji:'😔',label:'우울'},{emoji:'😡',label:'화남'},{emoji:'😰',label:'불안'},{emoji:'🤩',label:'신남'},{emoji:'😴',label:'무기력'}];
+const DIARY_BODY_OPTIONS = [
+  {emoji:'💪',label:'최상'},{emoji:'😊',label:'좋음'},{emoji:'😐',label:'보통'},{emoji:'😩',label:'피곤'},{emoji:'🤒',label:'아픔'},
+  {emoji:'🤕',label:'두통'},{emoji:'🥱',label:'졸림'},{emoji:'🤧',label:'감기'},{emoji:'🥴',label:'어지러움'},{emoji:'💊',label:'약먹음'},
+  {emoji:'🏃',label:'운동함'},{emoji:'🧘',label:'이완됨'},{emoji:'😮‍💨',label:'숨참'},{emoji:'🤢',label:'속불편'},{emoji:'❄️',label:'오한'}
+];
+const DIARY_MOOD_OPTIONS = [
+  {emoji:'😄',label:'기쁨'},{emoji:'😌',label:'평온'},{emoji:'🥰',label:'설렘'},{emoji:'🤔',label:'고민'},{emoji:'😤',label:'답답'},
+  {emoji:'😔',label:'우울'},{emoji:'😡',label:'화남'},{emoji:'😰',label:'불안'},{emoji:'🤩',label:'신남'},{emoji:'😴',label:'무기력'},
+  {emoji:'🥺',label:'서운함'},{emoji:'😶',label:'멍함'},{emoji:'🤗',label:'따뜻함'},{emoji:'😒',label:'짜증'},{emoji:'🫠',label:'지침'},
+  {emoji:'🙏',label:'감사'},{emoji:'😬',label:'긴장'},{emoji:'🌊',label:'감동'},{emoji:'🤭',label:'부끄러움'},{emoji:'😎',label:'자신감'}
+];
 
 function diaryDateKey(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
