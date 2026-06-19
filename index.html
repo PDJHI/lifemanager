@@ -2451,12 +2451,9 @@ function deleteTodo(key, id) {
   if (t) {
     const thisMon = getMonday(now);
     const nextMon = addDays(thisMon, 7);
-    for (let i = 0; i < 7; i++) {
-      const nextDt  = addDays(nextMon, i);
-      const nextKey = `${nextDt.getFullYear()}-${String(nextDt.getMonth()+1).padStart(2,'0')}-${String(nextDt.getDate()).padStart(2,'0')}`;
-      if (todoStore[nextKey]) {
-        todoStore[nextKey] = todoStore[nextKey].filter(x => !(x.text === t.text && x.carriedOver));
-      }
+    const nextKey = weekKey(nextMon);
+    if (todoStore[nextKey]) {
+      todoStore[nextKey] = todoStore[nextKey].filter(x => !(x.text === t.text && x.carriedOver));
     }
   }
 
@@ -9951,6 +9948,7 @@ function lsAutoSave() {
   if (_lsAutoSaveTimer) clearTimeout(_lsAutoSaveTimer);
   _lsAutoSaveTimer = setTimeout(() => {
     lsSave();
+    if (window._fbUid && window._fsSave) window._fsSave(window._fbUid).catch(() => {});
   }, 800);
 }
 
@@ -10042,7 +10040,11 @@ function lsLoad() {
     if (p.routineCheckData)   Object.assign(routineCheckData, p.routineCheckData);
     migrateRoutineCategories();
     if (p.routineCheckData)   Object.assign(routineCheckData, p.routineCheckData);
-    if (p.todoStore)          Object.assign(todoStore, p.todoStore);
+    if (p.todoStore) {
+      Object.assign(todoStore, p.todoStore);
+      const allIds = Object.values(todoStore).flat().map(t => t.id || 0);
+      if (allIds.length > 0) nextTodoId = Math.max(...allIds) + 1;
+    }
     if (p.streakData)         Object.assign(streakData, p.streakData);
     if (p.wfStore) { Object.keys(wfStore).forEach(k=>delete wfStore[k]); Object.assign(wfStore, p.wfStore); }
     // 카테고리: 저장된 값 있으면 덮어쓰고, 없으면 기본값 유지
@@ -10187,7 +10189,24 @@ document.getElementById('logout-btn').addEventListener('click', function() {
         const p = snap.data();
         if (p.routines) routines = p.routines;
         if (p.routineCheckData)   Object.assign(routineCheckData, p.routineCheckData);
-        if (p.todoStore)          Object.assign(todoStore, p.todoStore);
+        if (p.todoStore) {
+          // Firestore에 아직 올라가지 않은 로컬 항목 보존
+          const unsynced = {};
+          Object.keys(todoStore).forEach(wk => {
+            const fsItems = p.todoStore[wk] || [];
+            const lsItems = todoStore[wk] || [];
+            const missing = lsItems.filter(lsItem => !fsItems.some(x => x.id === lsItem.id));
+            if (missing.length) unsynced[wk] = missing;
+          });
+          Object.assign(todoStore, p.todoStore);
+          Object.keys(unsynced).forEach(wk => {
+            if (!todoStore[wk]) todoStore[wk] = unsynced[wk];
+            else todoStore[wk] = [...todoStore[wk], ...unsynced[wk]];
+          });
+          const allFsIds = Object.values(todoStore).flat().map(t => t.id || 0);
+          if (allFsIds.length > 0) nextTodoId = Math.max(...allFsIds) + 1;
+          if (Object.keys(unsynced).length > 0) fsSave(uid).catch(() => {});
+        }
         if (p.oneThingStore)     Object.assign(oneThingStore, p.oneThingStore);
         if (p.oneThingDone)      Object.assign(oneThingDone, p.oneThingDone);
         if (p.streakData)         Object.assign(streakData, p.streakData);
