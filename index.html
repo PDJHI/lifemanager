@@ -2034,9 +2034,23 @@ navItems.forEach(item => {
     document.getElementById('page-' + item.dataset.page).classList.add('active');
     if (item.dataset.page === 'routine') { wfViewMonday = getMonday(now); switchTab('today'); }
     if (item.dataset.page === 'diary')   { diaryShowList(); }
+    localStorage.setItem('mlm_last_page', 'page:' + item.dataset.page);
   });
 });
-document.querySelector('[data-page="dashboard"]').click();
+(function() {
+  const last = localStorage.getItem('mlm_last_page');
+  if (last) {
+    const idx = last.indexOf(':');
+    const type = last.slice(0, idx);
+    const val  = last.slice(idx + 1);
+    if (type === 'page') {
+      const el = document.querySelector('[data-page="' + val + '"]');
+      if (el) { el.click(); return; }
+    } else if (type === 'goals') { selectGoals(val); return; }
+    else if (type === 'retro')   { selectRetro(val); return; }
+  }
+  document.querySelector('[data-page="dashboard"]').click();
+})();
 
 // ── Week cells (dashboard) ──────────────────────────────────────
 const weekCells = document.getElementById('week-cells');
@@ -9380,6 +9394,7 @@ function selectGoals(type) {
   document.getElementById('goals-page-title').textContent = titles[type] || '✨ 인생 목표';
   document.getElementById('nav-goals-sub').classList.add('open');
   document.getElementById('nav-goals-parent').classList.add('open');
+  localStorage.setItem('mlm_last_page', 'goals:' + type);
 }
 
 function toggleRetroMenu() {
@@ -9403,6 +9418,7 @@ function selectRetro(type) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-retro').classList.add('active');
   retroSwitch(type);
+  localStorage.setItem('mlm_last_page', 'retro:' + type);
 }
 
 
