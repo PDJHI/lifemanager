@@ -9992,7 +9992,7 @@ function lsAutoSave() {
   }, { passive: true, capture: true });
 })();
 
-function lsSave() {
+function lsSave(savedAt) {
   try {
     localStorage.setItem(LS_KEY, JSON.stringify({
       routines,
@@ -10019,6 +10019,7 @@ function lsSave() {
       qGoalsData,
       mGoalsData,
       affirmationStore,
+      _savedAt: savedAt !== undefined ? savedAt : Date.now(),
     }));
   } catch(e) { console.warn('저장 실패:', e); }
 }
@@ -10063,8 +10064,6 @@ function lsLoad() {
     if (!raw) return;
     const p = JSON.parse(raw);
     if (p.routines) routines = p.routines;
-    migrateRoutineCategories();
-    if (p.routineCheckData)   Object.assign(routineCheckData, p.routineCheckData);
     migrateRoutineCategories();
     if (p.routineCheckData)   Object.assign(routineCheckData, p.routineCheckData);
     if (p.todoStore) {
@@ -10173,6 +10172,7 @@ document.getElementById('logout-btn').addEventListener('click', function() {
   // ── Firestore 저장/불러오기 ──────────────────────────────────
   async function fsSave(uid) {
     try {
+      const savedAt = Date.now();
       const payload = {
         routines,
         routineCheckData,
@@ -10198,11 +10198,11 @@ document.getElementById('logout-btn').addEventListener('click', function() {
         qGoalsData,
         mGoalsData,
         affirmationStore,
-        _savedAt: Date.now()
+        _savedAt: savedAt
       };
       await setDoc(doc(db, 'users', uid, 'data', 'main'), payload);
-      // localStorage도 동기화
-      lsSave();
+      // localStorage도 동기화 (같은 _savedAt 사용)
+      lsSave(savedAt);
     } catch(e) {
       console.warn('Firestore 저장 실패, localStorage만 저장:', e);
       lsSave();
@@ -10214,6 +10214,18 @@ document.getElementById('logout-btn').addEventListener('click', function() {
       const snap = await getDoc(doc(db, 'users', uid, 'data', 'main'));
       if (snap.exists()) {
         const p = snap.data();
+
+        // 로컬 저장 시각이 Firestore보다 최신이면 로컬 데이터를 유지하고 Firestore에 업로드
+        try {
+          const lsRaw = localStorage.getItem(LS_KEY);
+          const lsSavedAt = lsRaw ? (JSON.parse(lsRaw)._savedAt || 0) : 0;
+          const fsSavedAt = p._savedAt || 0;
+          if (lsSavedAt > fsSavedAt) {
+            fsSave(uid).catch(() => {});
+            return true;
+          }
+        } catch(e) { /* 타임스탬프 비교 실패 시 Firestore 데이터로 진행 */ }
+
         if (p.routines) routines = p.routines;
         if (p.routineCheckData)   Object.assign(routineCheckData, p.routineCheckData);
         if (p.todoStore) {
@@ -10255,8 +10267,8 @@ document.getElementById('logout-btn').addEventListener('click', function() {
         if (p.qGoalsData)         Object.assign(qGoalsData, p.qGoalsData);
         if (p.mGoalsData)         Object.assign(mGoalsData, p.mGoalsData);
         if (p.affirmationStore && Array.isArray(p.affirmationStore)) { affirmationStore = p.affirmationStore; affirmationIdx = 0; }
-        // localStorage도 동기화
-        lsSave();
+        // localStorage도 동기화 (Firestore와 같은 _savedAt 사용)
+        lsSave(p._savedAt);
         return true;
       }
     } catch(e) {
