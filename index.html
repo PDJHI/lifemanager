@@ -2148,8 +2148,7 @@ function renderWeeklyTodo() {
   const pct = total ? Math.round(done/total*100) : 0;
   document.getElementById('todo-prog').style.width = pct+'%';
   document.getElementById('todo-prog-label').textContent = pct+'%';
-  document.const routineStatTodo = document.getElementById('routine-stat-todo');   if (routineStatTodo) routineStatTodo.textContent = `${done}/${total}`; = `${done}/${total}`;
-
+  document.getElementById('stat-todo').textContent = `${done}/${total}`;
   const row1 = document.getElementById('weekly-todo-days-row1');
   const row2 = document.getElementById('weekly-todo-days-row2');
   row1.innerHTML = '';
