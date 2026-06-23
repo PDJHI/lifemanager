@@ -689,9 +689,9 @@
       <div id="view-today" style="display:flex;flex-direction:column;gap:16px;">
         <!-- ① Stats row -->
         <div class="grid-3">
-          <div class="stat-card"><div class="stat-val" id="stat-routine">0/0</div><div class="stat-label">오늘 루틴</div></div>
-          <div class="stat-card"><div class="stat-val" id="stat-todo">0/0</div><div class="stat-label">이번 주 투두</div></div>
-          <div class="stat-card"><div class="stat-val">12일 🔥</div><div class="stat-label">연속 달성</div></div>
+          <div class="stat-card"><div class="stat-val" id="rt-stat-routine">0/0</div><div class="stat-label">오늘 루틴</div></div>
+          <div class="stat-card"><div class="stat-val" id="rt-stat-todo">0/0</div><div class="stat-label">이번 주 투두</div></div>
+          <div class="stat-card"><div class="stat-val" id="rt-stat-streak">0일</div><div class="stat-label">연속 달성</div></div>
         </div>
 
         <!-- ② 주간 목표 -->
@@ -2148,7 +2148,7 @@ function renderWeeklyTodo() {
   const pct = total ? Math.round(done/total*100) : 0;
   document.getElementById('todo-prog').style.width = pct+'%';
   document.getElementById('todo-prog-label').textContent = pct+'%';
-  document.getElementById('stat-todo').textContent = `${done}/${total}`;
+  const rtTodoEl2 = document.getElementById('rt-stat-todo'); if (rtTodoEl2) rtTodoEl2.textContent = `${done}/${total}`;
   const row1 = document.getElementById('weekly-todo-days-row1');
   const row2 = document.getElementById('weekly-todo-days-row2');
   row1.innerHTML = '';
@@ -2616,9 +2616,32 @@ function updateStats() {
   const rItems = document.querySelectorAll('#routine-list .routine-item');
   const rDone  = document.querySelectorAll('#routine-list .routine-item.done').length;
   const rPct = rItems.length ? Math.round(rDone/rItems.length*100) : 0;
-  document.getElementById('stat-routine').textContent = `${rDone}/${rItems.length}`;
   document.getElementById('routine-prog').style.width = rPct+'%';
   document.getElementById('routine-prog-label').textContent = rPct+'%';
+
+  // 루틴&투두 페이지 상단 카드 업데이트
+  const rtRoutineEl = document.getElementById('rt-stat-routine');
+  if (rtRoutineEl) rtRoutineEl.textContent = rDone+'/'+rItems.length;
+
+  const mon = getMonday(now);
+  const wKey = weekKey(mon);
+  const todos = todoStore[wKey] || [];
+  const tDone = todos.filter(t => t.done).length;
+  const rtTodoEl = document.getElementById('rt-stat-todo');
+  if (rtTodoEl) rtTodoEl.textContent = tDone+'/'+todos.length;
+
+  // 연속 달성 스트릭
+  let streak = 0;
+  let checkDate = new Date(now);
+  while (true) {
+    const sk = checkDate.getFullYear()+'-'+checkDate.getMonth()+'-'+checkDate.getDate();
+    if (!streakData[sk]) break;
+    streak++;
+    checkDate.setDate(checkDate.getDate()-1);
+  }
+  const rtStreakEl = document.getElementById('rt-stat-streak');
+  if (rtStreakEl) rtStreakEl.textContent = streak + '일' + (streak > 0 ? ' 🔥' : '');
+
   renderDashboard();
 }
 
@@ -5408,14 +5431,18 @@ const DIARY_SCORE_LABELS = ['','최악 😞','나쁨 😕','보통 😐','좋음
 const DIARY_BODY_OPTIONS = [
   {emoji:'💪',label:'최상'},{emoji:'😊',label:'좋음'},{emoji:'😐',label:'보통'},{emoji:'😩',label:'피곤'},{emoji:'🤒',label:'아픔'},
   {emoji:'🤕',label:'두통'},{emoji:'🥱',label:'졸림'},{emoji:'🤧',label:'감기'},{emoji:'🥴',label:'어지러움'},{emoji:'💊',label:'약먹음'},
-  {emoji:'🏃',label:'운동함'},{emoji:'🧘',label:'이완됨'},{emoji:'😮‍💨',label:'숨참'},{emoji:'🤢',label:'속불편'},{emoji:'❄️',label:'오한'}
+  {emoji:'🏃',label:'운동함'},{emoji:'🧘',label:'이완됨'},{emoji:'😮‍💨',label:'숨참'},{emoji:'🤢',label:'속불편'},{emoji:'❄️',label:'오한'},
+  {emoji:'🪨',label:'무거움'},{emoji:'🫀',label:'심장두근'},{emoji:'🦴',label:'근육통'},{emoji:'👁️',label:'눈피로'},{emoji:'🌡️',label:'열남'},
+  {emoji:'💧',label:'탈수'},{emoji:'🫁',label:'호흡불편'},{emoji:'🤸',label:'몸풀림'},{emoji:'🛌',label:'기력없음'},{emoji:'⚡',label:'에너지넘침'}
 ];
 const DIARY_MOOD_OPTIONS = [
   {emoji:'😄',label:'기쁨'},{emoji:'😌',label:'평온'},{emoji:'🥰',label:'설렘'},{emoji:'🤔',label:'고민'},{emoji:'😤',label:'답답'},
   {emoji:'😔',label:'우울'},{emoji:'😡',label:'화남'},{emoji:'😰',label:'불안'},{emoji:'🤩',label:'신남'},{emoji:'😴',label:'무기력'},
   {emoji:'🥺',label:'서운함'},{emoji:'😶',label:'멍함'},{emoji:'🤗',label:'따뜻함'},{emoji:'😒',label:'짜증'},{emoji:'🫠',label:'지침'},
   {emoji:'🙏',label:'감사'},{emoji:'😬',label:'긴장'},{emoji:'🌊',label:'감동'},{emoji:'🤭',label:'부끄러움'},{emoji:'😎',label:'자신감'},
-  {emoji:'😢',label:'슬픔'}
+  {emoji:'😢',label:'슬픔'},
+  {emoji:'😆',label:'즐거움'},{emoji:'🫶',label:'사랑스러움'},{emoji:'🌈',label:'희망찬'},{emoji:'😵',label:'혼란스러움'},{emoji:'🤯',label:'충격'},
+  {emoji:'🥳',label:'신나는'}
 ];
 
 function diaryDateKey(d) {
@@ -10215,13 +10242,14 @@ document.getElementById('logout-btn').addEventListener('click', function() {
       if (snap.exists()) {
         const p = snap.data();
 
-        // 로컬 저장 시각이 Firestore보다 최신이면 로컬 데이터를 유지하고 Firestore에 업로드
+        // 로컬 저장 시각이 Firestore보다 최신이면 로컬 데이터를 메모리에 올린 후 Firestore에 업로드
         try {
           const lsRaw = localStorage.getItem(LS_KEY);
           const lsSavedAt = lsRaw ? (JSON.parse(lsRaw)._savedAt || 0) : 0;
           const fsSavedAt = p._savedAt || 0;
           if (lsSavedAt > fsSavedAt) {
-            fsSave(uid).catch(() => {});
+            lsLoad(); // 먼저 로컬 데이터를 메모리에 올림
+            fsSave(uid).catch(() => {}); // 그 다음 Firestore에 업로드
             return true;
           }
         } catch(e) { /* 타임스탬프 비교 실패 시 Firestore 데이터로 진행 */ }
@@ -10277,9 +10305,44 @@ document.getElementById('logout-btn').addEventListener('click', function() {
     return false;
   }
 
+  // ── 일별 자동 백업 ──────────────────────────────────────────────
+  async function fsDailyBackup(uid) {
+    try {
+      const today = new Date();
+      const dateKey = today.getFullYear() + '-'
+        + String(today.getMonth() + 1).padStart(2, '0') + '-'
+        + String(today.getDate()).padStart(2, '0');
+      const backupRef = doc(db, 'users', uid, 'backups', dateKey);
+      const snap = await getDoc(backupRef);
+      if (snap.exists()) return;
+      const payload = {
+        routines, routineCheckData, todoStore, oneThingStore, oneThingDone,
+        streakData, wfStore, tlCatParents, tlCatChildren, tlNextParentId,
+        tlNextChildId, tlLogs, diaryStore, retroWeeklyContent, retroMonthlyData,
+        retroQuarterlyData, retroYearlyData, retroStore, yearlyGoalsData,
+        desireStore, buyStore, qGoalsData, mGoalsData, affirmationStore,
+        _savedAt: Date.now(), _backupDate: dateKey
+      };
+      await setDoc(backupRef, payload);
+      const { collection: fsCol, getDocs, deleteDoc } = await import('https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js');
+      const allSnaps = await getDocs(fsCol(db, 'users', uid, 'backups'));
+      const keys = allSnaps.docs.map(d => d.id).sort();
+      if (keys.length > 7) {
+        const toDelete = keys.slice(0, keys.length - 7);
+        for (const k of toDelete) {
+          await deleteDoc(doc(db, 'users', uid, 'backups', k));
+        }
+      }
+      console.log('[Backup] 오늘 백업 완료:', dateKey);
+    } catch(e) {
+      console.warn('[Backup] 백업 실패:', e);
+    }
+  }
+
   // 앱 전체에서 사용할 수 있도록 등록
   window._fsSave = fsSave;
   window._fsLoad = fsLoad;
+  window._fsDailyBackup = fsDailyBackup;
 
   window._fbSignIn = async () => {
     try {
@@ -10329,6 +10392,24 @@ document.getElementById('logout-btn').addEventListener('click', function() {
           else lsSave();
         }, 1500);
       };
+
+      // 오늘 백업 실행 (없으면 저장)
+      fsDailyBackup(user.uid);
+
+      // 자정에 자동 백업 타이머
+      if (!window._midnightBackupTimer) {
+        const scheduleBackup = () => {
+          const now = new Date();
+          const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 1, 0);
+          const ms = next - now;
+          window._midnightBackupTimer = setTimeout(() => {
+            if (window._fbUid && window._fsDailyBackup) window._fsDailyBackup(window._fbUid);
+            window._midnightBackupTimer = null;
+            scheduleBackup();
+          }, ms);
+        };
+        scheduleBackup();
+      }
 
       screen.style.display = 'none';
       appEl.style.display  = '';
