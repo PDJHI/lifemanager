@@ -1327,17 +1327,7 @@
                 oninput="diaryAutoSave()"
                 style="flex:1;font-size:19px;font-weight:600;border:none;outline:none;background:transparent;color:var(--text-primary);font-family:inherit;">
 
-              <!-- 날씨 -->
-              <div id="diary-weather-block" style="display:flex;align-items:center;gap:8px;flex-shrink:0;border-left:0.5px solid var(--border);padding-left:16px;">
-                <div>
-                  <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">날씨</div>
-                  <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;" id="diary-weather-btns"></div>
-                  <input type="text" id="diary-weather-custom" placeholder="직접 입력..." maxlength="20"
-                    onkeydown="if(event.key==='Enter')diaryAddCustomWeather()"
-                    style="font-size:12px;padding:3px 8px;border:0.5px dashed var(--border-md);border-radius:10px;background:transparent;color:var(--text-primary);font-family:inherit;outline:none;width:90px;"
-                    onfocus="this.style.borderStyle='solid'" onblur="this.style.borderStyle='dashed'">
-                </div>
-              </div>
+              <!-- (날씨는 2행 카드로 이동) -->
 
               <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;border-left:0.5px solid var(--border);padding-left:20px;min-width:130px;">
                 <div>
@@ -1356,9 +1346,9 @@
             </div>
           </div>
 
-          <!-- 2행: 몸상태 + 마음 (한 라인) -->
+          <!-- 2행: 몸상태 + 마음 + 날씨 (한 라인) -->
           <div class="card" style="padding:14px 16px;">
-            <div style="display:grid;grid-template-columns:1fr 1px 1fr;gap:0 24px;align-items:start;">
+            <div style="display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;gap:0 24px;align-items:start;">
 
               <!-- 몸 상태 -->
               <div>
@@ -1382,6 +1372,20 @@
                   style="font-size:12px;padding:3px 8px;border:0.5px dashed var(--border-md);border-radius:10px;background:transparent;color:var(--text-primary);font-family:inherit;outline:none;width:100px;"
                   onfocus="this.style.borderStyle='solid'" onblur="this.style.borderStyle='dashed'">
               </div>
+
+              <!-- 구분선 -->
+              <div style="background:var(--border);width:1px;align-self:stretch;"></div>
+
+              <!-- 날씨 -->
+              <div id="diary-weather-block">
+                <div class="card-title" style="margin-bottom:8px;"><i class="ti ti-cloud"></i>날씨</div>
+                <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;" id="diary-weather-btns"></div>
+                <input type="text" id="diary-weather-custom" placeholder="직접 입력..." maxlength="20"
+                  onkeydown="if(event.key==='Enter')diaryAddCustomWeather()"
+                  style="font-size:12px;padding:3px 8px;border:0.5px dashed var(--border-md);border-radius:10px;background:transparent;color:var(--text-primary);font-family:inherit;outline:none;width:90px;"
+                  onfocus="this.style.borderStyle='solid'" onblur="this.style.borderStyle='dashed'">
+              </div>
+
             </div>
           </div>
 
@@ -8217,8 +8221,7 @@ function retroMonthlySave(btn) {
   const d  = retroCursor['monthly'];
   if (!retroMonthlyData[mk]) retroMonthlyData[mk] = {};
   retroMonthlyData[mk]['_saved'] = true;
-
-  // 미달성 목표 → 다음달 mGoalsData에 자동 이월
+  retroMonthlyData[mk]['_savedDate'] = new Date().toISOString().slice(0,10);
   const nextD   = new Date(d.getFullYear(), d.getMonth() + 1, 1);
   const nextKey = `${nextD.getFullYear()}-${String(nextD.getMonth()+1).padStart(2,'0')}`;
   if (!mGoalsData[nextKey]) mGoalsData[nextKey] = { cats: {}, reward: '' };
@@ -8256,6 +8259,7 @@ function retroQuarterlySave(btn) {
   const d  = retroCursor['quarterly'];
   if (!retroQuarterlyData[qk]) retroQuarterlyData[qk] = {};
   retroQuarterlyData[qk]['_saved'] = true;
+  retroQuarterlyData[qk]['_savedDate'] = new Date().toISOString().slice(0,10);
 
   // 미달성 목표 → 다음분기 qGoalsData에 자동 이월
   const q = Math.ceil((d.getMonth()+1)/3);
@@ -8295,6 +8299,7 @@ function retroYearlySave(btn) {
   const d  = retroCursor['yearly'];
   if (!retroYearlyData[yk]) retroYearlyData[yk] = {};
   retroYearlyData[yk]['_saved'] = true;
+  retroYearlyData[yk]['_savedDate'] = new Date().toISOString().slice(0,10);
 
   // 미달성 목표 → 내년 yearlyGoalsData에 자동 이월
   const nextYear = d.getFullYear() + 1;
@@ -8528,6 +8533,7 @@ function retroMonthlyRenderForm() {
 
 
 let retroWeeklyContent = {}; // { weekKey: string }
+let retroWeeklyMeta    = {}; // { weekKey: { savedDate: 'YYYY-MM-DD' } }
 
 var _retroWeeklyAutoSaveTimer = null;
 function retroWeeklyAutoSave() {
@@ -8550,6 +8556,8 @@ function retroWeeklySave(btn) {
   retroWeeklyContent[key] = val;
   if (!retroStore.weekly[key]) retroStore.weekly[key] = {};
   retroStore.weekly[key][0] = val;
+  if (!retroWeeklyMeta[key]) retroWeeklyMeta[key] = {};
+  retroWeeklyMeta[key].savedDate = new Date().toISOString().slice(0,10);
   if (btn) { btn.textContent = '저장됨 ✓'; btn.style.background = '#43E97B'; }
   setTimeout(() => { if (btn) { btn.textContent = '저장'; btn.style.background = 'var(--text-primary)'; } }, 1400);
   retroShowList('weekly');
@@ -9485,6 +9493,7 @@ function renderRetro(type) {
         return '<div onclick="retroWeeklyLoad(\''+k+'\')" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border);cursor:pointer;">'
           + '<div style="flex:1;min-width:0;">'
           + '<div style="font-size:15px;font-weight:600;color:var(--text-primary);">'+fmtWeekKey(k)+'</div>'
+          + ((retroWeeklyMeta[k] && retroWeeklyMeta[k].savedDate) ? '<div style="font-size:12px;color:var(--text-tertiary);margin-top:2px;">입력일 ' + retroWeeklyMeta[k].savedDate + '</div>' : '')
           + '</div>'
           + (avgScore !== '-' ? '<span style="font-size:13px;font-weight:600;color:var(--text-tertiary);">avg '+avgScore+'</span>' : '')
           + '<i class="ti ti-chevron-right" style="color:var(--text-tertiary);font-size:16px;margin-left:4px;"></i>'
@@ -9515,6 +9524,7 @@ function renderRetro(type) {
               ${avgScore ? `<span style="font-size:12px;color:var(--text-tertiary);">avg ${avgScore}</span>` : ''}
             </div>
             <div style="font-size:13px;color:var(--text-tertiary);margin-top:3px;">${badges||'기록됨'}</div>
+            ${cats._savedDate ? `<div style="font-size:12px;color:var(--text-tertiary);margin-top:2px;">입력일 ${cats._savedDate}</div>` : ''}
           </div>
           <i class="ti ti-chevron-right" style="color:var(--text-tertiary);font-size:16px;"></i></div>`;
       }).join('');
@@ -9534,7 +9544,8 @@ function renderRetro(type) {
         }).filter(Boolean).join(' ');
         return `<div onclick="retroQuarterlyJumpTo('${qk}')" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border);cursor:pointer;">
           <div style="flex:1;min-width:0;"><div style="font-size:15px;font-weight:600;color:var(--text-primary);">${fmtQKey(qk)}</div>
-          <div style="font-size:13px;color:var(--text-tertiary);margin-top:3px;">${badges||'기록됨'}</div></div>
+          <div style="font-size:13px;color:var(--text-tertiary);margin-top:3px;">${badges||'기록됨'}</div>
+          ${cats._savedDate ? `<div style="font-size:12px;color:var(--text-tertiary);margin-top:2px;">입력일 ${cats._savedDate}</div>` : ''}</div>
           <i class="ti ti-chevron-right" style="color:var(--text-tertiary);font-size:16px;"></i></div>`;
       }).join('');
       if (listEl.lastElementChild) listEl.lastElementChild.style.borderBottom = 'none';
@@ -9553,7 +9564,8 @@ function renderRetro(type) {
         }).filter(Boolean).join(' ');
         return `<div onclick="retroYearlyJumpTo('${yk}')" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border);cursor:pointer;">
           <div style="flex:1;min-width:0;"><div style="font-size:15px;font-weight:600;color:var(--text-primary);">${yk}년</div>
-          <div style="font-size:13px;color:var(--text-tertiary);margin-top:3px;">${badges||'기록됨'}</div></div>
+          <div style="font-size:13px;color:var(--text-tertiary);margin-top:3px;">${badges||'기록됨'}</div>
+          ${cats._savedDate ? `<div style="font-size:12px;color:var(--text-tertiary);margin-top:2px;">입력일 ${cats._savedDate}</div>` : ''}</div>
           <i class="ti ti-chevron-right" style="color:var(--text-tertiary);font-size:16px;"></i></div>`;
       }).join('');
       if (listEl.lastElementChild) listEl.lastElementChild.style.borderBottom = 'none';
@@ -9850,7 +9862,7 @@ function dataExport() {
     tlCatChildren,
     tlLogs,
     diaryStore,
-    retroWeeklyContent,
+    retroWeeklyContent, retroWeeklyMeta,
     retroMonthlyData,
     retroQuarterlyData,
     retroYearlyData,
@@ -9894,6 +9906,7 @@ function dataImport() {
         if (p.tlLogs)             Object.assign(tlLogs, p.tlLogs);
         if (p.diaryStore) { Object.keys(diaryStore).forEach(k => delete diaryStore[k]); Object.assign(diaryStore, p.diaryStore); }
         if (p.retroWeeklyContent) Object.assign(retroWeeklyContent, p.retroWeeklyContent);
+        if (p.retroWeeklyMeta) Object.assign(retroWeeklyMeta, p.retroWeeklyMeta);
         if (p.retroMonthlyData)   Object.assign(retroMonthlyData, p.retroMonthlyData);
         if (p.retroQuarterlyData) Object.assign(retroQuarterlyData, p.retroQuarterlyData);
         if (p.retroYearlyData)    Object.assign(retroYearlyData, p.retroYearlyData);
@@ -9963,7 +9976,7 @@ function lsSave(savedAt) {
       tlNextChildId,
       tlLogs,
       diaryStore,
-      retroWeeklyContent,
+      retroWeeklyContent, retroWeeklyMeta,
       retroMonthlyData,
       retroQuarterlyData,
       retroYearlyData,
@@ -10036,6 +10049,7 @@ function lsLoad() {
     if (p.tlLogs)             Object.assign(tlLogs, p.tlLogs);
     if (p.diaryStore) { Object.keys(diaryStore).forEach(k => delete diaryStore[k]); Object.assign(diaryStore, p.diaryStore); }
     if (p.retroWeeklyContent) Object.assign(retroWeeklyContent, p.retroWeeklyContent);
+        if (p.retroWeeklyMeta) Object.assign(retroWeeklyMeta, p.retroWeeklyMeta);
     if (p.retroMonthlyData)   Object.assign(retroMonthlyData, p.retroMonthlyData);
     if (p.retroQuarterlyData) Object.assign(retroQuarterlyData, p.retroQuarterlyData);
     if (p.retroYearlyData)    Object.assign(retroYearlyData, p.retroYearlyData);
@@ -10142,7 +10156,7 @@ document.getElementById('logout-btn').addEventListener('click', function() {
         tlNextChildId,
         tlLogs,
         diaryStore,
-        retroWeeklyContent,
+        retroWeeklyContent, retroWeeklyMeta,
         retroMonthlyData,
         retroQuarterlyData,
         retroYearlyData,
@@ -10213,6 +10227,7 @@ document.getElementById('logout-btn').addEventListener('click', function() {
         if (p.tlLogs)             Object.assign(tlLogs, p.tlLogs);
         if (p.diaryStore) { Object.keys(diaryStore).forEach(k => delete diaryStore[k]); Object.assign(diaryStore, p.diaryStore); }
         if (p.retroWeeklyContent) Object.assign(retroWeeklyContent, p.retroWeeklyContent);
+        if (p.retroWeeklyMeta) Object.assign(retroWeeklyMeta, p.retroWeeklyMeta);
         if (p.retroMonthlyData)   Object.assign(retroMonthlyData, p.retroMonthlyData);
         if (p.retroQuarterlyData) Object.assign(retroQuarterlyData, p.retroQuarterlyData);
         if (p.retroYearlyData)    Object.assign(retroYearlyData, p.retroYearlyData);
