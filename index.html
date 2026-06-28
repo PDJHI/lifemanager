@@ -4087,35 +4087,37 @@ function renderNextWeekTodo() {
       txt.style.cssText = 'flex:1;font-size:13px;line-height:1.5;' + (t.done ? 'color:var(--text-tertiary);text-decoration:line-through;' : 'color:var(--text-primary);') + 'outline:none;word-break:break-word;';
       txt.textContent = t.text;
       txt.title = '더블클릭하여 편집';
-      (function(todo) {
-        txt.addEventListener('dblclick', function(e) {
+      (function(todo, txtEl) {
+        txtEl.addEventListener('dblclick', function(e) {
           e.stopPropagation();
-          txt.contentEditable = 'true';
-          txt.style.outline = '1px solid var(--border-md)';
-          txt.style.borderRadius = '3px';
-          txt.style.padding = '0 2px';
-          txt.focus();
-          var r = document.createRange(); r.selectNodeContents(txt);
+          txtEl.contentEditable = 'true';
+          txtEl.style.outline = '1px solid var(--border-md)';
+          txtEl.style.borderRadius = '3px';
+          txtEl.style.padding = '0 2px';
+          txtEl.focus();
+          var r = document.createRange(); r.selectNodeContents(txtEl);
           window.getSelection().removeAllRanges(); window.getSelection().addRange(r);
         });
-        txt.addEventListener('blur', function() {
-          var v = txt.textContent.trim();
-          if (v) todo.text = v; else txt.textContent = todo.text;
-          txt.contentEditable = 'false'; txt.style.outline = ''; txt.style.padding = '';
+        txtEl.addEventListener('blur', function() {
+          var v = txtEl.textContent.trim();
+          if (v) todo.text = v; else txtEl.textContent = todo.text;
+          txtEl.contentEditable = 'false'; txtEl.style.outline = ''; txtEl.style.padding = '';
           lsAutoSave(); renderNextWeekTodo();
         });
-        txt.addEventListener('keydown', function(e) {
-          if (e.key === 'Enter') { e.preventDefault(); txt.blur(); }
-          if (e.key === 'Escape') { txt.textContent = todo.text; txt.blur(); }
+        txtEl.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') { e.preventDefault(); txtEl.blur(); }
+          if (e.key === 'Escape') { txtEl.textContent = todo.text; txtEl.blur(); }
         });
-      })(t);
+      })(t, txt);
 
       var del = document.createElement('i');
       del.className = 'ti ti-x';
       del.style.cssText = 'font-size:11px;color:var(--text-tertiary);cursor:pointer;margin-top:3px;opacity:0;transition:opacity 0.1s;flex-shrink:0;';
-      (function(todo, key){ del.addEventListener('click', function(e){ e.stopPropagation(); deleteTodo(key, todo.id); renderNextWeekTodo(); }); })(t, nwKey);
-      item.addEventListener('mouseenter', function(){ del.style.opacity='1'; });
-      item.addEventListener('mouseleave', function(){ del.style.opacity='0'; });
+      (function(todo, key, delEl){
+        delEl.addEventListener('click', function(e){ e.stopPropagation(); deleteTodo(key, todo.id); renderNextWeekTodo(); });
+        item.addEventListener('mouseenter', function(){ delEl.style.opacity='1'; });
+        item.addEventListener('mouseleave', function(){ delEl.style.opacity='0'; });
+      })(t, nwKey, del);
 
       item.appendChild(chk); item.appendChild(txt); item.appendChild(del);
       col.appendChild(item);
