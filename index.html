@@ -10100,6 +10100,8 @@ function lsLoad() {
       const allIds = Object.values(todoStore).flat().map(t => t.id || 0);
       if (allIds.length > 0) nextTodoId = Math.max(...allIds) + 1;
     }
+    if (p.oneThingStore)      Object.assign(oneThingStore, p.oneThingStore);
+    if (p.oneThingDone)       Object.assign(oneThingDone, p.oneThingDone);
     if (p.streakData)         Object.assign(streakData, p.streakData);
     if (p.wfStore) { Object.keys(wfStore).forEach(k=>delete wfStore[k]); Object.assign(wfStore, p.wfStore); }
     // 카테고리: 저장된 값 있으면 덮어쓰고, 없으면 기본값 유지
