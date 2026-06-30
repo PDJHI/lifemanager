@@ -339,7 +339,7 @@
       <button onclick="dataCleanupBefore()" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--radius-md);border:0.5px solid var(--border-md);background:transparent;color:var(--text-secondary);font-size:13px;cursor:pointer;font-family:inherit;width:100%;text-align:left;">
         <i class="ti ti-calendar-minus" style="font-size:16px;"></i> 날짜 이전 삭제
       </button>
-      <button id="logout-btn" onclick="doLogout()" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--radius-md);border:0.5px solid var(--border-md);background:transparent;color:var(--text-tertiary);font-size:13px;cursor:pointer;font-family:inherit;width:100%;text-align:left;">
+      <button id="logout-btn" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--radius-md);border:0.5px solid var(--border-md);background:transparent;color:var(--text-tertiary);font-size:13px;cursor:pointer;font-family:inherit;width:100%;text-align:left;">
         <i class="ti ti-logout" style="font-size:16px;"></i> 로그아웃
       </button>
     </div>
@@ -2009,6 +2009,7 @@ let viewMonday = getMonday(now);
 // ── Manage-tab state ────────────────────────────────────────────
 let selectedDay = 0;
 let editingId = null;
+let wfViewMonday = getMonday(now);
 const CAT_TAG = { '자산':'tag-amber', '관계':'tag-blue', '가족':'tag-pink', '건강':'tag-green', '경험':'tag-coral', '커리어':'tag-purple', '성장':'tag-green', '아침':'tag-green', '오전':'tag-blue', '오후':'tag-amber', '저녁':'tag-purple' };
 const TIME_TAG = { '공통':'tag-blue', '아침':'tag-green', '오전':'tag-blue', '오후':'tag-amber', '저녁':'tag-purple' };
 const PRIO_COLOR = { high:'#E24B4A', mid:'#EF9F27', low:'#639922' };
@@ -3643,7 +3644,6 @@ function buyModalClose() {
 // { [weekKey]: { goals: [{id,text,done}], rewards: [{id,text,claimed}] } }
 let wfStore = {};
 let wfNextId = 1;
-let wfViewMonday = getMonday(now);
 
 function wfKey(monday) { return weekKey(monday); }
 
