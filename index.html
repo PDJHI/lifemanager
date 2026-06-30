@@ -10300,19 +10300,18 @@ document.getElementById('logout-btn').addEventListener('click', function() {
   window._fsDailyBackup = fsDailyBackup;
 
   window._fbSignIn = async () => {
-    try {
-      return await signInWithPopup(auth, provider);
-    } catch(e) {
-      if (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user') {
-        return signInWithRedirect(auth, provider);
-      }
-      throw e;
-    }
+    // 팝업 방식은 회사 네트워크 등 COOP 정책에 의해 차단되는 경우가 있으므로
+    // 리다이렉트 방식을 기본으로 사용 (모든 환경에서 안정적으로 동작)
+    return signInWithRedirect(auth, provider);
   };
   window._fbSignOut = () => signOut(auth);
   window._fbReady   = true;
 
-  getRedirectResult(auth).catch(e => console.warn('redirect result', e));
+  // 리다이렉트 로그인 후 결과 처리 — onAuthStateChanged가 자동으로 user를 받지만
+  // 명시적으로 처리해 에러도 잡음
+  getRedirectResult(auth).catch(e => {
+    if (e.code !== 'auth/no-auth-event') console.warn('redirect result:', e);
+  });
 
   onAuthStateChanged(auth, async user => {
     const screen = document.getElementById('login-screen');
