@@ -9941,12 +9941,17 @@ function dataImport() {
 // ── localStorage 자동 저장 ──────────────────────────────────────
 const LS_KEY = 'mlm_data_v1';
 
+// 실제로 데이터가 "수정된" 마지막 시각. 단순 주기적 백업(setInterval)으로는
+// 절대 갱신되지 않도록 분리 — 기기 간 충돌(LWW) 비교가 이 값을 기준으로 동작함.
+let lastDataChangeAt = 0;
+
 // 기본 lsAutoSave (Firebase 로그인 전에도 동작)
 let _lsAutoSaveTimer = null;
 function lsAutoSave() {
   if (_lsAutoSaveTimer) clearTimeout(_lsAutoSaveTimer);
   _lsAutoSaveTimer = setTimeout(() => {
-    lsSave();
+    lastDataChangeAt = Date.now();
+    lsSave(lastDataChangeAt);
     if (window._fbUid && window._fsSave) window._fsSave(window._fbUid).catch(() => {});
   }, 800);
 }
@@ -9991,7 +9996,7 @@ function lsSave(savedAt) {
       qGoalsData,
       mGoalsData,
       affirmationStore,
-      _savedAt: savedAt !== undefined ? savedAt : Date.now(),
+      _savedAt: savedAt !== undefined ? savedAt : (lastDataChangeAt || Date.now()),
     }));
   } catch(e) { console.warn('저장 실패:', e); }
 }
@@ -10035,6 +10040,7 @@ function lsLoad() {
     const raw = localStorage.getItem(LS_KEY);
     if (!raw) return;
     const p = JSON.parse(raw);
+    lastDataChangeAt = p._savedAt || 0;
     if (p.routines) routines = p.routines;
     migrateRoutineCategories();
     if (p.routineCheckData)   Object.assign(routineCheckData, p.routineCheckData);
@@ -10145,7 +10151,8 @@ document.getElementById('logout-btn').addEventListener('click', function() {
   // ── Firestore 저장/불러오기 ──────────────────────────────────
   async function fsSave(uid) {
     try {
-      const savedAt = Date.now();
+      lastDataChangeAt = Date.now();
+      const savedAt = lastDataChangeAt;
       const payload = {
         routines,
         routineCheckData,
@@ -10243,6 +10250,7 @@ document.getElementById('logout-btn').addEventListener('click', function() {
         if (p.mGoalsData)         Object.assign(mGoalsData, p.mGoalsData);
         if (p.affirmationStore && Array.isArray(p.affirmationStore)) { affirmationStore = p.affirmationStore; affirmationIdx = 0; }
         // localStorage도 동기화 (Firestore와 같은 _savedAt 사용)
+        lastDataChangeAt = p._savedAt || Date.now();
         lsSave(p._savedAt);
         return true;
       }
@@ -10336,7 +10344,7 @@ document.getElementById('logout-btn').addEventListener('click', function() {
         clearTimeout(window._lsTimer);
         window._lsTimer = setTimeout(() => {
           if (window._fbUid) fsSave(window._fbUid);
-          else lsSave();
+          else { lastDataChangeAt = Date.now(); lsSave(lastDataChangeAt); }
         }, 1500);
       };
 
