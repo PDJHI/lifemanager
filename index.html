@@ -2010,6 +2010,13 @@ let viewMonday = getMonday(now);
 let selectedDay = 0;
 let editingId = null;
 let wfViewMonday = getMonday(now);
+let diaryStore = {};
+let diaryViewDate = new Date(now); diaryViewDate.setHours(0,0,0,0);
+let diaryCalMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+let diaryMode = 'list'; // 'list' | 'editor'
+let diaryCalWeekMonday = getMonday(now);
+let diaryFullCalYear  = now.getFullYear();
+let diaryFullCalMonth = now.getMonth();
 const CAT_TAG = { '자산':'tag-amber', '관계':'tag-blue', '가족':'tag-pink', '건강':'tag-green', '경험':'tag-coral', '커리어':'tag-purple', '성장':'tag-green', '아침':'tag-green', '오전':'tag-blue', '오후':'tag-amber', '저녁':'tag-purple' };
 const TIME_TAG = { '공통':'tag-blue', '아침':'tag-green', '오전':'tag-blue', '오후':'tag-amber', '저녁':'tag-purple' };
 const PRIO_COLOR = { high:'#E24B4A', mid:'#EF9F27', low:'#639922' };
@@ -2039,7 +2046,7 @@ navItems.forEach(item => {
     localStorage.setItem('mlm_last_page', 'page:' + item.dataset.page);
   });
 });
-(function() {
+setTimeout(function() {
   const last = localStorage.getItem('mlm_last_page');
   if (last) {
     const idx = last.indexOf(':');
@@ -2052,7 +2059,7 @@ navItems.forEach(item => {
     else if (type === 'retro')   { selectRetro(val); return; }
   }
   document.querySelector('[data-page="dashboard"]').click();
-})();
+}, 0);
 
 // ── Week cells (dashboard) ──────────────────────────────────────
 const weekCells = document.getElementById('week-cells');
@@ -5425,10 +5432,7 @@ function tlAutoFillFutureWeekdays() {
 }
 
 // ── Diary ─────────────────────────────────────────────────────────
-let diaryStore = {};
-let diaryViewDate = new Date(now); diaryViewDate.setHours(0,0,0,0);
-let diaryCalMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-let diaryMode = 'list'; // 'list' | 'editor'
+// (diaryStore, diaryViewDate, diaryCalMonth, diaryMode 선언은 상단으로 이동됨)
 
 const DIARY_SCORE_LABELS = ['','최악 😞','나쁨 😕','보통 😐','좋음 🙂','최고 😄','완벽 🤩','행복 🥰','최고야 🌟','눈부심 ✨','완벽한 하루 🎉'];
 const DIARY_WEATHER_OPTIONS = [
@@ -6161,7 +6165,7 @@ function diaryDelete() {
 
 // ── Calendar — weekly strip ───────────────────────────────────────
 // diaryCalMonth now tracks the "view week" monday
-let diaryCalWeekMonday = getMonday(now);
+// (diaryCalWeekMonday 선언은 상단으로 이동됨)
 
 function renderDiaryCal() {
   const mon = diaryCalWeekMonday;
@@ -6243,8 +6247,8 @@ function diarySwitchTab(tab) {
 }
 
 // ── 전체 달력 ─────────────────────────────────────────────────────
-let diaryFullCalYear  = now.getFullYear();
-let diaryFullCalMonth = now.getMonth();
+// (diaryFullCalYear 선언은 상단으로 이동됨)
+// (diaryFullCalMonth 선언은 상단으로 이동됨)
 
 function diaryFullCalPrev() {
   diaryFullCalMonth -= 2;
