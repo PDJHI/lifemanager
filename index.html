@@ -2003,7 +2003,7 @@ let nextRoutineId = 1;
 
 // ── Todo data: { [weekKey]: [ {id, dayIdx(0=월), text, priority, done} ] } ──
 let todoStore = {};
-let nextTodoId = 1;
+window.nextTodoId = 1;
 let oneThingStore = {};  // { 'weekKey-OT-di': text }
 let oneThingDone  = {};  // { 'weekKey-OT-di': bool }
 
@@ -4435,7 +4435,7 @@ const TL_DEFAULT_CHILDREN = [
 // 실제 사용 변수 — lsLoad/fsLoad에서 덮어씀. 없으면 기본값 사용
 let tlCatParents  = JSON.parse(JSON.stringify(TL_DEFAULT_PARENTS));
 let tlCatChildren = JSON.parse(JSON.stringify(TL_DEFAULT_CHILDREN));
-let tlNextParentId = 10, tlNextChildId = 20;
+window.tlNextParentId = 10; window.tlNextChildId = 20;
 
 let tlLogs = {};
 let tlNextLogId = 100;
@@ -10166,8 +10166,8 @@ document.getElementById('logout-btn').addEventListener('click', function() {
         wfStore,
         tlCatParents,
         tlCatChildren,
-        tlNextParentId,
-        tlNextChildId,
+        tlNextParentId: window.tlNextParentId,
+        tlNextChildId: window.tlNextChildId,
         tlLogs,
         diaryStore,
         retroWeeklyContent, retroWeeklyMeta,
@@ -10227,7 +10227,7 @@ document.getElementById('logout-btn').addEventListener('click', function() {
             else todoStore[wk] = [...todoStore[wk], ...unsynced[wk]];
           });
           const allFsIds = Object.values(todoStore).flat().map(t => t.id || 0);
-          if (allFsIds.length > 0) nextTodoId = Math.max(...allFsIds) + 1;
+          if (allFsIds.length > 0) window.nextTodoId = Math.max(...allFsIds) + 1;
           if (Object.keys(unsynced).length > 0) fsSave(uid).catch(() => {});
         }
         if (p.oneThingStore)     Object.assign(oneThingStore, p.oneThingStore);
@@ -10236,8 +10236,8 @@ document.getElementById('logout-btn').addEventListener('click', function() {
         if (p.wfStore) { Object.keys(wfStore).forEach(k=>delete wfStore[k]); Object.assign(wfStore, p.wfStore); }
         if (p.tlCatParents && p.tlCatParents.length)  tlCatParents  = p.tlCatParents;
         if (p.tlCatChildren && p.tlCatChildren.length) tlCatChildren = p.tlCatChildren;
-        if (p.tlNextParentId)     tlNextParentId     = p.tlNextParentId;
-        if (p.tlNextChildId)      tlNextChildId      = p.tlNextChildId;
+        if (p.tlNextParentId)     window.tlNextParentId = p.tlNextParentId;
+        if (p.tlNextChildId)      window.tlNextChildId  = p.tlNextChildId;
         if (p.tlLogs)             Object.assign(tlLogs, p.tlLogs);
         if (p.diaryStore) { Object.keys(diaryStore).forEach(k => delete diaryStore[k]); Object.assign(diaryStore, p.diaryStore); }
         if (p.retroWeeklyContent) Object.assign(retroWeeklyContent, p.retroWeeklyContent);
@@ -10275,8 +10275,9 @@ document.getElementById('logout-btn').addEventListener('click', function() {
       if (snap.exists()) return;
       const payload = {
         routines, routineCheckData, todoStore, oneThingStore, oneThingDone,
-        streakData, wfStore, tlCatParents, tlCatChildren, tlNextParentId,
-        tlNextChildId, tlLogs, diaryStore, retroWeeklyContent, retroMonthlyData,
+        streakData, wfStore, tlCatParents, tlCatChildren,
+        tlNextParentId: window.tlNextParentId, tlNextChildId: window.tlNextChildId,
+        tlLogs, diaryStore, retroWeeklyContent, retroMonthlyData,
         retroQuarterlyData, retroYearlyData, retroStore, yearlyGoalsData,
         desireStore, buyStore, qGoalsData, mGoalsData, affirmationStore,
         _savedAt: Date.now(), _backupDate: dateKey
