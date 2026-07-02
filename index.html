@@ -330,6 +330,9 @@
       </div>
     </div>
     <div class="sidebar-bottom" style="margin-top:auto;padding:12px 8px;border-top:0.5px solid var(--border);display:flex;flex-direction:column;gap:6px;">
+      <button id="force-sync-btn" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--radius-md);border:0.5px solid var(--border-md);background:transparent;color:var(--text-secondary);font-size:13px;cursor:pointer;font-family:inherit;width:100%;text-align:left;">
+        <i class="ti ti-refresh" style="font-size:16px;"></i> 클라우드에서 불러오기
+      </button>
       <button onclick="dataExport()" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--radius-md);border:0.5px solid var(--border-md);background:transparent;color:var(--text-secondary);font-size:13px;cursor:pointer;font-family:inherit;width:100%;text-align:left;">
         <i class="ti ti-download" style="font-size:16px;"></i> 데이터 백업
       </button>
@@ -10349,6 +10352,32 @@ document.getElementById('logout-btn').addEventListener('click', function() {
           else { window.lastDataChangeAt = Date.now(); lsSave(window.lastDataChangeAt); }
         }, 1500);
       };
+
+      // 강제 클라우드 동기화 버튼
+      const forceSyncBtn = document.getElementById('force-sync-btn');
+      if (forceSyncBtn) {
+        forceSyncBtn.onclick = async () => {
+          forceSyncBtn.disabled = true;
+          forceSyncBtn.innerHTML = '<i class="ti ti-loader" style="font-size:16px;"></i> 불러오는 중...';
+          try {
+            localStorage.removeItem('mlm_data_v1'); // 로컬 캐시 제거 후 강제 로드
+            const ok = await fsLoad(user.uid);
+            if (ok) {
+              syncTodayRoutines(); renderWeeklyTodo(); renderWf(); renderStreakWeek();
+              renderTimelog(); diaryShowList(); retroSwitch('weekly'); showRetroHome();
+              renderRetroWeeklyDashboard(); updateStats(); renderDesire();
+              buyCheckCarryover(); renderBuy(); renderDashboard();
+              alert('✅ 클라우드에서 데이터를 불러왔습니다.');
+            } else {
+              alert('❌ 불러오기 실패. 로그인 상태를 확인하세요.');
+            }
+          } catch(e) {
+            alert('❌ 오류: ' + e.message);
+          }
+          forceSyncBtn.disabled = false;
+          forceSyncBtn.innerHTML = '<i class="ti ti-refresh" style="font-size:16px;"></i> 클라우드에서 불러오기';
+        };
+      }
 
       // 오늘 백업 실행 (없으면 저장)
       fsDailyBackup(user.uid);
