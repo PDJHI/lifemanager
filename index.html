@@ -10132,10 +10132,289 @@ document.getElementById('logout-btn').addEventListener('click', function() {
 });
 </script>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+(function() {
+  firebase.initializeApp({
+    apiKey:            "AIzaSyDZ7EjyhLwti7Sp1kZJtlWIR0diiXkR7Uk",
+    authDomain:        "my-life-manager-ed18a.firebaseapp.com",
+    projectId:         "my-life-manager-ed18a",
+    storageBucket:     "my-life-manager-ed18a.firebasestorage.app",
+    messagingSenderId: "211027712302",
+    appId:             "1:211027712302:web:ba3e22741fbd569e9ac2bf"
+  });
+
+  var auth     = firebase.auth();
+  var db       = firebase.firestore();
+  var provider = new firebase.auth.GoogleAuthProvider();
+  var ALLOWED  = 'jihoe1125@gmail.com';
+
+  // ── Firestore 저장 ────────────────────────────────────────────
+  async function fsSave(uid) {
+    try {
+      window.lastDataChangeAt = Date.now();
+      var savedAt = window.lastDataChangeAt;
+      var payload = {
+        routines, routineCheckData, todoStore, oneThingStore, oneThingDone,
+        streakData, wfStore, tlCatParents, tlCatChildren,
+        tlNextParentId, tlNextChildId, tlLogs, diaryStore,
+        retroWeeklyContent, retroWeeklyMeta, retroMonthlyData,
+        retroQuarterlyData, retroYearlyData, retroStore,
+        yearlyGoalsData, desireStore, buyStore, qGoalsData, mGoalsData,
+        affirmationStore, _savedAt: savedAt
+      };
+      await db.collection('users').doc(uid).collection('data').doc('main').set(payload);
+      lsSave(savedAt);
+      console.log('[Sync] Firestore 저장 완료');
+    } catch(e) {
+      console.warn('[Sync] Firestore 저장 실패, localStorage만 저장:', e);
+      lsSave();
+    }
+  }
+
+  // ── Firestore 불러오기 ────────────────────────────────────────
+  async function fsLoad(uid) {
+    try {
+      var snap = await db.collection('users').doc(uid).collection('data').doc('main').get();
+      if (snap.exists) {
+        var p = snap.data();
+
+        // 로컬이 더 최신이면 로컬 → Firestore 업로드
+        try {
+          var lsRaw     = localStorage.getItem(LS_KEY);
+          var lsSavedAt = lsRaw ? (JSON.parse(lsRaw)._savedAt || 0) : 0;
+          var fsSavedAt = p._savedAt || 0;
+          if (lsSavedAt > fsSavedAt) {
+            lsLoad();
+            fsSave(uid).catch(function() {});
+            return true;
+          }
+        } catch(e) { /* 비교 실패 시 Firestore 데이터로 진행 */ }
+
+        if (p.routines) routines = p.routines;
+        if (p.routineCheckData) Object.assign(routineCheckData, p.routineCheckData);
+        if (p.todoStore) {
+          var unsynced = {};
+          Object.keys(todoStore).forEach(function(wk) {
+            var fsItems  = p.todoStore[wk] || [];
+            var lsItems  = todoStore[wk]   || [];
+            var missing  = lsItems.filter(function(lsItem) {
+              return !fsItems.some(function(x) { return x.id === lsItem.id; });
+            });
+            if (missing.length) unsynced[wk] = missing;
+          });
+          Object.assign(todoStore, p.todoStore);
+          Object.keys(unsynced).forEach(function(wk) {
+            if (!todoStore[wk]) todoStore[wk] = unsynced[wk];
+            else todoStore[wk] = todoStore[wk].concat(unsynced[wk]);
+          });
+          var allFsIds = Object.values(todoStore).reduce(function(a,b){ return a.concat(b); }, []).map(function(t){ return t.id || 0; });
+          if (allFsIds.length > 0) nextTodoId = Math.max.apply(null, allFsIds) + 1;
+          if (Object.keys(unsynced).length > 0) fsSave(uid).catch(function() {});
+        }
+        if (p.oneThingStore)     Object.assign(oneThingStore, p.oneThingStore);
+        if (p.oneThingDone)      Object.assign(oneThingDone,  p.oneThingDone);
+        if (p.streakData)        Object.assign(streakData,    p.streakData);
+        if (p.wfStore) { Object.keys(wfStore).forEach(function(k){ delete wfStore[k]; }); Object.assign(wfStore, p.wfStore); }
+        if (p.tlCatParents  && p.tlCatParents.length)  tlCatParents  = p.tlCatParents;
+        if (p.tlCatChildren && p.tlCatChildren.length) tlCatChildren = p.tlCatChildren;
+        if (p.tlNextParentId) tlNextParentId = p.tlNextParentId;
+        if (p.tlNextChildId)  tlNextChildId  = p.tlNextChildId;
+        if (p.tlLogs)         Object.assign(tlLogs, p.tlLogs);
+        if (p.diaryStore) { Object.keys(diaryStore).forEach(function(k){ delete diaryStore[k]; }); Object.assign(diaryStore, p.diaryStore); }
+        if (p.retroWeeklyContent) Object.assign(retroWeeklyContent, p.retroWeeklyContent);
+        if (p.retroWeeklyMeta)    Object.assign(retroWeeklyMeta,    p.retroWeeklyMeta);
+        if (p.retroMonthlyData)   Object.assign(retroMonthlyData,   p.retroMonthlyData);
+        if (p.retroQuarterlyData) Object.assign(retroQuarterlyData, p.retroQuarterlyData);
+        if (p.retroYearlyData)    Object.assign(retroYearlyData,    p.retroYearlyData);
+        if (p.retroStore)         Object.assign(retroStore,         p.retroStore);
+        if (p.yearlyGoalsData)    Object.assign(yearlyGoalsData,    p.yearlyGoalsData);
+        if (p.desireStore)        Object.assign(desireStore,        p.desireStore);
+        if (p.buyStore) {
+          if (p.buyStore.need)     buyStore.need     = p.buyStore.need;
+          if (p.buyStore.want)     buyStore.want     = p.buyStore.want;
+          if (p.buyStore._weekKey) buyStore._weekKey = p.buyStore._weekKey;
+        }
+        if (p.qGoalsData) Object.assign(qGoalsData, p.qGoalsData);
+        if (p.mGoalsData) Object.assign(mGoalsData, p.mGoalsData);
+        if (p.affirmationStore && Array.isArray(p.affirmationStore)) {
+          affirmationStore = p.affirmationStore; affirmationIdx = 0;
+        }
+        window.lastDataChangeAt = p._savedAt || Date.now();
+        lsSave(p._savedAt);
+        console.log('[Sync] Firestore 불러오기 완료');
+        return true;
+      }
+    } catch(e) {
+      console.warn('[Sync] Firestore 불러오기 실패:', e);
+    }
+    return false;
+  }
+
+  // ── 일별 자동 백업 ────────────────────────────────────────────
+  async function fsDailyBackup(uid) {
+    try {
+      var today   = new Date();
+      var dateKey = today.getFullYear() + '-'
+        + String(today.getMonth() + 1).padStart(2, '0') + '-'
+        + String(today.getDate()).padStart(2, '0');
+      var backupRef = db.collection('users').doc(uid).collection('backups').doc(dateKey);
+      var snap = await backupRef.get();
+      if (snap.exists) return;
+      var payload = {
+        routines, routineCheckData, todoStore, oneThingStore, oneThingDone,
+        streakData, wfStore, tlCatParents, tlCatChildren,
+        tlNextParentId, tlNextChildId, tlLogs, diaryStore,
+        retroWeeklyContent, retroMonthlyData, retroQuarterlyData,
+        retroYearlyData, retroStore, yearlyGoalsData,
+        desireStore, buyStore, qGoalsData, mGoalsData, affirmationStore,
+        _savedAt: Date.now(), _backupDate: dateKey
+      };
+      await backupRef.set(payload);
+      var allSnaps = await db.collection('users').doc(uid).collection('backups').get();
+      var keys = allSnaps.docs.map(function(d){ return d.id; }).sort();
+      if (keys.length > 7) {
+        var toDelete = keys.slice(0, keys.length - 7);
+        for (var i = 0; i < toDelete.length; i++) {
+          await db.collection('users').doc(uid).collection('backups').doc(toDelete[i]).delete();
+        }
+      }
+      console.log('[Backup] 오늘 백업 완료:', dateKey);
+    } catch(e) {
+      console.warn('[Backup] 백업 실패:', e);
+    }
+  }
+
+  window._fsSave        = fsSave;
+  window._fsLoad        = fsLoad;
+  window._fsDailyBackup = fsDailyBackup;
+
+  window._fbSignIn = function() {
+    return auth.signInWithPopup(provider).catch(function(e) {
+      console.warn('팝업 로그인 실패, 리다이렉트로 전환:', e.code || e.message);
+      return auth.signInWithRedirect(provider);
+    });
+  };
+  window._fbSignOut = function() { return auth.signOut(); };
+  window._fbReady   = true;
+
+  auth.getRedirectResult().catch(function(e) {
+    if (e.code !== 'auth/no-auth-event') console.warn('redirect result:', e);
+  });
+
+  auth.onAuthStateChanged(async function(user) {
+    var screen = document.getElementById('login-screen');
+    var appEl  = document.getElementById('app');
+
+    if (user && user.email === ALLOWED) {
+      window._fbUid = user.uid;
+
+      var loaded = await fsLoad(user.uid);
+      if (loaded) {
+        syncTodayRoutines(); renderWeeklyTodo(); renderWf(); renderStreakWeek();
+        renderTimelog(); diaryShowList(); retroSwitch('weekly'); showRetroHome();
+        renderRetroWeeklyDashboard(); updateStats(); renderDesire();
+        buyCheckCarryover(); renderBuy(); renderDashboard();
+      }
+
+      window.lsAutoSave = function() {
+        clearTimeout(window._lsTimer);
+        window._lsTimer = setTimeout(function() {
+          if (window._fbUid) fsSave(window._fbUid);
+          else { window.lastDataChangeAt = Date.now(); lsSave(window.lastDataChangeAt); }
+        }, 1500);
+      };
+
+      // 강제 클라우드 동기화 버튼
+      var forceSyncBtn = document.getElementById('force-sync-btn');
+      if (forceSyncBtn) {
+        forceSyncBtn.onclick = async function() {
+          forceSyncBtn.disabled = true;
+          forceSyncBtn.innerHTML = '<i class="ti ti-loader" style="font-size:16px;"></i> 불러오는 중...';
+          try {
+            localStorage.removeItem('mlm_data_v1');
+            var ok = await fsLoad(user.uid);
+            if (ok) {
+              syncTodayRoutines(); renderWeeklyTodo(); renderWf(); renderStreakWeek();
+              renderTimelog(); diaryShowList(); retroSwitch('weekly'); showRetroHome();
+              renderRetroWeeklyDashboard(); updateStats(); renderDesire();
+              buyCheckCarryover(); renderBuy(); renderDashboard();
+              alert('✅ 클라우드에서 데이터를 불러왔습니다.');
+            } else {
+              alert('❌ 불러오기 실패. 로그인 상태를 확인하세요.');
+            }
+          } catch(e) {
+            alert('❌ 오류: ' + e.message);
+          }
+          forceSyncBtn.disabled = false;
+          forceSyncBtn.innerHTML = '<i class="ti ti-refresh" style="font-size:16px;"></i> 클라우드에서 불러오기';
+        };
+      }
+
+      fsDailyBackup(user.uid);
+
+      if (!window._midnightBackupTimer) {
+        var scheduleBackup = function() {
+          var n    = new Date();
+          var next = new Date(n.getFullYear(), n.getMonth(), n.getDate() + 1, 0, 1, 0);
+          window._midnightBackupTimer = setTimeout(function() {
+            if (window._fbUid) fsDailyBackup(window._fbUid);
+            window._midnightBackupTimer = null;
+            scheduleBackup();
+          }, next - n);
+        };
+        scheduleBackup();
+      }
+
+      screen.style.display = 'none';
+      appEl.style.display  = '';
+      (function() {
+        var last = localStorage.getItem('mlm_last_page');
+        if (last) {
+          var idx  = last.indexOf(':');
+          var type = last.slice(0, idx);
+          var val  = last.slice(idx + 1);
+          if (type === 'page') {
+            var el = document.querySelector('[data-page="' + val + '"]');
+            if (el) { el.click(); return; }
+          } else if (type === 'goals') { selectGoals(val); return; }
+          else if (type === 'retro')   { selectRetro(val);  return; }
+        }
+        document.querySelector('[data-page="dashboard"]').click();
+      })();
+
+      var IDLE_MS = 30 * 60 * 1000;
+      if (!window._idleTimerSetup) {
+        window._idleTimerSetup = true;
+        window._resetIdle = function() {
+          clearTimeout(window._idleTimer);
+          window._idleTimer = setTimeout(function() {
+            if (window._fbSignOut) window._fbSignOut();
+          }, IDLE_MS);
+        };
+        ['mousemove','mousedown','keydown','keypress','keyup',
+         'touchstart','touchmove','scroll','click','input','change','focus','wheel']
+          .forEach(function(evt) {
+            window.addEventListener(evt, window._resetIdle, { passive: true, capture: true });
+          });
+      }
+      window._resetIdle();
+
+    } else {
+      window._fbUid = null;
+      screen.style.display = 'flex';
+      appEl.style.display  = 'none';
+    }
+    window.dispatchEvent(new CustomEvent('auth-change', { detail: user }));
+  });
+
+  window.dispatchEvent(new Event('firebase-ready'));
+})();
+</script>
+</body>
+</html>
 
   const app  = initializeApp({
     apiKey:            "AIzaSyDZ7EjyhLwti7Sp1kZJtlWIR0diiXkR7Uk",
