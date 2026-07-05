@@ -10154,8 +10154,8 @@ document.getElementById('logout-btn').addEventListener('click', function() {
   // ── Firestore 저장 ────────────────────────────────────────────
   async function fsSave(uid) {
     try {
-      window.lastDataChangeAt = Date.now();
-      var savedAt = window.lastDataChangeAt;
+      var savedAt = Date.now();
+      window.lastDataChangeAt = savedAt;
       var payload = {
         routines, routineCheckData, todoStore, oneThingStore, oneThingDone,
         streakData, wfStore, tlCatParents, tlCatChildren,
@@ -10174,25 +10174,14 @@ document.getElementById('logout-btn').addEventListener('click', function() {
     }
   }
 
-  // ── Firestore 불러오기 ────────────────────────────────────────
+  // ── Firestore 불러오기 (Firestore가 항상 정답) ────────────────
   async function fsLoad(uid) {
     try {
       var snap = await db.collection('users').doc(uid).collection('data').doc('main').get();
       if (snap.exists) {
         var p = snap.data();
 
-        // 로컬이 더 최신이면 로컬 → Firestore 업로드
-        try {
-          var lsRaw     = localStorage.getItem(LS_KEY);
-          var lsSavedAt = lsRaw ? (JSON.parse(lsRaw)._savedAt || 0) : 0;
-          var fsSavedAt = p._savedAt || 0;
-          if (lsSavedAt > fsSavedAt) {
-            lsLoad();
-            fsSave(uid).catch(function() {});
-            return true;
-          }
-        } catch(e) { /* 비교 실패 시 Firestore 데이터로 진행 */ }
-
+        // Firestore 데이터를 무조건 메모리에 반영 (타임스탬프 비교 없음)
         if (p.routines) routines = p.routines;
         if (p.routineCheckData) Object.assign(routineCheckData, p.routineCheckData);
         if (p.todoStore) {
