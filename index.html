@@ -9944,15 +9944,16 @@ function dataImport() {
 // ── localStorage 자동 저장 ──────────────────────────────────────
 const LS_KEY = 'mlm_data_v1';
 
-// 실제로 데이터가 "수정된" 마지막 시각. 단순 주기적 백업(setInterval)으로는
-// 절대 갱신되지 않도록 분리 — 기기 간 충돌(LWW) 비교가 이 값을 기준으로 동작함.
 window.lastDataChangeAt = 0;
+window._fsLoadComplete = false; // fsLoad 완료 전 Firestore 저장 방지
 
 // 기본 lsAutoSave (Firebase 로그인 전에도 동작)
 let _lsAutoSaveTimer = null;
 function lsAutoSave() {
   if (_lsAutoSaveTimer) clearTimeout(_lsAutoSaveTimer);
   _lsAutoSaveTimer = setTimeout(() => {
+    // fsLoad 완료 전에는 Firestore에 저장하지 않음 (빈 데이터 덮어쓰기 방지)
+    if (!window._fsLoadComplete) { lsSave(); return; }
     window.lastDataChangeAt = Date.now();
     lsSave(window.lastDataChangeAt);
     if (window._fbUid && window._fsSave) window._fsSave(window._fbUid).catch(() => {});
@@ -10233,12 +10234,14 @@ document.getElementById('logout-btn').addEventListener('click', function() {
         }
         window.lastDataChangeAt = p._savedAt || Date.now();
         lsSave(p._savedAt);
+        window._fsLoadComplete = true;
         console.log('[Sync] Firestore 불러오기 완료');
         return true;
       }
     } catch(e) {
       console.warn('[Sync] Firestore 불러오기 실패:', e);
     }
+    window._fsLoadComplete = true; // 실패해도 이후 저장은 허용
     return false;
   }
 
@@ -10311,6 +10314,7 @@ document.getElementById('logout-btn').addEventListener('click', function() {
       window.lsAutoSave = function() {
         clearTimeout(window._lsTimer);
         window._lsTimer = setTimeout(function() {
+          if (!window._fsLoadComplete) return; // 초기 로드 전 저장 방지
           if (window._fbUid) fsSave(window._fbUid);
           else { window.lastDataChangeAt = Date.now(); lsSave(window.lastDataChangeAt); }
         }, 1500);
@@ -10404,15 +10408,6 @@ document.getElementById('logout-btn').addEventListener('click', function() {
 </script>
 </body>
 </html>
-
-  const app  = initializeApp({
-    apiKey:            "AIzaSyDZ7EjyhLwti7Sp1kZJtlWIR0diiXkR7Uk",
-    authDomain:        "my-life-manager-ed18a.firebaseapp.com",
-    projectId:         "my-life-manager-ed18a",
-    storageBucket:     "my-life-manager-ed18a.firebasestorage.app",
-    messagingSenderId: "211027712302",
-    appId:             "1:211027712302:web:ba3e22741fbd569e9ac2bf"
-  });
 
   const auth = getAuth(app);
   const db   = getFirestore(app);
