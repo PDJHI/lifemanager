@@ -5443,7 +5443,6 @@ function diaryShowList() {
   document.getElementById('diary-list-view').style.display = '';
   document.getElementById('diary-editor-view').style.display = 'none';
   renderDiaryList();
-  renderDiaryCal();
 }
 
 function diaryShowEditor(k) {
@@ -6084,9 +6083,8 @@ function diaryDelete() {
 // (diaryCalWeekMonday 선언은 상단으로 이동됨)
 
 function renderDiaryCal() {
+  if (!document.getElementById('diary-cal-grid')) return; // 캘린더 UI 없으면 무시
   const mon = diaryCalWeekMonday;
-  // 레이블: 현재 주가 속한 달 표시
-  const refMonth = mon.getMonth();
   const refYear  = mon.getFullYear();
   document.getElementById('diary-cal-year').textContent  = `${refYear}년`;
   document.getElementById('diary-cal-label').textContent = `${refMonth+1}월`;
@@ -6145,9 +6143,11 @@ function renderDiaryCal() {
   while ((diaryStore[diaryDateKey(cur)] && diaryStore[diaryDateKey(cur)].content) || (diaryStore[diaryDateKey(cur)] && diaryStore[diaryDateKey(cur)].title)) {
     streak++; cur = addDays(cur, -1);
   }
-  document.getElementById('diary-stat-count').textContent  = entries.length;
-  document.getElementById('diary-stat-avg').textContent    = avg;
-  document.getElementById('diary-stat-streak').textContent = streak + '일';
+  if (document.getElementById('diary-stat-count')) {
+    document.getElementById('diary-stat-count').textContent  = entries.length;
+    document.getElementById('diary-stat-avg').textContent    = avg;
+    document.getElementById('diary-stat-streak').textContent = streak + '일';
+  }
 }
 
 function diaryCalPrev() { diaryCalWeekMonday = addDays(diaryCalWeekMonday, -7); renderDiaryCal(); }
