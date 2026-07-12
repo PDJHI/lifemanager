@@ -10126,7 +10126,18 @@ document.getElementById('logout-btn').addEventListener('click', function() {
         if (p.tlNextParentId) tlNextParentId = p.tlNextParentId;
         if (p.tlNextChildId)  tlNextChildId  = p.tlNextChildId;
         if (p.tlLogs)         Object.assign(tlLogs, p.tlLogs);
-        if (p.diaryStore) { Object.keys(diaryStore).forEach(function(k){ delete diaryStore[k]; }); Object.assign(diaryStore, p.diaryStore); }
+        if (p.diaryStore) {
+          var diaryUnsynced = {};
+          Object.keys(diaryStore).forEach(function(k) {
+            var local = diaryStore[k];
+            var hasLocalContent = local && (local.content || local.title);
+            if (hasLocalContent && !p.diaryStore[k]) diaryUnsynced[k] = local;
+          });
+          Object.keys(diaryStore).forEach(function(k){ delete diaryStore[k]; });
+          Object.assign(diaryStore, p.diaryStore);
+          Object.keys(diaryUnsynced).forEach(function(k){ diaryStore[k] = diaryUnsynced[k]; });
+          if (Object.keys(diaryUnsynced).length > 0) fsSave(uid).catch(function() {});
+        }
         if (p.retroWeeklyContent) Object.assign(retroWeeklyContent, p.retroWeeklyContent);
         if (p.retroWeeklyMeta)    Object.assign(retroWeeklyMeta,    p.retroWeeklyMeta);
         if (p.retroMonthlyData)   Object.assign(retroMonthlyData,   p.retroMonthlyData);
@@ -10136,8 +10147,24 @@ document.getElementById('logout-btn').addEventListener('click', function() {
         if (p.yearlyGoalsData)    Object.assign(yearlyGoalsData,    p.yearlyGoalsData);
         if (p.desireStore)        Object.assign(desireStore,        p.desireStore);
         if (p.buyStore) {
-          if (p.buyStore.need)     buyStore.need     = p.buyStore.need;
-          if (p.buyStore.want)     buyStore.want     = p.buyStore.want;
+          ['need','want'].forEach(function(type) {
+            var fsItems = p.buyStore[type] || [];
+            var lsItems = buyStore[type] || [];
+            var lsMap = {};
+            lsItems.forEach(function(it){ lsMap[it.id] = it; });
+            // Firestore 항목 기준으로 병합하되, 로컬에서 구매완료(done:true) 처리했는데
+            // 아직 Firestore가 못 따라잡은(done:false) 경우 로컬의 완료 상태를 우선한다
+            var merged = fsItems.map(function(fsIt) {
+              var lsIt = lsMap[fsIt.id];
+              if (lsIt && lsIt.done && !fsIt.done) return lsIt;
+              return fsIt;
+            });
+            // 로컬에만 있고 아직 Firestore에 없는(추가 동기화 전) 항목도 보존
+            var fsIds = {};
+            fsItems.forEach(function(it){ fsIds[it.id] = true; });
+            var localOnly = lsItems.filter(function(it){ return !fsIds[it.id]; });
+            buyStore[type] = merged.concat(localOnly);
+          });
           if (p.buyStore._weekKey) buyStore._weekKey = p.buyStore._weekKey;
         }
         if (p.qGoalsData) Object.assign(qGoalsData, p.qGoalsData);
