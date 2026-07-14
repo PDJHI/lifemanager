@@ -10125,7 +10125,23 @@ document.getElementById('logout-btn').addEventListener('click', function() {
         if (p.tlCatChildren && p.tlCatChildren.length) tlCatChildren = p.tlCatChildren;
         if (p.tlNextParentId) tlNextParentId = p.tlNextParentId;
         if (p.tlNextChildId)  tlNextChildId  = p.tlNextChildId;
-        if (p.tlLogs)         Object.assign(tlLogs, p.tlLogs);
+        if (p.tlLogs) {
+          var tlUnsynced = {};
+          Object.keys(tlLogs).forEach(function(k) {
+            var fsItems = p.tlLogs[k] || [];
+            var lsItems = tlLogs[k] || [];
+            var fsIds = {};
+            fsItems.forEach(function(it){ fsIds[it.id] = true; });
+            var missing = lsItems.filter(function(it){ return !fsIds[it.id]; });
+            if (missing.length) tlUnsynced[k] = missing;
+          });
+          Object.assign(tlLogs, p.tlLogs);
+          Object.keys(tlUnsynced).forEach(function(k) {
+            if (!tlLogs[k]) tlLogs[k] = [];
+            tlLogs[k] = tlLogs[k].concat(tlUnsynced[k]);
+          });
+          if (Object.keys(tlUnsynced).length > 0) fsSave(uid).catch(function() {});
+        }
         if (p.diaryStore) {
           var diaryUnsynced = {};
           Object.keys(diaryStore).forEach(function(k) {
