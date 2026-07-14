@@ -1955,6 +1955,7 @@ let todoStore = {};
 window.nextTodoId = 1;
 let oneThingStore = {};  // { 'weekKey-OT-di': text }
 let oneThingDone  = {};  // { 'weekKey-OT-di': bool }
+let oneThingMeta  = {};  // { 'weekKey-OT-di': updatedAt } — 텍스트/완료 수정 시각 기록
 
 // ── Current week being viewed ───────────────────────────────────
 let viewMonday = getMonday(now);
@@ -2152,7 +2153,7 @@ function renderWeeklyTodo() {
           items.forEach(t => {
             const exists = todoStore[key].some(x => x.text === t.text && x.dayIdx === dayIdx);
             if (!exists) {
-              todoStore[key].push({ id: nextTodoId++, dayIdx: dayIdx, text: t.text, priority: t.priority || 'mid', done: false });
+              todoStore[key].push({ id: nextTodoId++, dayIdx: dayIdx, text: t.text, priority: t.priority || 'mid', done: false, updatedAt: Date.now() });
               added++;
             }
           });
@@ -2200,6 +2201,7 @@ function renderWeeklyTodo() {
       otChk.onclick = function(e) {
         e.stopPropagation();
         oneThingDone[k] = !oneThingDone[k];
+        oneThingMeta[k] = Date.now();
         lsAutoSave(); renderWeeklyTodo();
       };
     })(otKey);
@@ -2219,14 +2221,16 @@ function renderWeeklyTodo() {
         e.stopPropagation();
         const cycle = {high:'mid', mid:'low', low:'high'};
         t.priority = cycle[t.priority];
+        t.updatedAt = Date.now();
         renderWeeklyTodo();
+        lsAutoSave();
       };
 
       // check circle
       const chk = document.createElement('div');
       chk.style.cssText = `width:13px;height:13px;border-radius:50%;border:1.5px solid ${t.done ? 'var(--text-primary)' : 'var(--border-md)'};flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-top:2px;background:${t.done ? 'var(--text-primary)' : 'transparent'};transition:all 0.15s;`;
       chk.innerHTML = t.done ? '<i class="ti ti-check" style="font-size:8px;color:var(--bg-primary)"></i>' : '';
-      chk.onclick = e => { e.stopPropagation(); t.done = !t.done; renderWeeklyTodo(); updateStats(); lsAutoSave(); };
+      chk.onclick = e => { e.stopPropagation(); t.done = !t.done; t.updatedAt = Date.now(); renderWeeklyTodo(); updateStats(); lsAutoSave(); };
 
       // text — dblclick to edit
       const txt = document.createElement('div');
@@ -2246,7 +2250,7 @@ function renderWeeklyTodo() {
       };
       txt.onblur = () => {
         const val = txt.textContent.trim();
-        if (val) t.text = val; else txt.textContent = t.text;
+        if (val) { t.text = val; t.updatedAt = Date.now(); } else txt.textContent = t.text;
         txt.contentEditable = 'false';
         txt.style.outline = '';
         txt.style.padding = '';
@@ -2347,6 +2351,7 @@ function renderWeeklyTodo() {
                 // 대상 키에 추가
                 if (!todoStore[targetKey]) todoStore[targetKey] = [];
                 t.dayIdx = targetDi;
+                t.updatedAt = Date.now();
                 todoStore[targetKey].push(t);
                 overlay.remove();
                 lsAutoSave(); renderWeeklyTodo(); updateStats();
@@ -2411,7 +2416,7 @@ function commitAdd(key, di, inp) {
   const val = inp.value.trim();
   if (!val) return;
   if (!todoStore[key]) todoStore[key] = [];
-  todoStore[key].push({ id: nextTodoId++, dayIdx: di, text: val, priority: 'mid', done: false });
+  todoStore[key].push({ id: nextTodoId++, dayIdx: di, text: val, priority: 'mid', done: false, updatedAt: Date.now() });
   inp.value = '';
   updateStats(); lsAutoSave();
 }
@@ -2457,7 +2462,7 @@ function todoCopyLastWeekAll() {
   lwUndone.forEach(t => {
     const exists = todoStore[key].some(x => x.text === t.text && x.dayIdx === t.dayIdx);
     if (!exists) {
-      todoStore[key].push({ id: nextTodoId++, dayIdx: t.dayIdx, text: t.text, priority: t.priority || 'mid', done: false });
+      todoStore[key].push({ id: nextTodoId++, dayIdx: t.dayIdx, text: t.text, priority: t.priority || 'mid', done: false, updatedAt: Date.now() });
       added++;
     }
   });
@@ -2680,6 +2685,7 @@ function renderDashboard() {
       otChkEl.innerHTML = otDoneVal ? '<i class="ti ti-check" style="font-size:9px;color:white"></i>' : '';
       otChkEl.onclick = function() {
         oneThingDone[otKey] = !oneThingDone[otKey];
+        oneThingMeta[otKey] = Date.now();
         lsAutoSave(); renderDashboard();
       };
       otRow.appendChild(otStarEl); otRow.appendChild(otTxtEl); otRow.appendChild(otChkEl);
@@ -2697,7 +2703,7 @@ function renderDashboard() {
         var chk = document.createElement('div');
         chk.style.cssText = 'width:14px;height:14px;border-radius:50%;border:1.5px solid '+(t.done?'var(--text-primary)':'var(--border-md)')+';flex-shrink:0;display:flex;align-items:center;justify-content:center;background:'+(t.done?'var(--text-primary)':'transparent')+';cursor:pointer;';
         if (t.done) chk.innerHTML = '<i class="ti ti-check" style="font-size:9px;color:var(--bg-primary)"></i>';
-        chk.onclick = function(){ t.done=!t.done; lsAutoSave(); renderDashboard(); };
+        chk.onclick = function(){ t.done=!t.done; t.updatedAt = Date.now(); lsAutoSave(); renderDashboard(); };
         var txt = document.createElement('span');
         txt.style.cssText = 'flex:1;font-size:13px;'+(t.done?'text-decoration:line-through;color:var(--text-tertiary);':'color:var(--text-primary);');
         txt.textContent = t.text;
@@ -3452,6 +3458,7 @@ function renderBuy() {
         } else if (!item.done) {
           item.purchasedDate = '';
         }
+        item.updatedAt = Date.now();
         renderBuy(); lsAutoSave();
       };
 
@@ -3482,7 +3489,7 @@ function renderBuy() {
       };
       txt.onblur = function() {
         const val = txt.textContent.trim();
-        if (val) item.text = val; else txt.textContent = item.text;
+        if (val) { item.text = val; item.updatedAt = Date.now(); } else txt.textContent = item.text;
         txt.contentEditable = 'false'; txt.style.outline = ''; txt.style.padding = '';
         lsAutoSave();
       };
@@ -3559,6 +3566,7 @@ function buySetPurchasedDate(type, id) {
   if (!val || !val.trim()) return;
   item.purchasedDate = val.trim();
   item.done = true;
+  item.updatedAt = Date.now();
   renderBuy(); lsAutoSave();
 }
 
@@ -3566,7 +3574,7 @@ function buyInlineAdd(type) {
   const input = document.getElementById(`buy-${type}-input`);
   const text  = input.value.trim();
   if (!text) return;
-  buyStore[type].push({ id: buyNextId++, text, done: false, addedDate: buyTodayStr(), purchasedDate: '' });
+  buyStore[type].push({ id: buyNextId++, text, done: false, addedDate: buyTodayStr(), purchasedDate: '', updatedAt: Date.now() });
   input.value = '';
   input.focus();
   renderBuy(); lsAutoSave();
@@ -3590,7 +3598,7 @@ function buyModalSave() {
   if (!text) { document.getElementById('buy-modal-text').focus(); return; }
   const addedDate     = document.getElementById('buy-modal-added').value.trim() || buyTodayStr();
   const purchasedDate = document.getElementById('buy-modal-purchased').value.trim() || '';
-  buyStore[_buyAddType].push({ id: buyNextId++, text, done: !!purchasedDate, addedDate, purchasedDate });
+  buyStore[_buyAddType].push({ id: buyNextId++, text, done: !!purchasedDate, addedDate, purchasedDate, updatedAt: Date.now() });
   document.getElementById('buy-modal').classList.remove('open');
   renderBuy(); lsAutoSave();
 }
@@ -4098,7 +4106,7 @@ function renderNextWeekTodo() {
           var v = inp.value.trim();
           if (!v) return;
           if (!todoStore[key]) todoStore[key] = [];
-          todoStore[key].push({ id: nextTodoId++, dayIdx: dayIdx, text: v, priority: 'mid', done: false });
+          todoStore[key].push({ id: nextTodoId++, dayIdx: dayIdx, text: v, priority: 'mid', done: false, updatedAt: Date.now() });
           inp.value = '';
           lsAutoSave();
           renderNextWeekTodo();
@@ -4146,7 +4154,7 @@ function renderNextWeekTodo() {
         day.items.forEach(function(t) {
           var exists = todoStore[key].some(function(x){ return x.text === t.text && x.dayIdx === di; });
           if (!exists) {
-            todoStore[key].push({ id: nextTodoId++, dayIdx: di, text: t.text, priority: t.priority || 'mid', done: false });
+            todoStore[key].push({ id: nextTodoId++, dayIdx: di, text: t.text, priority: t.priority || 'mid', done: false, updatedAt: Date.now() });
             added++;
           }
         });
@@ -4181,7 +4189,7 @@ function renderNextWeekTodo() {
         dayItems.forEach(function(t) {
           var exists = todoStore[key].some(function(x){ return x.text === t.text && x.dayIdx === dayIdx; });
           if (!exists) {
-            todoStore[key].push({ id: nextTodoId++, dayIdx: dayIdx, text: t.text, priority: t.priority || 'mid', done: false });
+            todoStore[key].push({ id: nextTodoId++, dayIdx: dayIdx, text: t.text, priority: t.priority || 'mid', done: false, updatedAt: Date.now() });
             added++;
           }
         });
@@ -4208,7 +4216,7 @@ function renderNextWeekTodo() {
           if (!todoStore[key]) todoStore[key] = [];
           var exists = todoStore[key].some(function(x){ return x.text === todo.text && x.dayIdx === dayIdx; });
           if (!exists) {
-            todoStore[key].push({ id: nextTodoId++, dayIdx: dayIdx, text: todo.text, priority: todo.priority || 'mid', done: false });
+            todoStore[key].push({ id: nextTodoId++, dayIdx: dayIdx, text: todo.text, priority: todo.priority || 'mid', done: false, updatedAt: Date.now() });
             lsAutoSave(); renderNextWeekTodo();
           }
         });
@@ -4926,7 +4934,7 @@ function tlAddManual() {
   if (dur < TL_STEP) { alert('최소 10분 이상 선택해주세요.'); return; }
   const k = tlDateKey(tlViewDate);
   if (!tlLogs[k]) tlLogs[k] = [];
-  tlLogs[k].push({id: tlNextLogId++, catId, label, start, end, dur});
+  tlLogs[k].push({id: tlNextLogId++, catId, label, start, end, dur, updatedAt: Date.now()});
   document.getElementById('tl-add-label').value = '';
   // advance slider to end of just-added block
   tlSliderStart = tlSliderEnd;
@@ -4998,6 +5006,7 @@ function tlSaveEdit() {
   log.start = start;
   log.end   = end;
   log.dur   = dur;
+  log.updatedAt = Date.now();
 
   tlCloseEdit();
   renderTimelog();
@@ -5049,7 +5058,7 @@ function tlPasteLog() {
   const [sh,sm] = newStart.split(':').map(Number);
   const [eh,em] = newEnd.split(':').map(Number);
   const dur = (eh*60+em) - (sh*60+sm);
-  tlLogs[k].push({ id: tlNextLogId++, catId: _tlClipboard.catId, label: _tlClipboard.label, start: newStart, end: newEnd, dur });
+  tlLogs[k].push({ id: tlNextLogId++, catId: _tlClipboard.catId, label: _tlClipboard.label, start: newStart, end: newEnd, dur, updatedAt: Date.now() });
   renderTimelog();
   lsAutoSave();
 }
@@ -5081,7 +5090,7 @@ function tlCopyPrevDay() {
       label: log.label,
       start: log.start,
       end: log.end,
-      dur: log.dur
+      dur: log.dur, updatedAt: Date.now()
     });
   });
   renderTimelog();
@@ -5111,6 +5120,7 @@ function otSaveEdit() {
   if (!_otEditKey) return;
   const v = document.getElementById('ot-edit-input').value.trim();
   oneThingStore[_otEditKey] = v;
+  oneThingMeta[_otEditKey] = Date.now();
   lsAutoSave();
   renderWeeklyTodo();
   otCloseEdit();
@@ -5357,7 +5367,7 @@ function tlAutoFillWeekday() {
     const catId = tlFindCatId(item.parentName, item.childName);
     if (!catId) return;
     const dur = tlTimeDiff(item.start, item.end);
-    tlLogs[k].push({ id: tlNextLogId++, catId, label: item.label, start: item.start, end: item.end, dur });
+    tlLogs[k].push({ id: tlNextLogId++, catId, label: item.label, start: item.start, end: item.end, dur, updatedAt: Date.now() });
   });
   renderTimelog();
   lsAutoSave();
@@ -5377,7 +5387,7 @@ function tlAutoFillFutureWeekdays() {
       var catId = tlFindCatId(item.parentName, item.childName);
       if (!catId) return;
       var dur = tlTimeDiff(item.start, item.end);
-      tlLogs[k].push({ id: tlNextLogId++, catId: catId, label: item.label, start: item.start, end: item.end, dur: dur });
+      tlLogs[k].push({ id: tlNextLogId++, catId: catId, label: item.label, start: item.start, end: item.end, dur: dur, updatedAt: Date.now() });
     });
   }
   lsAutoSave();
@@ -5519,6 +5529,7 @@ function diaryToggleWeather(label) {
   const k = diaryDateKey(diaryViewDate);
   const data = diaryGetOrCreate(k);
   data.weather = (data.weather === label) ? '' : label;
+  data.updatedAt = Date.now();
   document.getElementById('diary-weather-custom').value = '';
   diaryRenderWeatherBtns(data);
   lsAutoSave();
@@ -5531,6 +5542,7 @@ function diaryAddCustomWeather() {
   const k = diaryDateKey(diaryViewDate);
   const data = diaryGetOrCreate(k);
   data.weather = v;
+  data.updatedAt = Date.now();
   diaryRenderWeatherBtns(data);
   lsAutoSave();
 }
@@ -5621,6 +5633,7 @@ function renderDiaryEditor() {
       txt.onblur = function() {
         var v = txt.textContent.trim();
         if (v) { data.gratitude[i] = v; } else { data.gratitude.splice(i, 1); }
+        data.updatedAt = Date.now();
         txt.contentEditable = 'false'; txt.style.outline = ''; txt.style.padding = '';
         lsAutoSave(); diaryRenderGratitude(data);
       };
@@ -5633,7 +5646,7 @@ function renderDiaryEditor() {
       del.className = 'ti ti-x';
       del.style.cssText = 'font-size:11px;color:var(--text-tertiary);cursor:pointer;opacity:0;transition:opacity 0.1s;flex-shrink:0;';
       (function(idx) {
-        del.onclick = function(e) { e.stopPropagation(); data.gratitude.splice(idx, 1); lsAutoSave(); diaryRenderGratitude(data); };
+        del.onclick = function(e) { e.stopPropagation(); data.gratitude.splice(idx, 1); data.updatedAt = Date.now(); lsAutoSave(); diaryRenderGratitude(data); };
       })(i);
       row.onmouseenter = function() { del.style.opacity='1'; };
       row.onmouseleave = function() { del.style.opacity='0'; };
@@ -5676,6 +5689,7 @@ function diaryRenderGratitude(data) {
     txt.onblur = function() {
       var v = txt.textContent.trim();
       if (v) { data.gratitude[i] = v; } else { data.gratitude.splice(i, 1); }
+      data.updatedAt = Date.now();
       txt.contentEditable = 'false'; txt.style.outline = ''; txt.style.padding = '';
       lsAutoSave(); diaryRenderGratitude(data);
     };
@@ -5688,7 +5702,7 @@ function diaryRenderGratitude(data) {
     del.className = 'ti ti-x';
     del.style.cssText = 'font-size:11px;color:var(--text-tertiary);cursor:pointer;opacity:0;transition:opacity 0.1s;flex-shrink:0;';
     (function(idx) {
-      del.onclick = function(e) { e.stopPropagation(); data.gratitude.splice(idx, 1); lsAutoSave(); diaryRenderGratitude(data); };
+      del.onclick = function(e) { e.stopPropagation(); data.gratitude.splice(idx, 1); data.updatedAt = Date.now(); lsAutoSave(); diaryRenderGratitude(data); };
     })(i);
     row.onmouseenter = function() { del.style.opacity='1'; };
     row.onmouseleave = function() { del.style.opacity='0'; };
@@ -5705,6 +5719,7 @@ function diaryAddGratitude() {
   var data = diaryGetOrCreate(dk);
   if (!data.gratitude) data.gratitude = [];
   data.gratitude.push(v);
+  data.updatedAt = Date.now();
   inp.value = '';
   lsAutoSave(); diaryRenderGratitude(data);
 }
@@ -6037,6 +6052,7 @@ function diaryToggleMood(label) {
   if (!Array.isArray(data.mood)) data.mood = [];
   const idx = data.mood.indexOf(label);
   if (idx>=0) data.mood.splice(idx,1); else data.mood.push(label);
+  data.updatedAt = Date.now();
   lsAutoSave(); renderDiaryEditor();
 }
 function diaryAddCustomMood() {
@@ -6055,6 +6071,7 @@ function diarySave() {
   data.content     = document.getElementById('diary-content').value.trim();
   const scoreVal   = parseInt(document.getElementById('diary-score-input').value) || 0;
   data.score       = Math.max(0, Math.min(10, scoreVal));
+  data.updatedAt   = Date.now();
   lsAutoSave();
 }
 
@@ -9774,8 +9791,7 @@ function dataExport() {
     todoStore,
     oneThingStore,
     oneThingDone,
-    oneThingStore,
-    oneThingDone,
+    oneThingMeta,
     streakData,
     wfStore,
     tlCatParents,
@@ -9817,6 +9833,7 @@ function dataImport() {
         if (p.todoStore)          Object.assign(todoStore, p.todoStore);
         if (p.oneThingStore)     Object.assign(oneThingStore, p.oneThingStore);
         if (p.oneThingDone)      Object.assign(oneThingDone, p.oneThingDone);
+        if (p.oneThingMeta)      Object.assign(oneThingMeta, p.oneThingMeta);
         if (p.streakData)         Object.assign(streakData, p.streakData);
         if (p.wfStore) { Object.keys(wfStore).forEach(k=>delete wfStore[k]); Object.assign(wfStore, p.wfStore); }
         if (p.tlCatParents && p.tlCatParents.length)  tlCatParents  = p.tlCatParents;
@@ -9894,6 +9911,7 @@ function lsSave(savedAt) {
       todoStore,
     oneThingStore,
     oneThingDone,
+    oneThingMeta,
       streakData,
       wfStore,
       tlCatParents,
@@ -9966,6 +9984,9 @@ function lsLoad() {
       const allIds = Object.values(todoStore).flat().map(t => t.id || 0);
       if (allIds.length > 0) nextTodoId = Math.max(...allIds) + 1;
     }
+    if (p.oneThingStore)      Object.assign(oneThingStore, p.oneThingStore);
+    if (p.oneThingDone)       Object.assign(oneThingDone, p.oneThingDone);
+    if (p.oneThingMeta)       Object.assign(oneThingMeta, p.oneThingMeta);
     if (p.streakData)         Object.assign(streakData, p.streakData);
     if (p.wfStore) { Object.keys(wfStore).forEach(k=>delete wfStore[k]); Object.assign(wfStore, p.wfStore); }
     // 카테고리: 저장된 값 있으면 덮어쓰고, 없으면 기본값 유지
@@ -10065,13 +10086,69 @@ document.getElementById('logout-btn').addEventListener('click', function() {
   var provider = new firebase.auth.GoogleAuthProvider();
   var ALLOWED  = 'jihoe1125@gmail.com';
 
+  // ── 배열형 스토어 공용 병합 함수 (id + updatedAt 기반 last-write-wins) ──
+  // localStore: { 그룹키: [ {id, updatedAt, ...} ] } 형태의 스토어 (todoStore, tlLogs, buyStore 등)
+  // 반환값: 병합 중 로컬 값이 보존/우선된 것이 있었는지 여부 (true면 클라우드에 재저장 필요)
+  function fsMergeArrayStore(localStore, fsSlice) {
+    var unsynced = {};
+    var changed  = {};
+    Object.keys(localStore).forEach(function(k) {
+      if (!Array.isArray(localStore[k])) return; // 배열이 아닌 부가 필드(_weekKey 등)는 건너뜀
+      var fsItems = fsSlice[k] || [];
+      var lsItems = localStore[k] || [];
+      var fsMap = {};
+      fsItems.forEach(function(x) { fsMap[x.id] = x; });
+      var missing = lsItems.filter(function(it) { return !fsMap.hasOwnProperty(it.id); });
+      if (missing.length) unsynced[k] = missing;
+      var diffItems = lsItems.filter(function(it) {
+        var fsIt = fsMap[it.id];
+        if (!fsIt || JSON.stringify(fsIt) === JSON.stringify(it)) return false;
+        return (it.updatedAt || 0) > (fsIt.updatedAt || 0);
+      });
+      if (diffItems.length) changed[k] = diffItems;
+    });
+    Object.assign(localStore, fsSlice);
+    Object.keys(changed).forEach(function(k) {
+      changed[k].forEach(function(it) {
+        var idx = localStore[k].findIndex(function(x) { return x.id === it.id; });
+        if (idx >= 0) localStore[k][idx] = it;
+      });
+    });
+    Object.keys(unsynced).forEach(function(k) {
+      if (!localStore[k]) localStore[k] = unsynced[k];
+      else localStore[k] = localStore[k].concat(unsynced[k]);
+    });
+    return Object.keys(unsynced).length > 0 || Object.keys(changed).length > 0;
+  }
+
+  // ── 평면 키-값 스토어 공용 병합 함수 (updatedAt 메타 맵 기반 last-write-wins) ──
+  // localStore/fsSlice: { key: 값 } 형태, localMeta/fsMeta: { key: updatedAt } 형태
+  function fsMergeFlatStore(localStore, fsSlice, localMeta, fsMeta) {
+    fsMeta = fsMeta || {};
+    var preserve = {};
+    var preserveMeta = {};
+    Object.keys(localStore).forEach(function(k) {
+      var lsVal = localStore[k];
+      if (!(k in fsSlice)) { if (lsVal) { preserve[k] = lsVal; preserveMeta[k] = localMeta[k]; } return; } // 로컬에만 있는 새 값은 항상 보존
+      if (JSON.stringify(fsSlice[k]) === JSON.stringify(lsVal)) return;
+      var lsTime = localMeta[k] || 0;
+      var fsTime = fsMeta[k] || 0;
+      if (lsTime > fsTime) { preserve[k] = lsVal; preserveMeta[k] = lsTime; }
+    });
+    Object.assign(localStore, fsSlice);
+    Object.assign(localStore, preserve);
+    Object.assign(localMeta, fsMeta);
+    Object.assign(localMeta, preserveMeta);
+    return Object.keys(preserve).length > 0;
+  }
+
   // ── Firestore 저장 ────────────────────────────────────────────
   async function fsSave(uid) {
     try {
       var savedAt = Date.now();
       window.lastDataChangeAt = savedAt;
       var payload = {
-        routines, routineCheckData, todoStore, oneThingStore, oneThingDone,
+        routines, routineCheckData, todoStore, oneThingStore, oneThingDone, oneThingMeta,
         streakData, wfStore, tlCatParents, tlCatChildren,
         tlNextParentId, tlNextChildId, tlLogs, diaryStore,
         retroWeeklyContent, retroWeeklyMeta, retroMonthlyData,
@@ -10099,26 +10176,19 @@ document.getElementById('logout-btn').addEventListener('click', function() {
         if (p.routines) routines = p.routines;
         if (p.routineCheckData) Object.assign(routineCheckData, p.routineCheckData);
         if (p.todoStore) {
-          var unsynced = {};
-          Object.keys(todoStore).forEach(function(wk) {
-            var fsItems  = p.todoStore[wk] || [];
-            var lsItems  = todoStore[wk]   || [];
-            var missing  = lsItems.filter(function(lsItem) {
-              return !fsItems.some(function(x) { return x.id === lsItem.id; });
-            });
-            if (missing.length) unsynced[wk] = missing;
-          });
-          Object.assign(todoStore, p.todoStore);
-          Object.keys(unsynced).forEach(function(wk) {
-            if (!todoStore[wk]) todoStore[wk] = unsynced[wk];
-            else todoStore[wk] = todoStore[wk].concat(unsynced[wk]);
-          });
+          var needResaveTodo = fsMergeArrayStore(todoStore, p.todoStore);
           var allFsIds = Object.values(todoStore).reduce(function(a,b){ return a.concat(b); }, []).map(function(t){ return t.id || 0; });
           if (allFsIds.length > 0) nextTodoId = Math.max.apply(null, allFsIds) + 1;
-          if (Object.keys(unsynced).length > 0) fsSave(uid).catch(function() {});
+          if (needResaveTodo) fsSave(uid).catch(function() {});
         }
-        if (p.oneThingStore)     Object.assign(oneThingStore, p.oneThingStore);
-        if (p.oneThingDone)      Object.assign(oneThingDone,  p.oneThingDone);
+        if (p.oneThingStore) {
+          var needResaveOts = fsMergeFlatStore(oneThingStore, p.oneThingStore, oneThingMeta, p.oneThingMeta);
+          if (needResaveOts) fsSave(uid).catch(function() {});
+        }
+        if (p.oneThingDone) {
+          var needResaveOtd = fsMergeFlatStore(oneThingDone, p.oneThingDone, oneThingMeta, p.oneThingMeta);
+          if (needResaveOtd) fsSave(uid).catch(function() {});
+        }
         if (p.streakData)        Object.assign(streakData,    p.streakData);
         if (p.wfStore) { Object.keys(wfStore).forEach(function(k){ delete wfStore[k]; }); Object.assign(wfStore, p.wfStore); }
         if (p.tlCatParents  && p.tlCatParents.length)  tlCatParents  = p.tlCatParents;
@@ -10126,33 +10196,26 @@ document.getElementById('logout-btn').addEventListener('click', function() {
         if (p.tlNextParentId) tlNextParentId = p.tlNextParentId;
         if (p.tlNextChildId)  tlNextChildId  = p.tlNextChildId;
         if (p.tlLogs) {
-          var tlUnsynced = {};
-          Object.keys(tlLogs).forEach(function(k) {
-            var fsItems = p.tlLogs[k] || [];
-            var lsItems = tlLogs[k] || [];
-            var fsIds = {};
-            fsItems.forEach(function(it){ fsIds[it.id] = true; });
-            var missing = lsItems.filter(function(it){ return !fsIds[it.id]; });
-            if (missing.length) tlUnsynced[k] = missing;
-          });
-          Object.assign(tlLogs, p.tlLogs);
-          Object.keys(tlUnsynced).forEach(function(k) {
-            if (!tlLogs[k]) tlLogs[k] = [];
-            tlLogs[k] = tlLogs[k].concat(tlUnsynced[k]);
-          });
-          if (Object.keys(tlUnsynced).length > 0) fsSave(uid).catch(function() {});
+          var needResaveTl = fsMergeArrayStore(tlLogs, p.tlLogs);
+          if (needResaveTl) fsSave(uid).catch(function() {});
         }
         if (p.diaryStore) {
-          var diaryUnsynced = {};
+          var diaryPreserve = {};
           Object.keys(diaryStore).forEach(function(k) {
             var local = diaryStore[k];
             var hasLocalContent = local && (local.content || local.title);
-            if (hasLocalContent && !p.diaryStore[k]) diaryUnsynced[k] = local;
+            if (!hasLocalContent) return;
+            var fsEntry = p.diaryStore[k];
+            if (!fsEntry) { diaryPreserve[k] = local; return; } // 클라우드에 아직 없는 로컬 전용 항목은 항상 보존
+            if (JSON.stringify(fsEntry) === JSON.stringify(local)) return;
+            var lsTime = local.updatedAt || 0;
+            var fsTime = fsEntry.updatedAt || 0;
+            if (lsTime > fsTime) diaryPreserve[k] = local;
           });
           Object.keys(diaryStore).forEach(function(k){ delete diaryStore[k]; });
           Object.assign(diaryStore, p.diaryStore);
-          Object.keys(diaryUnsynced).forEach(function(k){ diaryStore[k] = diaryUnsynced[k]; });
-          if (Object.keys(diaryUnsynced).length > 0) fsSave(uid).catch(function() {});
+          Object.keys(diaryPreserve).forEach(function(k){ diaryStore[k] = diaryPreserve[k]; });
+          if (Object.keys(diaryPreserve).length > 0) fsSave(uid).catch(function() {});
         }
         if (p.retroWeeklyContent) Object.assign(retroWeeklyContent, p.retroWeeklyContent);
         if (p.retroWeeklyMeta)    Object.assign(retroWeeklyMeta,    p.retroWeeklyMeta);
@@ -10163,25 +10226,9 @@ document.getElementById('logout-btn').addEventListener('click', function() {
         if (p.yearlyGoalsData)    Object.assign(yearlyGoalsData,    p.yearlyGoalsData);
         if (p.desireStore)        Object.assign(desireStore,        p.desireStore);
         if (p.buyStore) {
-          ['need','want'].forEach(function(type) {
-            var fsItems = p.buyStore[type] || [];
-            var lsItems = buyStore[type] || [];
-            var lsMap = {};
-            lsItems.forEach(function(it){ lsMap[it.id] = it; });
-            // Firestore 항목 기준으로 병합하되, 로컬에서 구매완료(done:true) 처리했는데
-            // 아직 Firestore가 못 따라잡은(done:false) 경우 로컬의 완료 상태를 우선한다
-            var merged = fsItems.map(function(fsIt) {
-              var lsIt = lsMap[fsIt.id];
-              if (lsIt && lsIt.done && !fsIt.done) return lsIt;
-              return fsIt;
-            });
-            // 로컬에만 있고 아직 Firestore에 없는(추가 동기화 전) 항목도 보존
-            var fsIds = {};
-            fsItems.forEach(function(it){ fsIds[it.id] = true; });
-            var localOnly = lsItems.filter(function(it){ return !fsIds[it.id]; });
-            buyStore[type] = merged.concat(localOnly);
-          });
+          var needResaveBuy = fsMergeArrayStore(buyStore, p.buyStore);
           if (p.buyStore._weekKey) buyStore._weekKey = p.buyStore._weekKey;
+          if (needResaveBuy) fsSave(uid).catch(function() {});
         }
         if (p.qGoalsData) Object.assign(qGoalsData, p.qGoalsData);
         if (p.mGoalsData) Object.assign(mGoalsData, p.mGoalsData);
@@ -10212,7 +10259,7 @@ document.getElementById('logout-btn').addEventListener('click', function() {
       var snap = await backupRef.get();
       if (snap.exists) return;
       var payload = {
-        routines, routineCheckData, todoStore, oneThingStore, oneThingDone,
+        routines, routineCheckData, todoStore, oneThingStore, oneThingDone, oneThingMeta,
         streakData, wfStore, tlCatParents, tlCatChildren,
         tlNextParentId, tlNextChildId, tlLogs, diaryStore,
         retroWeeklyContent, retroMonthlyData, retroQuarterlyData,
