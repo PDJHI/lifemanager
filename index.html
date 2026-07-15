@@ -4398,6 +4398,27 @@ let tlLogs = {};
 let tlNextLogId = 100;
 let tlViewDate = new Date(now); tlViewDate.setHours(0,0,0,0);
 
+// 과거 세션 간 tlNextLogId 리셋으로 같은 날짜 안에 id가 중복된 항목이 생긴 경우,
+// 중복분에 새 고유 id를 부여해 편집/삭제 시 엉뚱한 항목과 매칭되는 문제를 복구한다.
+function tlFixDuplicateIds() {
+  let fixed = false;
+  Object.keys(tlLogs).forEach(k => {
+    const arr = tlLogs[k];
+    if (!Array.isArray(arr)) return;
+    const seen = new Set();
+    arr.forEach(l => {
+      if (seen.has(l.id)) {
+        l.id = tlNextLogId++;
+        l.updatedAt = Date.now();
+        fixed = true;
+      } else {
+        seen.add(l.id);
+      }
+    });
+  });
+  return fixed;
+}
+
 function tlDateKey(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
@@ -9994,7 +10015,12 @@ function lsLoad() {
     if (p.tlCatChildren && p.tlCatChildren.length) tlCatChildren = p.tlCatChildren;
     if (p.tlNextParentId)     tlNextParentId     = p.tlNextParentId;
     if (p.tlNextChildId)      tlNextChildId      = p.tlNextChildId;
-    if (p.tlLogs)             Object.assign(tlLogs, p.tlLogs);
+    if (p.tlLogs) {
+      Object.assign(tlLogs, p.tlLogs);
+      const allTlIds = Object.values(tlLogs).flat().map(l => l.id || 0);
+      if (allTlIds.length > 0) tlNextLogId = Math.max(tlNextLogId, Math.max(...allTlIds) + 1);
+      tlFixDuplicateIds();
+    }
     if (p.diaryStore) { Object.keys(diaryStore).forEach(k => delete diaryStore[k]); Object.assign(diaryStore, p.diaryStore); }
     if (p.retroWeeklyContent) Object.assign(retroWeeklyContent, p.retroWeeklyContent);
         if (p.retroWeeklyMeta) Object.assign(retroWeeklyMeta, p.retroWeeklyMeta);
@@ -10197,7 +10223,10 @@ document.getElementById('logout-btn').addEventListener('click', function() {
         if (p.tlNextChildId)  tlNextChildId  = p.tlNextChildId;
         if (p.tlLogs) {
           var needResaveTl = fsMergeArrayStore(tlLogs, p.tlLogs);
-          if (needResaveTl) fsSave(uid).catch(function() {});
+          var allTlIds = Object.values(tlLogs).reduce(function(a,b){ return a.concat(b); }, []).map(function(l){ return l.id || 0; });
+          if (allTlIds.length > 0) tlNextLogId = Math.max(tlNextLogId, Math.max.apply(null, allTlIds) + 1);
+          var dedupedTl = tlFixDuplicateIds();
+          if (needResaveTl || dedupedTl) fsSave(uid).catch(function() {});
         }
         if (p.diaryStore) {
           var diaryPreserve = {};
